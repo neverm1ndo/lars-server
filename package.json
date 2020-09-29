@@ -1,0 +1,36 @@
+{
+  "name": "libertylogs",
+  "version": "1.0.0",
+  "description": "Program for viewing server logs",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "build:server": "tsc --outDir ./server/build --project ./server",
+    "build:client": "tsc --outDir ./client/build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neverm1ndo/libertylogs.git"
+  },
+  "keywords": [
+    "logs"
+  ],
+  "author": "neverm1ndo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/neverm1ndo/libertylogs/issues"
+  },
+  "homepage": "https://github.com/neverm1ndo/libertylogs#readme",
+  "dependencies": {
+    "@types/jasmine": "^3.5.14",
+    "express": "^4.17.1",
+    "express-jwt": "^6.0.0",
+    "jasmine": "^3.6.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.8",
+    "@types/node": "^14.11.2",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.3"
+  }
+}

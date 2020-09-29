@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "allowJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "esModuleInterop": true,
+    "rootDir": "./",
+    "removeComments": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "types": ["jasmine", "node", "express"]
+  },
+  "exclude": [
+    "node_modules/*"
+  ]
+}
