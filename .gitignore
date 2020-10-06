@@ -1,3 +1,5 @@
 node_modules/*
 build/*
 *.log
+logs/*
+*.test.js

@@ -3,16 +3,14 @@
     "target": "es6",
     "module": "commonjs",
     "allowJs": true,
-    "declaration": true,
-    "emitDeclarationOnly": true,
     "esModuleInterop": true,
-    "rootDir": "./",
+    "rootDir": "../",
+    "outDir": "build",
+    "strict": true,
+    "sourceMap": true,
     "removeComments": true,
     "esModuleInterop": true,
-    "strict": true,
-    "types": ["jasmine", "node", "express"]
+    "allowSyntheticDefaultImports": true
   },
-  "exclude": [
-    "node_modules/*"
-  ]
+  "include": ["./server/*"]
 }
