@@ -8,8 +8,7 @@ import { GeoData } from './interfaces/geodata';
 import { Logger } from './logger';
 
 export class Parser {
-  path: string;
-
+  private path: string;
   private _readFile: any = bindNodeCallback(fs.readFile);
   private _watchFile: any = bindNodeCallback(fs.watch);
   public result$: Observable<Buffer>;
@@ -59,7 +58,7 @@ export class Parser {
     lines = textplane.split('\n');
     lines.forEach((line: string) => {
       let splits = line.split(' ');
-      if (splits[0] !== '') {        
+      if (splits[0] !== '') {
         parsed.push({
           unix: +splits[0],
           date: splits[1],

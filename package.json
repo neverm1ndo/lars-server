@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/neverm1ndo/libertylogs#readme",
   "dependencies": {
+    "@types/express-jwt": "0.0.42",
     "@types/jasmine": "^3.5.14",
     "@types/mongoose": "^5.7.36",
     "@types/ws": "^7.2.7",

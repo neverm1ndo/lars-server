@@ -46,7 +46,16 @@ export class Logger {
   }
   public static error(...args: any[]): void {
     const now = new Date;
-    process.stdout.write(' \x1b[1m' + this.timestamp(now) + '\x1b[0m \x1b[30m[ERROR]');
+    process.stdout.write(' \x1b[1m' + this.timestamp(now) + '\x1b[0m \x1b[31m[ERROR]');
+    args.forEach((arg: any) => {
+      process.stdout.write(arg + ' ');
+    });
+    this.writeToFile(args);
+    process.stdout.write('\x1b[0m\n');
+  }
+  public static warn(...args: any[]): void {
+    const now = new Date;
+    process.stdout.write(' \x1b[1m' + this.timestamp(now) + '\x1b[0m \x1b[33m[WARNING]');
     args.forEach((arg: any) => {
       process.stdout.write(arg + ' ');
     });
