@@ -4,6 +4,7 @@ import { Parser } from './parser.server';
 // import { Observable } from 'rxjs';
 import WebSocket from 'ws';
 import { WSMessage } from './interfaces/ws.message';
+import { Logger } from './logger';
 
 const PORT: number = 9809;
 
@@ -13,13 +14,13 @@ export default class API {
   });
   clients: WebSocket[] = [];
   app: any;
-  parser: Parser = new Parser({ path: './logs/20200928.log' });
+  // parser: Parser = new Parser({ path: './logs/20200928.log' });
   constructor() {
     this.app = express();
     // mongoose.connect("mongodb://localhost:27017/libertylogs", { useNewUrlParser: true, useUnifiedTopology: true });
   }
   init() {
-    this.parser._watchdog.subscribe();
+    // this.parser._watchdog.subscribe();
     this.app.get('/uber', (res: any, req: any) => { // TEST function. Could be expensive
       // res.send(mongoose.)
     });
@@ -36,6 +37,7 @@ export default class API {
     **/
     });
     this.app.listen(PORT, () => {
+      Logger.log('Express server listening on port', PORT)
       this.wss.on('connection', (ws: any, req: any) => {
         this.clients.push(ws);
         ws.on('message', (message: WSMessage) => {

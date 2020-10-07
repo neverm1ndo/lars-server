@@ -41,7 +41,7 @@ export class Parser {
     mongoose.connect("mongodb://localhost:27017/libertylogs", { useNewUrlParser: true, useUnifiedTopology: true });
     this._result.pipe(
       map(val => val.toString())
-    ).subscribe(x => {
+    ).subscribe((x: string) => {
       this.parse(x).forEach((line: LogLine) => {
         let l = new LOG_LINE(line);
         l.save().then(() => { console.log('Line', line.process, 'saved') });

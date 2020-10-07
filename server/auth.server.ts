@@ -7,7 +7,7 @@ export default class Auth {
   constructor() {
     this.app = express();
   }
-  init() {
+  init(): void {
     this.app.get('/auth', (req: any, res: any) => {
 
     });
