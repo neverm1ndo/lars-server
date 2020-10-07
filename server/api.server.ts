@@ -1,12 +1,34 @@
 import express from 'express';
-// import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { Parser } from './parser.server';
 // import { Observable } from 'rxjs';
 import WebSocket from 'ws';
-import { WSMessage } from './interfaces/ws.message';
+
 import { Logger } from './logger';
 
+import { WSMessage } from './interfaces/ws.message';
+import { LogLine } from './interfaces/logline';
+
+// import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 const PORT: number = 9809;
+const LOG_LINE = mongoose.model( 'LogLine', new Schema ({
+  unix: { type: Number, required: true },
+  date: { type: String, required: true },
+  process: { type: String, required: true },
+  nickname: { type: String },
+  id: { type: Number },
+  geo: {
+    country: { type: String },
+    cc: { type: String },
+    ip: { type: String },
+    as: { type: Number },
+    ss: { type: String },
+    org: { type: String },
+    c: { type: String }
+  }
+}));
 
 export default class API {
   wss: WebSocket.Server = new WebSocket.Server({
@@ -14,12 +36,30 @@ export default class API {
   });
   clients: WebSocket[] = [];
   app: any;
-  // parser: Parser = new Parser({ path: './logs/20200928.log' });
+  parser: Parser = new Parser({ path: './logs/20200928.log' });
+
   constructor() {
     this.app = express();
-    // mongoose.connect("mongodb://localhost:27017/libertylogs", { useNewUrlParser: true, useUnifiedTopology: true });
+    mongoose.connect("mongodb://localhost:27017/libertylogs", { useNewUrlParser: true, useUnifiedTopology: true });
   }
-  init() {
+
+  wsmsg(msg: WSMessage): string {
+    return JSON.stringify(msg);
+  }
+
+  private subs() {
+    Logger.log('Subbing to all events...')
+    this.parser.result$.pipe(
+      map(val => val.toString())
+    ).subscribe((unparsed: string) => {
+      this.parser.parse(unparsed).forEach((line: LogLine) => {
+        let l = new LOG_LINE(line);
+        l.save().then(() => { Logger.log('Line', line.process, 'saved') });
+      })
+    }, (err) => { Logger.error(err) });
+  }
+  public init() {
+    this.subs();
     // this.parser._watchdog.subscribe();
     this.app.get('/uber', (res: any, req: any) => { // TEST function. Could be expensive
       // res.send(mongoose.)
@@ -37,19 +77,19 @@ export default class API {
     **/
     });
     this.app.listen(PORT, () => {
-      Logger.log('Express server listening on port', PORT)
+      Logger.log('Express API server listening on port', PORT);
       this.wss.on('connection', (ws: any, req: any) => {
         this.clients.push(ws);
         Logger.log(ws._socket.remoteAddress, 'connected to the LAS');
-        ws.on('message', (message: WSMessage) => {
-          switch (message.event) {
+        ws.on('message', (message: string) => {
+          switch (JSON.parse(message).event) {
             case 'TEST': {
               break;
             }
             default: break;
           }
         });
-        ws.send(`> You successfully conected to the Liberty Admin Server! IP: ${ws._socket.remoteAddress}`);
+        ws.send(this.wsmsg({event: 'client-connection', msg: `> You successfully conected to the Liberty Admin Server! IP: ${ws._socket.remoteAddress}`}));
       });
       this.wss.on('close', (ws: any) => {
         this.clients.forEach((client: any, index: number) => {

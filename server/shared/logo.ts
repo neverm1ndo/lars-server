@@ -2,7 +2,8 @@ export default class Logo {
   constructor() {}
   public static print() {
     console.log(
-      ' █████  ██████████ \n',
+      '\n',
+      '█████  ██████████ \n',
       '█████  ██████████  \n',
       '█████       █████  \n',
       '█████       █████  \n',

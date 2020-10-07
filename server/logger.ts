@@ -4,7 +4,11 @@ import path from 'path';
 export class Logger {
   constructor() {}
   private static timestamp(now: Date): string {
-    return `[${now.getFullYear()}-${now.getMonth()}-${now.getDate()} | ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}] `;
+    function convert(str: number) {
+      const pad = '00';
+      return pad.substring(0, pad.length - str.toString().length) + str.toString();
+    }
+    return `[${convert(now.getFullYear())}-${convert(now.getMonth())}-${convert(now.getDate())} | ${convert(now.getHours())}:${convert(now.getMinutes())}:${convert(now.getSeconds())}] `;
   }
   private static writeToFile(args: any[]): void {
     const now = new Date;
@@ -33,7 +37,7 @@ export class Logger {
   }
   public static log(...args: any[]): void {
     const now = new Date;
-    process.stdout.write('\x1b[1m' + this.timestamp(now) + '\x1b[0m');
+    process.stdout.write(' \x1b[1m' + this.timestamp(now) + '\x1b[0m');
     args.forEach((arg: any) => {
       process.stdout.write(arg + ' ');
     });
@@ -42,7 +46,7 @@ export class Logger {
   }
   public static error(...args: any[]): void {
     const now = new Date;
-    process.stdout.write('\x1b[1m' + this.timestamp(now) + '\x1b[0m \x1b[30m[ERROR]');
+    process.stdout.write(' \x1b[1m' + this.timestamp(now) + '\x1b[0m \x1b[30m[ERROR]');
     args.forEach((arg: any) => {
       process.stdout.write(arg + ' ');
     });

@@ -5,6 +5,6 @@ export interface LogLine {
   date: string;
   process: string;
   nickname?: string;
-  id?: number;
+  id: number;
   geo?: GeoData;
 }
