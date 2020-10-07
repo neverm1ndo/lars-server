@@ -40,6 +40,7 @@ export default class API {
       Logger.log('Express server listening on port', PORT)
       this.wss.on('connection', (ws: any, req: any) => {
         this.clients.push(ws);
+        Logger.log(ws._socket.remoteAddress, 'connected to the LAS');
         ws.on('message', (message: WSMessage) => {
           switch (message.event) {
             case 'TEST': {

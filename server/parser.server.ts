@@ -7,6 +7,7 @@ import mongoose, { Schema } from 'mongoose';
 
 import { LogLine } from './interfaces/logline';
 import { GeoData } from './interfaces/geodata';
+import { Logger } from './logger';
 
 const LOG_LINE = mongoose.model( 'LogLine', new Schema ({
   unix: { type: Number, required: true },
@@ -44,7 +45,7 @@ export class Parser {
     ).subscribe((x: string) => {
       this.parse(x).forEach((line: LogLine) => {
         let l = new LOG_LINE(line);
-        l.save().then(() => { console.log('Line', line.process, 'saved') });
+        l.save().then(() => { Logger.log('Line', line.process, 'saved') });
       })
     });
   }
