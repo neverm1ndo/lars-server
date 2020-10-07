@@ -1,16 +1,16 @@
 import express from 'express';
+import https from 'https';
+import fs from 'fs';
 import mongoose, { Schema } from 'mongoose';
-import { Parser } from './parser.server';
-// import { Observable } from 'rxjs';
-import WebSocket from 'ws';
 import jwt from 'express-jwt';
+import WebSocket from 'ws';
+import { Parser } from './parser.server';
 
 import { Logger } from './logger';
 
 import { WSMessage } from './interfaces/ws.message';
 import { LogLine } from './interfaces/logline';
 
-// import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 const PORT: number = 9809;
@@ -46,7 +46,7 @@ export default class API {
       secret: this.app.get('secret'),
       algorithms: ['RS256'],
       credentialsRequired: false,
-      getToken: function fromHeaderOrQuerystring (req: any) {
+      getToken: (req: any) => {
         if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
             return req.headers.authorization.split(' ')[1];
         } else if (req.query && req.query.token) {
@@ -76,7 +76,7 @@ export default class API {
   public init() {
     // this.subs();
     this.app.get('/api/uber', (req: any, res: any) => { // TEST function. Could be expensive
-      if (!req.headers.autho) return res.sendStatus(401);
+      if (!req.headers.authorization) return res.sendStatus(401);
       LOG_LINE.find({}, (err: any, lines: mongoose.Document[]) => {
         if (err) return Logger.error(err);
         res.send(lines);
@@ -97,7 +97,11 @@ export default class API {
     **/
     res.sendStatus(200);
     });
-    this.app.listen(PORT, () => {
+    https.createServer({
+      'key' : fs.readFileSync(__dirname + '/keys/ssl.key'),
+      'cert' : fs.readFileSync(__dirname + '/keys/ssl.crt'),
+      'ca' : fs.readFileSync(__dirname + '/keys/ssl.crt')
+    }, this.app).listen(PORT, () => {
       Logger.log('Express API server listening on port', PORT);
       this.wss.on('connection', (ws: any, req: any) => {
         this.clients.push(ws);
