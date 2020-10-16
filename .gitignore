@@ -3,3 +3,5 @@ build/*
 *.log
 logs/*
 *.test.js
+client/*
+*.env

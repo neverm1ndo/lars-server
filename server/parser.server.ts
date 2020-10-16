@@ -17,7 +17,7 @@ export class Parser {
               fs.readdir(path.join(__dirname, './logs'), (err: any, files: string[]) => {
               if (err) {
                 subscriber.error('Cant scan directory');
-                Logger.error('Cant scan diractory', err);
+                Logger.error('Cant scan directory', err);
               } else {
                 subscriber.next(files[files.length]);
               };
