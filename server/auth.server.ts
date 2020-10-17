@@ -12,8 +12,10 @@ import fs from 'fs';
 
 import { Logger } from './logger';
 
-const HTTPS_PORT: number = 443;
-const HTTP_PORT: number = 80;
+dotenv.config({ path:path.resolve(process.cwd(), 'server/.env') });
+
+const HTTPS_PORT: any = process.env.HTTPS_PORT;
+const HTTP_PORT: any = process.env.HTTP_PORT;
 
 export default class Auth {
   app: any;
@@ -38,7 +40,6 @@ export default class Auth {
     preflightContinue: false,
   };
   constructor() {
-    dotenv.config({ path:path.resolve(process.cwd(), 'server/.env') });
     this.app = express();
     this.app.use(cors(this.CORSoptions));
     this.app.use(express.static('static'));
@@ -64,14 +65,18 @@ export default class Auth {
       connection.promise()
         .query(`SELECT username, user_id, user_type, user_avatar FROM phpbb_users WHERE user_email = '${req.body.email}' AND user_password = '${req.body.password}'`)
         .then(([rows, fields]: any[]): void => {
-          Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
-          res.send(JSON.stringify({
-            name: rows.username,
-            role: rows.user_type,
-            id: rows.user_id,
-            avatar: rows.user_avatar,
-            token: jwt.sign({ user: rows.username, role: rows.user_type, id: rows.user_id }, process.env.ACCESS_TOKEN_SECRET!)
-          }));
+          if (rows[0].length === 1) {
+            Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
+            res.send(JSON.stringify({
+              name: rows[0].username,
+              role: rows[0].user_type,
+              id: rows[0].user_id,
+              avatar: rows[0].user_avatar,
+              token: jwt.sign({ user: rows[0].username, role: rows[0].user_type, id: rows[0].user_id }, process.env.ACCESS_TOKEN_SECRET!)
+            }));
+          } else {
+            res.sendStatus(401)('Failed authorization');
+          }
         })
         .catch((err: any): void => {
           res.sendStatus(401)('Failed authorization');
