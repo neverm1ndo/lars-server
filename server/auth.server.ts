@@ -19,7 +19,11 @@ const HTTP_PORT: any = process.env.HTTP_PORT;
 
 export default class Auth {
   app: any;
-  readonly whitelist = ['http://api.stackexchange.com', 'http://localhost:4200', '*'];
+  readonly whitelist = [
+    'http://ohmydog.ml',
+    'https://ohmydog.ml',
+    'http://localhost:4200',
+    '*'];
   readonly CORSoptions: cors.CorsOptions = {
     allowedHeaders: [
       'Origin',
@@ -75,7 +79,7 @@ export default class Auth {
               token: jwt.sign({ user: rows[0].username, role: rows[0].user_type, id: rows[0].user_id }, process.env.ACCESS_TOKEN_SECRET!)
             }));
           } else {
-            res.sendStatus(401)('Failed authorization');
+            res.sendStatus(401).send('Failed authorization');
           }
         })
         .catch((err: any): void => {
