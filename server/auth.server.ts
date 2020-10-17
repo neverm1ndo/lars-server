@@ -17,7 +17,6 @@ const HTTP_PORT: number = 80;
 
 export default class Auth {
   app: any;
-  readonly connection: mysql.Connection;
   readonly whitelist = ['http://api.stackexchange.com', 'http://localhost:4200', '*'];
   readonly CORSoptions: cors.CorsOptions = {
     allowedHeaders: [
@@ -44,12 +43,6 @@ export default class Auth {
     this.app.use(cors(this.CORSoptions));
     this.app.use(express.static('static'));
     this.app.use(helmet());
-    this.connection = mysql.createConnection({
-      host: process.env.DB_ADDRESS,
-      user: process.env.DB_USER,
-      database: process.env.DB_NAME,
-      password: process.env.DB_PASSWORD
-    });
   }
 
   certsIsReady(): boolean {
@@ -62,7 +55,13 @@ export default class Auth {
   init(): void {
     this.app.post('/login', bodyParser.json() ,(req: any, res: any): void => {
       Logger.log('Trying to authorize', req.body.email);
-      this.connection.promise()
+      const connection = mysql.createConnection({
+        host: process.env.DB_ADDRESS,
+        user: process.env.DB_USER,
+        database: process.env.DB_NAME,
+        password: process.env.DB_PASSWORD
+      });
+      connection.promise()
         .query(`SELECT username, user_id, user_type, user_avatar FROM phpbb_users WHERE user_email = '${req.body.email}' AND user_password = '${req.body.password}'`)
         .then(([rows, fields]: any[]): void => {
           Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
@@ -79,16 +78,16 @@ export default class Auth {
           Logger.error(`[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email)
           Logger.error(err);
         })
-        .then((): void => this.connection.end());
+        .then((): void => connection.end());
     });
-    if (this.certsIsReady()) {
+    /* if (this.certsIsReady()) {
       https.createServer({
         cert: fs.readFileSync('./sslcert/fullchain.pem'),
         key: fs.readFileSync('./sslcert/privkey.pem')
       }, this.app).listen(HTTPS_PORT, () => {
         console.log('Auth HTTPS server listening on ', HTTPS_PORT, ' port');
       });
-    }
+    } */
     http.createServer(this.app).listen(HTTP_PORT, () => {
       Logger.log('Auth HTTP server listening on ', HTTP_PORT, ' port');
     });
