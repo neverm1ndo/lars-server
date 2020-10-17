@@ -45,7 +45,6 @@ export default class Auth {
   };
   constructor() {
     this.app = express();
-    this.app.use(cors(this.CORSoptions));
     this.app.use(express.static('static'));
     this.app.use(helmet());
   }
@@ -58,7 +57,7 @@ export default class Auth {
     }
   }
   init(): void {
-    this.app.post('/login', bodyParser.json() ,(req: any, res: any): void => {
+    this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(req: any, res: any): void => {
       Logger.log('Trying to authorize', req.body.email);
       const connection = mysql.createConnection({
         host: process.env.DB_ADDRESS,
