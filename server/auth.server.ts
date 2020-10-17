@@ -19,10 +19,10 @@ const HTTP_PORT: any = process.env.HTTP_PORT;
 
 export default class Auth {
   app: any;
-  readonly whitelist = [
+  readonly whitelist: string[] = [
+    'http://localhost:4200',
     'http://ohmydog.ml',
     'https://ohmydog.ml',
-    'http://localhost:4200',
     '*'];
   readonly CORSoptions: cors.CorsOptions = {
     allowedHeaders: [
@@ -33,7 +33,7 @@ export default class Auth {
       'X-Access-Token',
     ],
     credentials: true,
-    methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
+    methods: 'POST',
     origin: (origin: any, callback: any) => {
       if (this.whitelist.indexOf(origin) !== -1) {
         callback(null, true)
