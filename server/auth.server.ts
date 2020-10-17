@@ -59,23 +59,23 @@ export default class Auth {
   init(): void {
     this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(req: any, res: any): void => {
       Logger.log('Trying to authorize', req.body.email);
-      const connection = mysql.createConnection({
+      const connection = mysql.createPool({
         host: process.env.DB_ADDRESS,
         user: process.env.DB_USER,
         database: process.env.DB_NAME,
         password: process.env.DB_PASSWORD
       });
       connection.promise()
-        .query(`SELECT username, user_id, user_type, user_avatar FROM phpbb_users WHERE user_email = '${req.body.email}' AND user_password = '${req.body.password}'`)
+        .query("SELECT `username`, `user_id`, `user_type`, `user_avatar` FROM `phpbb_users` WHERE `user_email` = ? AND `user_password` = ?", [req.body.email, req.body.password])
         .then(([rows, fields]: any[]): void => {
           if (rows[0].length === 1) {
             Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
             res.send(JSON.stringify({
-              name: rows[0].username,
-              role: rows[0].user_type,
-              id: rows[0].user_id,
-              avatar: rows[0].user_avatar,
-              token: jwt.sign({ user: rows[0].username, role: rows[0].user_type, id: rows[0].user_id }, process.env.ACCESS_TOKEN_SECRET!)
+              name: rows[0][0].username,
+              role: rows[0][0].user_type,
+              id: rows[0][0].user_id,
+              avatar: rows[0][0].user_avatar,
+              token: jwt.sign({ user: rows[0][0].username, role: rows[0][0].user_type, id: rows[0][0].user_id }, process.env.ACCESS_TOKEN_SECRET!)
             }));
           } else {
             res.sendStatus(401).send('Failed authorization');
