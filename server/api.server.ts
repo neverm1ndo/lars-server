@@ -98,9 +98,9 @@ export default class API {
     res.sendStatus(200);
     });
     https.createServer({
-      'key' : fs.readFileSync(__dirname + '/keys/ssl.key'),
-      'cert' : fs.readFileSync(__dirname + '/keys/ssl.crt'),
-      'ca' : fs.readFileSync(__dirname + '/keys/ssl.crt')
+      'key' : ' ',
+      'cert' : ' ',
+      'ca' : ' '
     }, this.app).listen(PORT, () => {
       Logger.log('Express API server listening on port', PORT);
       this.wss.on('connection', (ws: any, req: any) => {
