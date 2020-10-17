@@ -45,7 +45,7 @@ export default class Auth {
   };
   constructor() {
     this.app = express();
-    this.app.use(express.static('static'));
+    this.app.use(express.static(__dirname + '/static'));
     this.app.use(helmet());
   }
 
