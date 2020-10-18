@@ -77,18 +77,16 @@ export default class Auth {
       connection.promise()
         .query("SELECT username, user_id, user_type, user_avatar, user_password FROM phpbb_users WHERE user_email = ?", [req.body.email])
         .then(([rows, fields]: any[]): void => {
-          if (rows[0].length === 1) {
-            let user = rows[0];
-            if (this.checkPassword(req.body.password, user.user_password)) {
-              Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
-              res.send(JSON.stringify({
-                name: user.username,
-                role: user.user_type,
-                id: user.user_id,
-                avatar: user.user_avatar,
-                token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, process.env.ACCESS_TOKEN_SECRET!)
-              }));
-            }
+          let user = rows[0];
+          if (this.checkPassword(req.body.password, user.user_password)) {
+            Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
+            res.send(JSON.stringify({
+              name: user.username,
+              role: user.user_type,
+              id: user.user_id,
+              avatar: user.user_avatar,
+              token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, process.env.ACCESS_TOKEN_SECRET!)
+            }));
           }
         })
         .catch((err: any): void => {
