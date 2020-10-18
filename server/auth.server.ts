@@ -30,7 +30,7 @@ export default class Auth {
       'X-Access-Token',
     ],
     credentials: true,
-    methods: 'GET,POST,DELETE',
+    methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
     origin: (origin: any, callback: any) => {
       if (this.whitelist.indexOf(origin) !== -1) {
         callback(null, true)
