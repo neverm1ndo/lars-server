@@ -9,6 +9,7 @@ import bodyParser from 'body-parser';
 import jwt from 'jsonwebtoken';
 import helmet from 'helmet';
 import fs from 'fs';
+import md5 from 'md5';
 
 import { Logger } from './logger';
 
@@ -53,8 +54,19 @@ export default class Auth {
       return false;
     }
   }
+
+  checkPassword(pass: string, hash: string): boolean {
+    let salt = hash.slice(0, hash.length - 32);
+    let realPassword = hash.slice(hash.length - 32, hash.length);
+    let password = md5(salt + pass);
+    if (password === realPassword) {
+      return true;
+    } else {
+      return false;
+    }
+  }
   init(): void {
-    this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(req: any, res: any): void => {
+    this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(err: any, req: any, res: any, next: any): void => {
       Logger.log('Trying to authorize', req.body.email);
       const connection = mysql.createPool({
         host: process.env.DB_ADDRESS,
@@ -63,23 +75,29 @@ export default class Auth {
         password: process.env.DB_PASSWORD
       });
       connection.promise()
-        .query("SELECT `username`, `user_id`, `user_type`, `user_avatar` FROM `phpbb_users` WHERE `user_email` = ? AND `user_password` = ?", [req.body.email, req.body.password])
+        .query("SELECT username, user_id, user_type, user_avatar, user_password FROM phpbb_users WHERE user_email = ?", [req.body.email])
         .then(([rows, fields]: any[]): void => {
           if (rows[0].length === 1) {
-            Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
-            res.send(JSON.stringify({
-              name: rows[0][0].username,
-              role: rows[0][0].user_type,
-              id: rows[0][0].user_id,
-              avatar: rows[0][0].user_avatar,
-              token: jwt.sign({ user: rows[0][0].username, role: rows[0][0].user_type, id: rows[0][0].user_id }, process.env.ACCESS_TOKEN_SECRET!)
-            }));
+            let user = rows[0][0];
+            if (this.checkPassword(req.body.password, user.user_password)) {
+              Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
+              res.send(JSON.stringify({
+                name: user.username,
+                role: user.user_type,
+                id: user.user_id,
+                avatar: user.user_avatar,
+                token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, process.env.ACCESS_TOKEN_SECRET!)
+              }));
+            } else {
+              res.sendStatus(401).send('FAIL: Bad password');
+            }
           } else {
+            Logger.error(`[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email);
             res.sendStatus(401).send('Failed authorization');
           }
         })
         .catch((err: any): void => {
-          res.sendStatus(401)('Failed authorization');
+          res.sendStatus(401).send('Failed authorization');
           Logger.error(`[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email)
           Logger.error(err);
         })
