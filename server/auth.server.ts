@@ -66,7 +66,7 @@ export default class Auth {
     }
   }
   init(): void {
-    this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(err: any, req: any, res: any, next: any): void => {
+    this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(req: any, res: any): void => {
       Logger.log('Trying to authorize', req.body.email);
       const connection = mysql.createPool({
         host: process.env.DB_ADDRESS,
