@@ -5,3 +5,4 @@ logs/*
 *.test.js
 client/*
 *.env
+cert/*
