@@ -96,14 +96,14 @@ export default class Auth {
         })
         .then((): void => connection.end());
     });
-    /* if (this.certsIsReady()) {
+    if (this.certsIsReady()) {
       https.createServer({
-        cert: fs.readFileSync('./sslcert/fullchain.pem'),
-        key: fs.readFileSync('./sslcert/privkey.pem')
+        cert: fs.readFileSync(process.env.SSL_FULLCHAIN_PATH!),
+        key: fs.readFileSync(process.env.SSL_PRIVKEY_PATH!)
       }, this.app).listen(HTTPS_PORT, () => {
         console.log('Auth HTTPS server listening on ', HTTPS_PORT, ' port');
       });
-    } */
+    }
     http.createServer(this.app).listen(HTTP_PORT, () => {
       Logger.log('Auth HTTP server listening on ', HTTP_PORT, ' port');
     });
