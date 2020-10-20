@@ -89,10 +89,10 @@ export default class Auth {
         .then((): void => connection.end());
     });
     https.createServer({
-      cert: fs.readFileSync(__dirname + process.env.SSL_PRIVKEY_PATH!),
+      cert: fs.readFileSync(__dirname + process.env.SSL_FULLCHAIN_PATH!),
       key: fs.readFileSync(__dirname + process.env.SSL_PRIVKEY_PATH!)
     }, this.app).listen(HTTPS_PORT, () => {
-      console.log('Auth HTTPS server listening on ', HTTPS_PORT, ' port');
+      Logger.log('Auth HTTPS server listening on ', HTTPS_PORT, ' port');
     });
     http.createServer(this.app).listen(HTTP_PORT, () => {
       Logger.log('Auth HTTP server listening on ', HTTP_PORT, ' port');
