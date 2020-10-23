@@ -50,6 +50,11 @@ export class Parser {
     }
   }
 
+  public parseContent(line: string): string | undefined {
+    let r_contentdata = new RegExp("'\(.*)'");
+    return line.split(r_contentdata)[1];
+  }
+
   //private processor() {}
 
   public parse(textplane: string): LogLine[] {
@@ -65,7 +70,8 @@ export class Parser {
           process: splits[2],
           nickname: splits[3],
           id: +splits[4].match('\[0-9]+')![0],
-          geo: this.parseGeo(line)
+          geo: this.parseGeo(line),
+          content: this.parseContent(line)
         });
       }
     });

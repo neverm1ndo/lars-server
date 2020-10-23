@@ -42,7 +42,7 @@ export default class Auth {
   };
   constructor() {
     this.app = express();
-    this.app.options('*', cors())
+    this.app.options('*', cors());
     this.app.use(express.static(__dirname + '/static'));
     this.app.use(helmet());
   }
