@@ -9,6 +9,7 @@ import mongoose, { Schema } from 'mongoose';
 import jwt from 'express-jwt';
 import WebSocket from 'ws';
 import { Parser } from './parser.server';
+import { Watcher } from './watcher';
 
 import { Logger } from './logger';
 
@@ -66,7 +67,8 @@ export default class API {
   });
   private clients: WebSocket[] = [];
   app: any;
-  parser: Parser = new Parser({ path: './logs/20200928.log' });
+  parser: Parser = new Parser();
+  watcher: Watcher = new Watcher();
 
   constructor() {
     this.app = express();
@@ -85,7 +87,7 @@ export default class API {
     //     return null;
     //   }
     // }));
-    mongoose.connect("mongodb://localhost:27017/libertylogs", { useNewUrlParser: true, useUnifiedTopology: true });
+    mongoose.connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true });
   }
 
   wsmsg(msg: WSMessage): string {
@@ -93,8 +95,8 @@ export default class API {
   }
 
   private subs() {
-    Logger.log('Subbing to all events...')
-    this.parser.result$.pipe(
+    Logger.log('Subbing to all events...');
+    this.watcher.result$.pipe(
       map(val => val.toString())
     ).subscribe((unparsed: string) => {
       this.parser.parse(unparsed).forEach((line: LogLine) => {

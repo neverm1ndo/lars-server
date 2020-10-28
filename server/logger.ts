@@ -3,17 +3,17 @@ import path from 'path';
 
 export class Logger {
   constructor() {}
+  public static convert(str: number): string {
+    const pad = '00';
+    return pad.substring(0, pad.length - str.toString().length) + str.toString();
+  }
   private static timestamp(now: Date): string {
-    function convert(str: number) {
-      const pad = '00';
-      return pad.substring(0, pad.length - str.toString().length) + str.toString();
-    }
-    return `[${convert(now.getFullYear())}-${convert(now.getMonth())}-${convert(now.getDate())} | ${convert(now.getHours())}:${convert(now.getMinutes())}:${convert(now.getSeconds())}] `;
+    return `[${this.convert(now.getFullYear())}-${this.convert(now.getMonth())}-${this.convert(now.getDate())} | ${this.convert(now.getHours())}:${this.convert(now.getMinutes())}:${this.convert(now.getSeconds())}] `;
   }
   private static writeToFile(args: any[]): void {
     const now = new Date;
     const dirpath = path.join(__dirname + '/DIARY');
-    const logpath = path.join(__dirname + '/DIARY/LIBLOG' + now.getFullYear() + now.getMonth() + now.getDay()  + '.liblog');
+    const logpath = path.join(__dirname + '/DIARY/LIBLOG' + this.convert(now.getFullYear()) + this.convert(now.getMonth()) + this.convert(now.getDay())  + '.liblog');
     if (!fs.existsSync(dirpath)) {
       fs.mkdirSync(dirpath);
     }
