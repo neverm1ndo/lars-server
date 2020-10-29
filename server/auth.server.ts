@@ -20,6 +20,7 @@ const HTTP_PORT: any = process.env.HTTP_PORT;
 
 export default class Auth {
   app: any;
+  connection: any;
   readonly whitelist: string[] = JSON.parse(process.env.CORS_WL!);
   readonly CORSoptions: cors.CorsOptions = {
     allowedHeaders: [
@@ -45,6 +46,12 @@ export default class Auth {
     this.app.options('*', cors());
     this.app.use(express.static(__dirname + '/static'));
     this.app.use(helmet());
+    this.connection = mysql.createPool({
+      host: process.env.DB_ADDRESS,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      password: process.env.DB_PASSWORD
+    });
   }
 
   checkPassword(pass: string, hash: string): boolean {
@@ -58,15 +65,28 @@ export default class Auth {
     }
   }
   init(): void {
+    this.app.get('/user', cors(this.CORSoptions), (req: any, res: any) => {
+      Logger.log(`[${req.connection.remoteAddress}]`,'Requesting user data ->', req.query.username);
+      this.connection.promise()
+        .query("SELECT user_id, user_type, user_avatar, user_password FROM phpbb_users WHERE username = ?", [req.query.name])
+        .then(([rows, fields]: any[]): void => {
+          let user = rows[0];
+          res.send(JSON.stringify({
+            role: user.user_type,
+            id: user.user_id,
+            avatar: user.user_avatar
+          }));
+        })
+        .catch((err: any): void => {
+          res.sendStatus(401).send('Unauthorized request');
+          Logger.error(`[${req.connection.remoteAddress}]`, 401, 'Unauthorized request ->', req.query)
+          Logger.error(err);
+        })
+        .then((): void => this.connection.end());
+    });
     this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(req: any, res: any): void => {
       Logger.log('Trying to authorize', req.body.email);
-      const connection = mysql.createPool({
-        host: process.env.DB_ADDRESS,
-        user: process.env.DB_USER,
-        database: process.env.DB_NAME,
-        password: process.env.DB_PASSWORD
-      });
-      connection.promise()
+      this.connection.promise()
         .query("SELECT username, user_id, user_type, user_avatar, user_password FROM phpbb_users WHERE user_email = ?", [req.body.email])
         .then(([rows, fields]: any[]): void => {
           let user = rows[0];
@@ -86,7 +106,7 @@ export default class Auth {
           Logger.error(`[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email)
           Logger.error(err);
         })
-        .then((): void => connection.end());
+        .then((): void => this.connection.end());
     });
     https.createServer({
       cert: fs.readFileSync(__dirname + process.env.SSL_FULLCHAIN_PATH!),
