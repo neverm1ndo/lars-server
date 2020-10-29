@@ -26,12 +26,13 @@ export class Parser {
   }
 
   public parseContent(line: string): string | undefined {
-    let r_contentdata = new RegExp("'\(.*)'");
+    let r_contentdata = new RegExp("'\(.*)'"); // Main
+    let r_contentdata2 = new RegExp("\(\\(\[0-9]+\\)\)"); // Secondary
     let parsed = line.split(r_contentdata)[1];
     if (parsed) {
       return parsed;
     } else {
-      parsed = line.split("(\d+) ")[1];
+      parsed = line.split(r_contentdata2)[2].trim();
       if (parsed) {
         return parsed;
       } else {
