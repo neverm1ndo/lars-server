@@ -69,7 +69,7 @@ export default class Auth {
       Logger.log(`[${req.connection.remoteAddress}]`,'Requesting user data ->', req.query.username);
       this.connection.promise()
         .query("SELECT user_id, user_type, user_avatar FROM phpbb_users WHERE username = ?", [req.query.name])
-        .then(([rows, fields]: any[]): void => {
+        .then(([rows]: any[]): void => {
           let user = rows[0];
           res.send(JSON.stringify({
             role: user.user_type,
@@ -88,7 +88,7 @@ export default class Auth {
       Logger.log('Trying to authorize', req.body.email);
       this.connection.promise()
         .query("SELECT username, user_id, user_type, user_avatar, user_password FROM phpbb_users WHERE user_email = ?", [req.body.email])
-        .then(([rows, fields]: any[]): void => {
+        .then(([rows]: any[]): void => {
           let user = rows[0];
           if (this.checkPassword(req.body.password, user.user_password)) {
             Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
