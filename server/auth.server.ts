@@ -68,7 +68,7 @@ export default class Auth {
     this.app.get('/user', cors(this.CORSoptions), (req: any, res: any) => {
       Logger.log(`[${req.connection.remoteAddress}]`,'Requesting user data ->', req.query.username);
       this.connection.promise()
-        .query("SELECT user_id, user_type, user_avatar, user_password FROM phpbb_users WHERE username = ?", [req.query.name])
+        .query("SELECT user_id, user_type, user_avatar FROM phpbb_users WHERE username = ?", [req.query.name])
         .then(([rows, fields]: any[]): void => {
           let user = rows[0];
           res.send(JSON.stringify({
