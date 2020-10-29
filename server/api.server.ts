@@ -63,7 +63,7 @@ export default class API {
     preflightContinue: false,
   };
   wss: WebSocket.Server = new WebSocket.Server({
-    port: 3001
+    port: +process.env.WS_PORT!
   });
   private clients: WebSocket[] = [];
   app: any;
