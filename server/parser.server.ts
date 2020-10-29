@@ -27,7 +27,17 @@ export class Parser {
 
   public parseContent(line: string): string | undefined {
     let r_contentdata = new RegExp("'\(.*)'");
-    return line.split(r_contentdata)[1];
+    let parsed = line.split(r_contentdata)[1];
+    if (parsed) {
+      return parsed;
+    } else {
+      parsed = line.split("(\d+) ")[1];
+      if (parsed) {
+        return parsed;
+      } else {
+        return undefined;
+      }
+    }
   }
 
   private splitter(textplane: string): string[] {
