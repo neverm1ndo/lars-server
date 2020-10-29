@@ -28,13 +28,11 @@ export class Watcher {
     this.result$ = new Observable<string>((subscriber) => {
       if (this.watcher) {
         this.watcher.on('change', ( filepath: string ) => {
-          Logger.log(filepath, 'changed');
           fs.readFile(path.resolve(process.cwd(), filepath), { encoding: 'utf8' }, (err, data) => {
             if (err) {
               Logger.error(err)
             } else {
               let split = data.split('\n');
-              Logger.log(split[split.length - 2]);
               subscriber.next(split[split.length - 2]);
             }
           });
