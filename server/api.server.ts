@@ -133,9 +133,8 @@ export default class API {
       Logger.log('Express API server listening on port', HTTP_PORT);
     });
     // https.createServer({
-    //   'key' : ' ',
-    //   'cert' : ' ',
-    //   'ca' : ' '
+    // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
+    // key: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_PRIVKEY_PATH!))
     // }, this.app).listen(HTTPS_PORT, () => {
     //   Logger.log('Express API server listening on port', HTTPS_PORT);
     // });
