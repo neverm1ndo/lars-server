@@ -50,6 +50,7 @@ export default class API {
       'Content-Type',
       'Accept',
       'X-Access-Token',
+      'Authorization'
     ],
     credentials: true,
     methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
@@ -74,19 +75,19 @@ export default class API {
     this.app = express();
     this.app.options('*', cors());
     this.app.set('secret', process.env.ACCESS_TOKEN_SECRET);
-    // this.app.use('/api', jwt({
-    //   secret: this.app.get('secret'),
-    //   algorithms: ['RS256'],
-    //   credentialsRequired: false,
-    //   getToken: (req: any) => {
-    //     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-    //         return req.headers.authorization.split(' ')[1];
-    //     } else if (req.query && req.query.token) {
-    //       return req.query.token;
-    //     }
-    //     return null;
-    //   }
-    // }));
+    this.app.use('/api', jwt({
+      secret: this.app.get('secret'),
+      algorithms: ['RS256'],
+      credentialsRequired: false,
+      getToken: (req: any) => {
+        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+            return req.headers.authorization.split(' ')[1];
+        } else if (req.query && req.query.token) {
+          return req.query.token;
+        }
+        return null;
+      }
+    }));
     mongoose.connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true });
   }
 
@@ -108,14 +109,14 @@ export default class API {
   public init() {
     this.subs();
     this.app.get('/api/uber', cors(this.CORSoptions), (req: any, res: any) => { // TEST function. Could be expensive
-      // if (!req.headers.authorization) return res.sendStatus(401);
+      if (!req.headers.authorization) return res.sendStatus(401);
       LOG_LINE.find({}, (err: any, lines: mongoose.Document[]) => {
         if (err) return Logger.error(err);
         res.send(lines);
         Logger.log('GET |', req.connection.remoteAddress, req.user,'-> LINES [', req.originalUrl, ']');
       });
     });
-    this.app.get('/api/search', (req: any, res: any) => {
+    this.app.get('/api/search', cors(this.CORSoptions), (req: any, res: any) => {
       /** Searching algorythm. Requires data from MongoDB.
           Searching by: * Nickname
                         * Serial numbers
@@ -124,7 +125,7 @@ export default class API {
     **/
     res.sendStatus(200);
     });
-    this.app.get('/api/config-files', (req: any, res: any) => {
+    this.app.get('/api/config-files', cors(this.CORSoptions), (req: any, res: any) => {
       /** Gets configuration files
     **/
     res.sendStatus(200);

@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import bodyParser from 'body-parser';
 import jwt from 'jsonwebtoken';
+import jwte from 'express-jwt';
 import helmet from 'helmet';
 import fs from 'fs';
 import md5 from 'md5';
@@ -29,6 +30,7 @@ export default class Auth {
       'Content-Type',
       'Accept',
       'X-Access-Token',
+      'Authorization'
     ],
     credentials: true,
     methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
@@ -44,6 +46,20 @@ export default class Auth {
   constructor() {
     this.app = express();
     this.app.options('*', cors());
+    this.app.set('secret', process.env.ACCESS_TOKEN_SECRET);
+    this.app.use('/user', jwte({
+      secret: this.app.get('secret'),
+      algorithms: ['RS256'],
+      credentialsRequired: false,
+      getToken: (req: any) => {
+        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+            return req.headers.authorization.split(' ')[1];
+        } else if (req.query && req.query.token) {
+          return req.query.token;
+        }
+        return null;
+      }
+    }));
     this.app.use(express.static(__dirname + '/static'));
     this.app.use(helmet());
     this.connection = mysql.createPool({
@@ -97,7 +113,7 @@ export default class Auth {
               role: user.user_type,
               id: user.user_id,
               avatar: user.user_avatar,
-              token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, process.env.ACCESS_TOKEN_SECRET!)
+              token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, process.env.ACCESS_TOKEN_SECRET!, { algorithm: 'RS256'})
             }));
           }
         })
@@ -108,6 +124,15 @@ export default class Auth {
         })
         .then((): void => this.connection.end());
     });
+        this.app.post('/login2', cors(this.CORSoptions), (req: any, res: any): void => {
+          res.send(JSON.stringify({
+            name: 'TEST',
+            role: 0,
+            id: 0,
+            avatar: 'https://avatars1.githubusercontent.com/u/6806120?s=460&u=4d9f445122df253c138d32175e7b7da1dfe63b05&v=4',
+            token: jwt.sign({ user: 'TEST', role: 0, id: 0 }, process.env.ACCESS_TOKEN_SECRET!, { algorithm: 'RS256'})
+          }));
+        });
     https.createServer({
       cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
       key: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_PRIVKEY_PATH!))
