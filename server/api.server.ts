@@ -7,11 +7,13 @@ import dotenv from 'dotenv';
 import path from 'path';
 import mongoose, { Schema } from 'mongoose';
 import jwt from 'express-jwt';
+import bodyParser from 'body-parser';
 import WebSocket from 'ws';
 import { Parser } from './parser.server';
 import { Watcher } from './watcher';
 
 import { Logger } from './logger';
+import { FSTreeNode } from './FSTree';
 
 import { WSMessage } from './interfaces/ws.message';
 import { LogLine } from './interfaces/logline';
@@ -77,7 +79,7 @@ export default class API {
     this.app.set('secret', process.env.ACCESS_TOKEN_SECRET);
     this.app.use('/api', jwt({
       secret: this.app.get('secret'),
-      algorithms: ['RS256'],
+      algorithms: ['HS256'],
       credentialsRequired: false,
       getToken: (req: any) => {
         if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
@@ -94,6 +96,33 @@ export default class API {
   wsmsg(msg: WSMessage): string {
     return JSON.stringify(msg);
   }
+
+  // private walkDir(dir: string, done: any) {
+  //   var results: any[] = [];
+  //   fs.readdir(dir, (err, list) => {
+  //     if (err) return done(err);
+  //     var pending = list.length;
+  //     if (!pending) return done(null, results);
+  //     list.forEach((file) => {
+  //       let filename = file;
+  //       file = path.resolve(dir, file);
+  //       fs.stat(file, (err: any, stat: any) => {
+  //         if (stat && stat.isDirectory()) {
+  //           let dirItems: any[] = [];
+  //           this.walkDir(file, (err: any, res: any) => {
+  //             results = results.concat(res);
+  //             // dirItems.push({ type: 'file', name: filename });
+  //           });
+  //           results.push({ type: 'dir', name: filename, path: file, items: dirItems, });
+  //           if (!--pending) done(null, results);
+  //         } else {
+  //           dirItems.push({ type: 'file', name: filename, path: file });
+  //           if (!--pending) done(null, results);
+  //         }
+  //       });
+  //     });
+  //   });
+  // }
 
   private subs() {
     Logger.log('Subbing to all events...');
@@ -113,7 +142,7 @@ export default class API {
       LOG_LINE.find({}, (err: any, lines: mongoose.Document[]) => {
         if (err) return Logger.error(err);
         res.send(lines);
-        Logger.log('GET |', req.connection.remoteAddress, req.user,'-> LINES [', req.originalUrl, ']');
+        Logger.log('GET |', req.connection.remoteAddress, '\x1b[94m', JSON.stringify(req.user.user),`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES [', req.originalUrl, ']');
       });
     });
     this.app.get('/api/search', cors(this.CORSoptions), (req: any, res: any) => {
@@ -125,10 +154,38 @@ export default class API {
     **/
     res.sendStatus(200);
     });
-    this.app.get('/api/config-files', cors(this.CORSoptions), (req: any, res: any) => {
-      /** Gets configuration files
-    **/
-    res.sendStatus(200);
+    this.app.get('/api/config-files-tree', cors(this.CORSoptions), (req: any, res: any) => {
+      if (!req.headers.authorization) return res.sendStatus(401);
+      Logger.log('GET |', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
+      let root = FSTreeNode.buildTree(path.resolve(process.cwd(), 'support/'), 'configs');
+      res.send(JSON.stringify(root));
+    });
+    this.app.get('/api/config-file', cors(this.CORSoptions), (req: any, res: any) => {
+      if (!req.headers.authorization) return res.sendStatus(401);
+      Logger.log('GET |', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
+      if (req.query.path) {
+        res.set('Content-Type', 'text/plain');
+        fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
+          if (err) {  res.status(500).send(err) }
+          else { res.send(data) };
+        });
+      }
+    });
+    this.app.put('/api/save-config-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => {
+      if (!req.headers.authorization)  { res.sendStatus(401); return ; }
+      Logger.log('PUT |', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONFIG_FILE', req.body.file.name, '[', req.originalUrl, ']');
+        fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
+          if (err) {  res.status(500).send(err) }
+          else { res.status(200) };
+        });
+    });
+    this.app.delete('/api/delete-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => {
+      if (!req.headers.authorization)  { res.sendStatus(401); return ; }
+      Logger.log('DELETE |', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_FILE', req.body.file.name, '[', req.originalUrl, ']');
+        fs.unlink(req.body.file.path, (err: NodeJS.ErrnoException | null) => {
+          if (err) {  res.status(500).send(err); }
+          else { res.status(200) };
+        });
     });
     http.createServer(this.app).listen(HTTP_PORT, () => {
       Logger.log('Express API server listening on port', HTTP_PORT);
