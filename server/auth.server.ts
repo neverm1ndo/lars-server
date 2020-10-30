@@ -130,7 +130,7 @@ export default class Auth {
             role: 0,
             id: 0,
             avatar: 'https://avatars1.githubusercontent.com/u/6806120?s=460&u=4d9f445122df253c138d32175e7b7da1dfe63b05&v=4',
-            token: jwt.sign({ user: 'TEST', role: 0, id: 0 }, process.env.ACCESS_TOKEN_SECRET!, { algorithm: 'RS256'})
+            token: jwt.sign({ user: 'TEST', role: 0, id: 0 }, process.env.ACCESS_TOKEN_SECRET!.replace(/\\n/gm, '\n'), { algorithm: 'RS256'})
           }));
         });
     https.createServer({
