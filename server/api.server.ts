@@ -97,33 +97,6 @@ export default class API {
     return JSON.stringify(msg);
   }
 
-  // private walkDir(dir: string, done: any) {
-  //   var results: any[] = [];
-  //   fs.readdir(dir, (err, list) => {
-  //     if (err) return done(err);
-  //     var pending = list.length;
-  //     if (!pending) return done(null, results);
-  //     list.forEach((file) => {
-  //       let filename = file;
-  //       file = path.resolve(dir, file);
-  //       fs.stat(file, (err: any, stat: any) => {
-  //         if (stat && stat.isDirectory()) {
-  //           let dirItems: any[] = [];
-  //           this.walkDir(file, (err: any, res: any) => {
-  //             results = results.concat(res);
-  //             // dirItems.push({ type: 'file', name: filename });
-  //           });
-  //           results.push({ type: 'dir', name: filename, path: file, items: dirItems, });
-  //           if (!--pending) done(null, results);
-  //         } else {
-  //           dirItems.push({ type: 'file', name: filename, path: file });
-  //           if (!--pending) done(null, results);
-  //         }
-  //       });
-  //     });
-  //   });
-  // }
-
   private subs() {
     Logger.log('Subbing to all events...');
     this.watcher.result$.pipe(
