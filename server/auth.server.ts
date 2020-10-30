@@ -46,7 +46,7 @@ export default class Auth {
   constructor() {
     this.app = express();
     this.app.options('*', cors());
-    this.app.set('secret', process.env.ACCESS_TOKEN_SECRET);
+    this.app.set('secret', process.env.ACCESS_TOKEN_SECRET!.replace(/\\n/gm, '\n'));
     this.app.use('/user', jwte({
       secret: this.app.get('secret'),
       algorithms: ['RS256'],
@@ -113,7 +113,7 @@ export default class Auth {
               role: user.user_type,
               id: user.user_id,
               avatar: user.user_avatar,
-              token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, process.env.ACCESS_TOKEN_SECRET!, { algorithm: 'RS256'})
+              token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, process.env.ACCESS_TOKEN_SECRET!.replace(/\\n/gm, '\n'), { algorithm: 'RS256'})
             }));
           }
         })
