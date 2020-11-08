@@ -22,8 +22,8 @@ import { map } from 'rxjs/operators';
 
 dotenv.config({ path:path.resolve(process.cwd(), 'server/.env') });
 
-const HTTP_PORT: number = 3080;
-const HTTPS_PORT: number = 3443;
+const HTTP_PORT: number = 8080;
+const HTTPS_PORT: number = 8443;
 
 const LOG_LINE = mongoose.model( 'LogLine', new Schema ({
   unix: { type: Number, required: true },
@@ -179,14 +179,14 @@ export default class API {
         });
     });
     http.createServer(this.app).listen(HTTP_PORT, () => {
-      Logger.log('Express HTTP API server listening on port', HTTP_PORT);
+      Logger.log('HTTP API server listening on port', HTTP_PORT);
     });
-    // https.createServer({
+    https.createServer({
     // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
-    // key: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_PRIVKEY_PATH!))
-    // }, this.app).listen(HTTPS_PORT, () => {
-    //   Logger.log('Express HTTPS API server listening on port', HTTPS_PORT);
-    // });
+    key: fs.readFileSync(process.env.SSL_PRIVKEY_PATH!)
+    }, this.app).listen(HTTPS_PORT, () => {
+      Logger.log('HTTPS API server listening on port', HTTPS_PORT);
+    });
   }
   public wssInit() {
     this.wss.on('connection', (ws: any, req: any) => {

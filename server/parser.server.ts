@@ -1,5 +1,6 @@
 import { LogLine } from './interfaces/logline';
 import { GeoData } from './interfaces/geodata';
+import iconv from 'iconv-lite';
 
 export class Parser {
 
@@ -47,9 +48,12 @@ export class Parser {
     return lines;
   }
 
+  public toUTF8(string: string): string {
+    return iconv.decode(Buffer.from(string), 'win1251');
+  }
   public parse(textplane: string): LogLine[] {
     let parsed: LogLine[] = [];
-    this.splitter(textplane).forEach((line: string) => {
+    this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
       let splits = line.split(' ');
       if (splits[0] !== '') {
         parsed.push({
