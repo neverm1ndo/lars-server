@@ -104,7 +104,7 @@ export default class API {
     ).subscribe((unparsed: string) => {
       this.parser.parse(unparsed).forEach((line: LogLine) => {
         let ln = new LOG_LINE(line);
-        ln.save().then(() => { /** Logger.log('Line', line.process, 'saved') **/ });
+        ln.save();
       })
     }, (err) => { Logger.error(err) });
   }
@@ -112,30 +112,47 @@ export default class API {
     this.subs();
     this.app.get('/api/uber', cors(this.CORSoptions), (req: any, res: any) => { // TEST function. Could be expensive
       if (!req.headers.authorization) return res.sendStatus(401);
+      Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES [', req.originalUrl, ']');
       LOG_LINE.find({}, (err: any, lines: mongoose.Document[]) => {
         if (err) return Logger.error(err);
         res.send(lines);
-        Logger.log('GET |', req.connection.remoteAddress, '\x1b[94m', JSON.stringify(req.user.user),`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES [', req.originalUrl, ']');
       });
     });
     this.app.get('/api/search', cors(this.CORSoptions), (req: any, res: any) => {
-      /** Searching algorythm. Requires data from MongoDB.
-          Searching by: * Nickname
-                        * Serial numbers
-                        * Date
-                        * IP
-    **/
-    res.sendStatus(200);
+      if (!req.headers.authorization) return res.sendStatus(401);
+        Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SEARCH\n',
+                   '                            └ ', JSON.stringify(req.query));
+        if (req.query.ip) {
+          LOG_LINE.find({"geo.ip": req.query.ip}, (err: any, lines: mongoose.Document[]) => {
+            if (err) return Logger.error(err);
+            res.send(lines);
+          });
+          return true;
+        }
+        if (req.query.nickname) {
+          LOG_LINE.find(req.query, (err: any, lines: mongoose.Document[]) => {
+            if (err) return Logger.error(err);
+            res.send(lines);
+          });
+          return true;
+        }
+        if (req.query.as && req.query.ss) {
+          LOG_LINE.find({"geo.as": req.query.as, "geo.ss": req.query.ss}, (err: any, lines: mongoose.Document[]) => {
+            if (err) return Logger.error(err);
+            res.send(lines);
+          });
+          return true;
+        }
     });
     this.app.get('/api/config-files-tree', cors(this.CORSoptions), (req: any, res: any) => {
       if (!req.headers.authorization) return res.sendStatus(401);
-      Logger.log('GET |', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
-      let root = FSTreeNode.buildTree(path.resolve(process.cwd(), 'support/'), 'configs');
+      Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
+      let root = FSTreeNode.buildTree(process.env.CFG_PATH!, 'configs');
       res.send(JSON.stringify(root));
     });
     this.app.get('/api/config-file', cors(this.CORSoptions), (req: any, res: any) => {
       if (!req.headers.authorization) return res.sendStatus(401);
-      Logger.log('GET |', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
+      Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
       if (req.query.path) {
         res.set('Content-Type', 'text/plain');
         fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
@@ -144,30 +161,31 @@ export default class API {
         });
       }
     });
-    this.app.put('/api/save-config-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => {
+    this.app.post('/api/save-config-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => {
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('PUT |', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONFIG_FILE', req.body.file.name, '[', req.originalUrl, ']');
+      Logger.log('POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONFIG_FILE', req.body.file.path, '[', req.originalUrl, ']');
         fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
-          if (err) {  res.status(500).send(err) }
-          else { res.status(200) };
+          if (err) { res.status(500).send(err) }
+          else { res.send(`File ${req.body.file.path} successfully saved`) };
         });
     });
     this.app.delete('/api/delete-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => {
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('DELETE |', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_FILE', req.body.file.name, '[', req.originalUrl, ']');
+      res.set('Content-Type', 'text/plain');
+      Logger.log('DELETE │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_FILE', req.body.file.name, '[', req.originalUrl, ']');
         fs.unlink(req.body.file.path, (err: NodeJS.ErrnoException | null) => {
           if (err) {  res.status(500).send(err); }
           else { res.status(200) };
         });
     });
     http.createServer(this.app).listen(HTTP_PORT, () => {
-      Logger.log('Express API server listening on port', HTTP_PORT);
+      Logger.log('Express HTTP API server listening on port', HTTP_PORT);
     });
     // https.createServer({
     // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
     // key: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_PRIVKEY_PATH!))
     // }, this.app).listen(HTTPS_PORT, () => {
-    //   Logger.log('Express API server listening on port', HTTPS_PORT);
+    //   Logger.log('Express HTTPS API server listening on port', HTTPS_PORT);
     // });
   }
   public wssInit() {
