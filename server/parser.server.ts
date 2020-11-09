@@ -59,9 +59,9 @@ export class Parser {
 
   public toUTF8(string: string | Buffer): string {
     if (typeof string == 'string') {
-      return iconv.decode(Buffer.from(string), 'utf8');
+      return iconv.encode(iconv.decode(Buffer.from(string, 'binary'), 'win1251'), 'utf8').toString();
     } else {
-      return iconv.decode(string, 'utf8');
+      return iconv.encode(iconv.decode(string, 'win1251'), 'utf8').toString();
     }
   }
   public parse(textplane: string | Buffer): LogLine[] {
