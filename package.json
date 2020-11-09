@@ -9,7 +9,7 @@
     "tsc": "tsc",
     "build": "npm-run-all clean tsc",
     "server": "node ./build/libertylogs/server/main.js",
-    "server:fl": "node ./build/libertylogs/server/main.js --first-launch",
+    "server:fl": "node ./build/libertylogs/server/main.js --first-launch"
   },
   "repository": {
     "type": "git",
