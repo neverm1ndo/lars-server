@@ -11,7 +11,6 @@ import bodyParser from 'body-parser';
 import WebSocket from 'ws';
 import { Parser } from './parser.server';
 import { Watcher } from './watcher';
-
 import { Logger } from './logger';
 import { FSTreeNode } from './FSTree';
 
@@ -72,8 +71,10 @@ export default class API {
   app: any;
   parser: Parser = new Parser();
   watcher: Watcher = new Watcher();
+  first: boolean = false;
 
-  constructor() {
+  constructor(first: boolean) {
+    this.first = first;
     this.app = express();
     this.app.options('*', cors());
     this.app.set('secret', process.env.ACCESS_TOKEN_SECRET);
@@ -97,6 +98,25 @@ export default class API {
     return JSON.stringify(msg);
   }
 
+  private firstLaunch(dir: string): void {
+    fs.readdirSync(dir).forEach(file => {
+      if (typeof file == 'string') {
+        let fullPath = path.join(dir, file);
+        if (fs.lstatSync(fullPath).isDirectory()) {
+          this.firstLaunch(fullPath);
+        } else {
+          fs.readFile(fullPath,(err: NodeJS.ErrnoException | null, buffer: Buffer) => {
+            if (err) return err;
+            this.parser.parse(buffer).forEach((line: LogLine) => {
+              let ln = new LOG_LINE(line);
+              ln.save();
+            });
+          })
+        }
+      }
+    });
+  }
+
   private subs() {
     Logger.log('Subbing to all events...');
     this.watcher.result$.pipe(
@@ -109,6 +129,9 @@ export default class API {
     }, (err) => { Logger.error(err) });
   }
   public init() {
+    if (this.first) {
+      this.firstLaunch(process.env.LOGS_PATH!);
+    }
     this.subs();
     this.app.get('/api/uber', cors(this.CORSoptions), (req: any, res: any) => { // TEST function. Could be expensive
       if (!req.headers.authorization) return res.sendStatus(401);

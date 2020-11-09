@@ -48,10 +48,14 @@ export class Parser {
     return lines;
   }
 
-  public toUTF8(string: string): string {
-    return iconv.decode(Buffer.from(string), 'win1251');
+  public toUTF8(string: string | Buffer): string {
+    if (typeof string == 'string') {
+      return iconv.decode(Buffer.from(string), 'utf8');
+    } else {
+      return iconv.decode(string, 'utf8');
+    }
   }
-  public parse(textplane: string): LogLine[] {
+  public parse(textplane: string | Buffer): LogLine[] {
     let parsed: LogLine[] = [];
     this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
       let splits = line.split(' ');
