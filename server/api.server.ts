@@ -204,12 +204,12 @@ export default class API {
     http.createServer(this.app).listen(HTTP_PORT, () => {
       Logger.log('HTTP API server listening on port', HTTP_PORT);
     });
-    https.createServer({
-    // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
-    key: fs.readFileSync(process.env.SSL_PRIVKEY_PATH!)
-    }, this.app).listen(HTTPS_PORT, () => {
-      Logger.log('HTTPS API server listening on port', HTTPS_PORT);
-    });
+    // https.createServer({
+    // // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
+    // key: fs.readFileSync(process.env.SSL_PRIVKEY_PATH!)
+    // }, this.app).listen(HTTPS_PORT, () => {
+    //   Logger.log('HTTPS API server listening on port', HTTPS_PORT);
+    // });
   }
   public wssInit() {
     this.wss.on('connection', (ws: any, req: any) => {
