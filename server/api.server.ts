@@ -64,9 +64,6 @@ export default class API {
     },
     preflightContinue: false,
   };
-  wss: WebSocket.Server = new WebSocket.Server({
-    port: +process.env.WS_PORT!
-  });
   private clients: WebSocket[] = [];
   app: any;
   parser: Parser = new Parser();
@@ -99,19 +96,22 @@ export default class API {
   }
 
   private firstLaunch(dir: string): void {
-    fs.readdirSync(dir).forEach(file => {
-      if (typeof file == 'string') {
-        let fullPath = path.join(dir, file);
-        if (fs.lstatSync(fullPath).isDirectory()) {
-          this.firstLaunch(fullPath);
-        } else {
-          fs.readFile(fullPath,(err: NodeJS.ErrnoException | null, buffer: Buffer) => {
-            if (err) return err;
-            this.parser.parse(buffer).forEach((line: LogLine) => {
-              let ln = new LOG_LINE(line);
-              ln.save();
-            });
-          })
+    fs.readdir(dir, (err: NodeJS.ErrnoException | null, dirs: any[]) => {
+      if (err) return err;
+      for (let i = 0; i < dirs.length; i++) {
+        if (typeof dirs[i] == 'string') {
+          let fullPath = path.join(dir, dirs[i]);
+          if (fs.lstatSync(fullPath).isDirectory()) {
+            this.firstLaunch(fullPath);
+          } else {
+            fs.readFile(fullPath,(err: NodeJS.ErrnoException | null, buffer: Buffer) => {
+              if (err) return err;
+              this.parser.parse(buffer).forEach((line: LogLine) => {
+                let ln = new LOG_LINE(line);
+                ln.save();
+              });
+            })
+          }
         }
       }
     });
@@ -141,33 +141,49 @@ export default class API {
         res.send(lines);
       });
     });
-    this.app.get('/api/search', cors(this.CORSoptions), (req: any, res: any) => {
+    this.app.get('/api/last', cors(this.CORSoptions), (req: any, res: any) => { // GET last lines. Default : 40
       if (!req.headers.authorization) return res.sendStatus(401);
+      let lim = 40;
+      let page = 0;
+      if (req.query.lim) lim = +req.query.lim;
+      if (req.query.page) page = +req.query.page;
+      Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES', lim, page,' [', req.originalUrl, ']');
+      LOG_LINE.find({}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page }, (err: any, lines: mongoose.Document[]) => {
+        if (err) return Logger.error(err);
+        res.send(lines);
+      });
+    });
+    this.app.get('/api/search', cors(this.CORSoptions), (req: any, res: any) => { // GET Search by nickname, ip, serals
+      if (!req.headers.authorization) return res.sendStatus(401);
+      let lim = 40;
+      let page = 0;
+      if (req.query.lim) lim = +req.query.lim;
+      if (req.query.page) page = +req.query.page;
         Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SEARCH\n',
                    '                            └ ', JSON.stringify(req.query));
         if (req.query.ip) {
-          LOG_LINE.find({"geo.ip": req.query.ip}, (err: any, lines: mongoose.Document[]) => {
+          LOG_LINE.find({"geo.ip": req.query.ip}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: mongoose.Document[]) => {
             if (err) return Logger.error(err);
             res.send(lines);
           });
           return true;
         }
         if (req.query.nickname) {
-          LOG_LINE.find(req.query, (err: any, lines: mongoose.Document[]) => {
+            LOG_LINE.find({nickname: req.query.nickname}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: mongoose.Document[]) => {
             if (err) return Logger.error(err);
             res.send(lines);
           });
           return true;
         }
         if (req.query.as && req.query.ss) {
-          LOG_LINE.find({"geo.as": req.query.as, "geo.ss": req.query.ss}, (err: any, lines: mongoose.Document[]) => {
+          LOG_LINE.find({"geo.as": req.query.as, "geo.ss": req.query.ss}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: mongoose.Document[]) => {
             if (err) return Logger.error(err);
             res.send(lines);
           });
           return true;
         }
     });
-    this.app.get('/api/config-files-tree', cors(this.CORSoptions), (req: any, res: any) => {
+    this.app.get('/api/config-files-tree', cors(this.CORSoptions), (req: any, res: any) => { // GET Files(configs) and directories tree
       if (!req.headers.authorization) return res.sendStatus(401);
       Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
       let root = FSTreeNode.buildTree(process.env.CFG_PATH!, 'configs');
@@ -184,7 +200,7 @@ export default class API {
         });
       }
     });
-    this.app.post('/api/save-config-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => {
+    this.app.post('/api/save-config-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // POST Rewrite changed config(any) file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
       Logger.log('POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONFIG_FILE', req.body.file.path, '[', req.originalUrl, ']');
         fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
@@ -192,7 +208,7 @@ export default class API {
           else { res.send(`File ${req.body.file.path} successfully saved`) };
         });
     });
-    this.app.delete('/api/delete-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => {
+    this.app.delete('/api/delete-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // DELETE Removes config file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
       res.set('Content-Type', 'text/plain');
       Logger.log('DELETE │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_FILE', req.body.file.name, '[', req.originalUrl, ']');
@@ -204,33 +220,39 @@ export default class API {
     http.createServer(this.app).listen(HTTP_PORT, () => {
       Logger.log('HTTP API server listening on port', HTTP_PORT);
     });
-    // https.createServer({
+    // let httpsServer = https.createServer({
     // // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
     // key: fs.readFileSync(process.env.SSL_PRIVKEY_PATH!)
     // }, this.app).listen(HTTPS_PORT, () => {
     //   Logger.log('HTTPS API server listening on port', HTTPS_PORT);
     // });
-  }
-  public wssInit() {
-    this.wss.on('connection', (ws: any, req: any) => {
-      this.clients.push(ws);
-      Logger.log(ws._socket.remoteAddress, 'connected to the LAS');
-      ws.on('message', (message: string) => {
-        switch (JSON.parse(message).event) {
-          case 'TEST': {
-            break;
-          }
-          default: break;
-        }
-      });
-      ws.send(this.wsmsg({event: 'client-connection', msg: `> You successfully conected to the Liberty Admin Server! IP: ${ws._socket.remoteAddress}`}));
-    });
-    this.wss.on('close', (ws: any) => {
-      this.clients.forEach((client: any, index: number) => {
-        if (ws._socket.remoteAddress == client._socket.remoteAddress) {
-          this.clients.splice(index, 0);
-        };
-      });
-    });
+    //
+    // /** WEBSOCKET SERVICE **/
+    // let wss = new WebSocket.Server({
+    //   server: httpsServer
+    // });
+    // wss.on('connection', (ws: any) => {
+    //   this.clients.push(ws);
+    //   Logger.log(ws._socket.remoteAddress, 'connected to the LAS');
+    //   ws.on('message', (message: string) => {
+    //     switch (JSON.parse(message).event) {
+    //       case 'TEST': {
+    //         break;
+    //       }
+    //       default: break;
+    //     }
+    //   });
+    //   ws.send(this.wsmsg({event: 'client-connection', msg: `> You successfully conected to the Liberty Admin Server! IP: ${ws._socket.remoteAddress}`}));
+    // });
+    // wss.on('close', (ws: any) => {
+    //   this.clients.forEach((client: any, index: number) => {
+    //     if (ws._socket.remoteAddress == client._socket.remoteAddress) {
+    //       this.clients.splice(index, 0);
+    //     };
+    //   });
+    // });
+    // wss.on('error', (err) => {
+    //   Logger.error(err);
+    // });
   }
 }
