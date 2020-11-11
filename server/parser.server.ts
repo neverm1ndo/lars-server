@@ -44,7 +44,11 @@ export class Parser {
     } else {
       parsed = line.split(r_contentdata2)[2].trim();
       if (parsed) {
-        return parsed;
+        if (!parsed.includes('{')) {
+          return parsed;
+        } else {
+          return undefined;
+        }
       } else {
         return undefined;
       }
@@ -85,7 +89,7 @@ export class Parser {
         }
         result.geo = this.parseGeo(line);
         result.content = this.parseContent(line);
-        if (parseInt(splits[3]) != null) {
+        if (splits[3].length > 3) {
           result.nickname = splits[3];
         } else {
           for (let i = 3; i < splits.length; i++) {
@@ -95,7 +99,11 @@ export class Parser {
             }
           }
         }
+        // console.log(result);
+
         parsed.push(result);
+      } else {
+        // console.log(splits);
       }
     });
     return parsed;
