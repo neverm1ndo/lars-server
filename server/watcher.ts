@@ -13,7 +13,7 @@ export class Watcher {
               fs.readdir(path.join(__dirname, `./log/${new Date().getFullYear()}/09`), (err: any, files: string[]) => {
               if (err) {
                 subscriber.error('Cant scan directory');
-                Logger.error('Cant scan directory', err);
+                Logger.log('error', 'Cant scan directory', err);
               } else {
                 subscriber.next(files[files.length]);
               };
@@ -30,7 +30,7 @@ export class Watcher {
         this.watcher.on('change', ( filepath: string ) => {
           fs.readFile(path.resolve(process.cwd(), filepath), { encoding: 'utf8' }, (err, data) => {
             if (err) {
-              Logger.error(err)
+              Logger.log('error', err)
             } else {
               let split = data.split('\n');
               subscriber.next(split[split.length - 2]);
