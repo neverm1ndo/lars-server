@@ -126,7 +126,7 @@ export default class API {
         let ln = new LOG_LINE(line);
         ln.save();
       })
-    }, (err) => { Logger.error(err) });
+    }, (err) => { Logger.log('error', err) });
   }
   public init() {
     if (this.first) {
@@ -137,7 +137,7 @@ export default class API {
       if (!req.headers.authorization) return res.sendStatus(401);
       Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES [', req.originalUrl, ']');
       LOG_LINE.find({}, (err: any, lines: mongoose.Document[]) => {
-        if (err) return Logger.error(err);
+        if (err) return Logger.log('error', err);
         res.send(lines);
       });
     });
@@ -149,7 +149,7 @@ export default class API {
       if (req.query.page) page = +req.query.page;
       Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES', lim, page,' [', req.originalUrl, ']');
       LOG_LINE.find({}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page }, (err: any, lines: mongoose.Document[]) => {
-        if (err) return Logger.error(err);
+        if (err) return Logger.log('error', err);
         res.send(lines);
       });
     });
@@ -163,21 +163,21 @@ export default class API {
                    '                            └ ', JSON.stringify(req.query));
         if (req.query.ip) {
           LOG_LINE.find({"geo.ip": req.query.ip}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: mongoose.Document[]) => {
-            if (err) return Logger.error(err);
+            if (err) return Logger.log('error', err);
             res.send(lines);
           });
           return true;
         }
         if (req.query.nickname) {
             LOG_LINE.find({nickname: req.query.nickname}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: mongoose.Document[]) => {
-            if (err) return Logger.error(err);
+            if (err) return Logger.log('error', err);
             res.send(lines);
           });
           return true;
         }
         if (req.query.as && req.query.ss) {
           LOG_LINE.find({"geo.as": req.query.as, "geo.ss": req.query.ss}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: mongoose.Document[]) => {
-            if (err) return Logger.error(err);
+            if (err) return Logger.log('error', err);
             res.send(lines);
           });
           return true;

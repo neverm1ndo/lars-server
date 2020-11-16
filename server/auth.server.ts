@@ -95,8 +95,8 @@ export default class Auth {
         })
         .catch((err: any): void => {
           res.sendStatus(401).send('Unauthorized request');
-          Logger.error(`[${req.connection.remoteAddress}]`, 401, 'Unauthorized request ->', req.query)
-          Logger.error(err);
+          Logger.log('error', `[${req.connection.remoteAddress}]`, 401, 'Unauthorized request ->', req.query)
+          Logger.log('error', err);
         })
         .then((): void => this.connection.end());
     });
@@ -119,8 +119,8 @@ export default class Auth {
         })
         .catch((err: any): void => {
           res.sendStatus(401).send('Failed authorization');
-          Logger.error(`[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email)
-          Logger.error(err);
+          Logger.log('error', `[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email)
+          Logger.log('error', err);
         })
         .then((): void => this.connection.end());
     });
