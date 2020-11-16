@@ -82,7 +82,7 @@ export default class Auth {
   }
   init(): void {
     this.app.get('/user', cors(this.CORSoptions), (req: any, res: any) => {
-      Logger.log(`[${req.connection.remoteAddress}]`,'Requesting user data ->', req.query.username);
+      Logger.log('default', `[${req.connection.remoteAddress}]`,'Requesting user data ->', req.query.username);
       this.connection.promise()
         .query("SELECT user_id, user_type, user_avatar FROM phpbb_users WHERE username = ?", [req.query.name])
         .then(([rows]: any[]): void => {
@@ -101,7 +101,7 @@ export default class Auth {
         .then((): void => this.connection.end());
     });
     this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(req: any, res: any): void => {
-      Logger.log('Trying to authorize', req.body.email);
+      Logger.log('default', 'Trying to authorize', req.body.email);
       this.connection.promise()
         .query("SELECT username, user_id, user_type, user_avatar, user_password FROM phpbb_users WHERE user_email = ?", [req.body.email])
         .then(([rows]: any[]): void => {
@@ -112,7 +112,7 @@ export default class Auth {
               name: user.username,
               role: user.user_type,
               id: user.user_id,
-              avatar: user.user_avatar,
+              avatar: 'http://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar,
               token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, this.app.get('secret'), { algorithm: 'HS256'})
             }));
           }
@@ -124,23 +124,29 @@ export default class Auth {
         })
         .then((): void => this.connection.end());
     });
-        this.app.post('/login2', cors(this.CORSoptions), (req: any, res: any): void => {
-          res.send(JSON.stringify({
-            name: 'TEST',
-            role: 0,
-            id: 0,
-            avatar: 'https://avatars1.githubusercontent.com/u/6806120?s=460&u=4d9f445122df253c138d32175e7b7da1dfe63b05&v=4',
-            token: jwt.sign({ user: 'TEST', role: 0, id: 0 }, this.app.get('secret'), { algorithm: 'HS256'})
-          }));
+        this.app.post('/login-secret', bodyParser.json(), cors(this.CORSoptions), (req: any, res: any): void => {
+          if (req.body.password === this.app.get('secret')) {
+            Logger.log('default', `[${req.connection.remoteAddress}]`, 'Login in by the test service account...');
+            res.send(JSON.stringify({
+              name: 'TEST',
+              role: 0,
+              id: 0,
+              avatar: 'https://avatars1.githubusercontent.com/u/6806120?s=460&u=4d9f445122df253c138d32175e7b7da1dfe63b05&v=4',
+              token: jwt.sign({ user: 'TEST', role: 0, id: 0 }, this.app.get('secret'), { algorithm: 'HS256'})
+            }));
+          } else {
+            Logger.log('error', 'Failed login in by the test service account');
+            res.sendStatus(401).send('Failed authorization');
+          }
         });
     https.createServer({
       cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
       key: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_PRIVKEY_PATH!))
     }, this.app).listen(HTTPS_PORT, () => {
-      Logger.log('Auth HTTPS server listening on ', HTTPS_PORT, ' port');
+      Logger.log('default', 'Auth HTTPS server listening on ', HTTPS_PORT, ' port');
     });
     http.createServer(this.app).listen(HTTP_PORT, () => {
-      Logger.log('Auth HTTP server listening on ', HTTP_PORT, ' port');
+      Logger.log('default', 'Auth HTTP server listening on ', HTTP_PORT, ' port');
     });
   }
 }

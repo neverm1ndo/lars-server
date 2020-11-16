@@ -118,7 +118,7 @@ export default class API {
   }
 
   private subs() {
-    Logger.log('Subbing to all events...');
+    Logger.log('default', 'Subbing to all events...');
     this.watcher.result$.pipe(
       map(val => val.toString())
     ).subscribe((unparsed: string) => {
@@ -135,7 +135,7 @@ export default class API {
     this.subs();
     this.app.get('/api/uber', cors(this.CORSoptions), (req: any, res: any) => { // TEST function. Could be expensive
       if (!req.headers.authorization) return res.sendStatus(401);
-      Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES [', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES [', req.originalUrl, ']');
       LOG_LINE.find({}, (err: any, lines: mongoose.Document[]) => {
         if (err) return Logger.log('error', err);
         res.send(lines);
@@ -147,7 +147,7 @@ export default class API {
       let page = 0;
       if (req.query.lim) lim = +req.query.lim;
       if (req.query.page) page = +req.query.page;
-      Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES', lim, page,' [', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES', lim, page,' [', req.originalUrl, ']');
       LOG_LINE.find({}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page }, (err: any, lines: mongoose.Document[]) => {
         if (err) return Logger.log('error', err);
         res.send(lines);
@@ -159,7 +159,7 @@ export default class API {
       let page = 0;
       if (req.query.lim) lim = +req.query.lim;
       if (req.query.page) page = +req.query.page;
-        Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SEARCH\n',
+        Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SEARCH\n',
                    '                            └ ', JSON.stringify(req.query));
         if (req.query.ip) {
           LOG_LINE.find({"geo.ip": req.query.ip}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: mongoose.Document[]) => {
@@ -185,13 +185,13 @@ export default class API {
     });
     this.app.get('/api/config-files-tree', cors(this.CORSoptions), (req: any, res: any) => { // GET Files(configs) and directories tree
       if (!req.headers.authorization) return res.sendStatus(401);
-      Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
       let root = FSTreeNode.buildTree(process.env.CFG_PATH!, 'configs');
       res.send(JSON.stringify(root));
     });
     this.app.get('/api/config-file', cors(this.CORSoptions), (req: any, res: any) => {
       if (!req.headers.authorization) return res.sendStatus(401);
-      Logger.log('GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
       if (req.query.path) {
         res.set('Content-Type', 'text/plain');
         fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
@@ -202,7 +202,7 @@ export default class API {
     });
     this.app.post('/api/save-config-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // POST Rewrite changed config(any) file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONFIG_FILE', req.body.file.path, '[', req.originalUrl, ']');
+      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONFIG_FILE', req.body.file.path, '[', req.originalUrl, ']');
         fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
           if (err) { res.status(500).send(err) }
           else { res.send(`File ${req.body.file.path} successfully saved`) };
@@ -211,14 +211,14 @@ export default class API {
     this.app.delete('/api/delete-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // DELETE Removes config file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
       res.set('Content-Type', 'text/plain');
-      Logger.log('DELETE │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_FILE', req.body.file.name, '[', req.originalUrl, ']');
+      Logger.log('default', 'DELETE │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_FILE', req.body.file.name, '[', req.originalUrl, ']');
         fs.unlink(req.body.file.path, (err: NodeJS.ErrnoException | null) => {
           if (err) {  res.status(500).send(err); }
           else { res.status(200) };
         });
     });
     http.createServer(this.app).listen(HTTP_PORT, () => {
-      Logger.log('HTTP API server listening on port', HTTP_PORT);
+      Logger.log('default', 'HTTP API server listening on port', HTTP_PORT);
     });
     // let httpsServer = https.createServer({
     // // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),

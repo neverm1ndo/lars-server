@@ -35,7 +35,7 @@ export class Logger {
       });
     });
   }
-  public static log(type: string = 'default', ...args: any[]): void {
+  public static log([type]: string = 'default', ...args: any[]): void {
     const now = new Date;
     process.stdout.write(' \x1b[1m' + this.timestamp(now) + '\x1b[0m');
     switch (type) {
