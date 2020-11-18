@@ -2,12 +2,16 @@ import express from 'express';
 import https from 'https';
 import http from 'http';
 import cors from 'cors';
+import mysql from 'mysql2';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import path from 'path';
 import mongoose, { Schema } from 'mongoose';
-import jwt from 'express-jwt';
+import jwt from 'jsonwebtoken';
+import jwte from 'express-jwt';
+import md5 from 'md5';
 import bodyParser from 'body-parser';
+import helmet from 'helmet';
 import WebSocket from 'ws';
 import { Parser } from './parser.server';
 import { Watcher } from './watcher';
@@ -66,6 +70,7 @@ export default class API {
   };
   private clients: WebSocket[] = [];
   app: any;
+  connection: any;
   parser: Parser = new Parser();
   watcher: Watcher = new Watcher();
   first: boolean = false;
@@ -75,7 +80,7 @@ export default class API {
     this.app = express();
     this.app.options('*', cors());
     this.app.set('secret', process.env.ACCESS_TOKEN_SECRET);
-    this.app.use('/api', jwt({
+    this.app.use('/api', '/user', jwte({
       secret: this.app.get('secret'),
       algorithms: ['HS256'],
       credentialsRequired: false,
@@ -88,7 +93,15 @@ export default class API {
         return null;
       }
     }));
+    this.app.use(helmet());
+    this.app.use(express.static(path.resolve(process.cwd(), '/app')));
     mongoose.connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true });
+    this.connection = mysql.createPool({
+      host: process.env.DB_ADDRESS,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      password: process.env.DB_PASSWORD
+    });
   }
 
   wsmsg(msg: WSMessage): string {
@@ -117,6 +130,17 @@ export default class API {
     });
   }
 
+  checkPassword(pass: string, hash: string): boolean {
+    let salt = hash.slice(0, hash.length - 32);
+    let realPassword = hash.slice(hash.length - 32, hash.length);
+    let password = md5(salt + pass);
+    if (password === realPassword) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   private subs() {
     Logger.log('default', 'Subbing to all events...');
     this.watcher.result$.pipe(
@@ -133,6 +157,64 @@ export default class API {
       this.firstLaunch(process.env.LOGS_PATH!);
     }
     this.subs();
+  this.app.get('/user', cors(this.CORSoptions), (req: any, res: any) => {
+    Logger.log('default', `[${req.connection.remoteAddress}]`,'Requesting user data ->', req.query.username);
+    this.connection.promise()
+      .query("SELECT user_id, user_type, user_avatar FROM phpbb_users WHERE username = ?", [req.query.name])
+      .then(([rows]: any[]): void => {
+        let user = rows[0];
+        res.send(JSON.stringify({
+          role: user.user_type,
+          id: user.user_id,
+          avatar: user.user_avatar
+        }));
+      })
+      .catch((err: any): void => {
+        res.sendStatus(401).send('Unauthorized request');
+        Logger.log('error', `[${req.connection.remoteAddress}]`, 401, 'Unauthorized request ->', req.query)
+        Logger.log('error', err);
+      })
+      .then((): void => this.connection.end());
+  });
+  this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(req: any, res: any): void => {
+    Logger.log('default', 'Trying to authorize', req.body.email);
+    this.connection.promise()
+      .query("SELECT username, user_id, user_type, user_avatar, user_password FROM phpbb_users WHERE user_email = ?", [req.body.email])
+      .then(([rows]: any[]): void => {
+        let user = rows[0];
+        if (this.checkPassword(req.body.password, user.user_password)) {
+          Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
+          res.send(JSON.stringify({
+            name: user.username,
+            role: user.user_type,
+            id: user.user_id,
+            avatar: 'http://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar,
+            token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, this.app.get('secret'), { algorithm: 'HS256'})
+          }));
+        }
+      })
+      .catch((err: any): void => {
+        res.sendStatus(401).send('Failed authorization');
+        Logger.log('error', `[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email)
+        Logger.log('error', err);
+      })
+      .then((): void => this.connection.end());
+  });
+      this.app.post('/login-secret', bodyParser.json(), cors(this.CORSoptions), (req: any, res: any): void => {
+        if (req.body.password === this.app.get('secret')) {
+          Logger.log('default', `[${req.connection.remoteAddress}]`, 'Login in by the test service account...');
+          res.send(JSON.stringify({
+            name: 'TEST',
+            role: 0,
+            id: 0,
+            avatar: 'https://avatars1.githubusercontent.com/u/6806120?s=460&u=4d9f445122df253c138d32175e7b7da1dfe63b05&v=4',
+            token: jwt.sign({ user: 'TEST', role: 0, id: 0 }, this.app.get('secret'), { algorithm: 'HS256'})
+          }));
+        } else {
+          Logger.log('error', 'Failed login in by the test service account');
+          res.sendStatus(401).send('Failed authorization');
+        }
+      });
     this.app.get('/api/uber', cors(this.CORSoptions), (req: any, res: any) => { // TEST function. Could be expensive
       if (!req.headers.authorization) return res.sendStatus(401);
       Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES [', req.originalUrl, ']');
@@ -218,41 +300,41 @@ export default class API {
         });
     });
     http.createServer(this.app).listen(HTTP_PORT, () => {
-      Logger.log('default', 'HTTP API server listening on port', HTTP_PORT);
+      Logger.log('default', 'HTTP LL server listening on port', HTTP_PORT);
     });
     // let httpsServer = https.createServer({
     // // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
     // key: fs.readFileSync(process.env.SSL_PRIVKEY_PATH!)
     // }, this.app).listen(HTTPS_PORT, () => {
-    //   Logger.log('HTTPS API server listening on port', HTTPS_PORT);
+    //   Logger.log('HTTPS LL server listening on port', HTTPS_PORT);
     // });
     //
-    // /** WEBSOCKET SERVICE **/
-    // let wss = new WebSocket.Server({
-    //   server: httpsServer
-    // });
-    // wss.on('connection', (ws: any) => {
-    //   this.clients.push(ws);
-    //   Logger.log(ws._socket.remoteAddress, 'connected to the LAS');
-    //   ws.on('message', (message: string) => {
-    //     switch (JSON.parse(message).event) {
-    //       case 'TEST': {
-    //         break;
-    //       }
-    //       default: break;
-    //     }
-    //   });
-    //   ws.send(this.wsmsg({event: 'client-connection', msg: `> You successfully conected to the Liberty Admin Server! IP: ${ws._socket.remoteAddress}`}));
-    // });
-    // wss.on('close', (ws: any) => {
-    //   this.clients.forEach((client: any, index: number) => {
-    //     if (ws._socket.remoteAddress == client._socket.remoteAddress) {
-    //       this.clients.splice(index, 0);
-    //     };
-    //   });
-    // });
-    // wss.on('error', (err) => {
-    //   Logger.error(err);
-    // });
+    /** WEBSOCKET SERVICE **/
+    let wss = new WebSocket.Server({
+      port: 3000
+    });
+    wss.on('connection', (ws: any) => {
+      this.clients.push(ws);
+      Logger.log(ws._socket.remoteAddress, 'connected to the LAS');
+      ws.on('message', (message: string) => {
+        switch (JSON.parse(message).event) {
+          case 'TEST': {
+            break;
+          }
+          default: break;
+        }
+      });
+      ws.send(this.wsmsg({event: 'client-connection', msg: `> You successfully conected to the LLS ! IP: ${ws._socket.remoteAddress}`}));
+    });
+    wss.on('close', (ws: any) => {
+      this.clients.forEach((client: any, index: number) => {
+        if (ws._socket.remoteAddress == client._socket.remoteAddress) {
+          this.clients.splice(index, 0);
+        };
+      });
+    });
+    wss.on('error', (err) => {
+      Logger.log('error', err);
+    });
   }
 }
