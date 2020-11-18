@@ -80,7 +80,20 @@ export default class API {
     this.app = express();
     this.app.options('*', cors());
     this.app.set('secret', process.env.ACCESS_TOKEN_SECRET);
-    this.app.use('/api', '/user', jwte({
+    this.app.use('/api', jwte({
+      secret: this.app.get('secret'),
+      algorithms: ['HS256'],
+      credentialsRequired: false,
+      getToken: (req: any) => {
+        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+            return req.headers.authorization.split(' ')[1];
+        } else if (req.query && req.query.token) {
+          return req.query.token;
+        }
+        return null;
+      }
+    }));
+    this.app.use('/user', jwte({
       secret: this.app.get('secret'),
       algorithms: ['HS256'],
       credentialsRequired: false,
