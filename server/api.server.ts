@@ -107,7 +107,7 @@ export default class API {
       }
     }));
     this.app.use(helmet());
-    this.app.use(express.static(path.resolve(process.cwd(), '/app')));
+    this.app.use(express.static(path.resolve(process.cwd(), 'app')));
     mongoose.connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true });
     this.connection = mysql.createPool({
       host: process.env.DB_ADDRESS,
