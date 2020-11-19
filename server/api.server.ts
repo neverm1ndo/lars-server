@@ -93,19 +93,6 @@ export default class API {
         return null;
       }
     }));
-    this.app.use('/user', jwte({
-      secret: this.app.get('secret'),
-      algorithms: ['HS256'],
-      credentialsRequired: false,
-      getToken: (req: any) => {
-        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-            return req.headers.authorization.split(' ')[1];
-        } else if (req.query && req.query.token) {
-          return req.query.token;
-        }
-        return null;
-      }
-    }));
     this.app.use(helmet());
     this.app.use('/app', express.static(path.resolve(process.cwd(), 'app')));
     mongoose.connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -170,7 +157,7 @@ export default class API {
       this.firstLaunch(process.env.LOGS_PATH!);
     }
     this.subs();
-  this.app.get('/user', cors(this.CORSoptions), (req: any, res: any) => {
+  this.app.get('/api/user', cors(this.CORSoptions), (req: any, res: any) => {
     Logger.log('default', `[${req.connection.remoteAddress}]`,'Requesting user data ->', req.query.username);
     this.connection.promise()
       .query("SELECT user_id, user_type, user_avatar FROM phpbb_users WHERE username = ?", [req.query.name])
@@ -236,9 +223,9 @@ export default class API {
         res.send(lines);
       });
     });
-    this.app.get('/api/last', cors(this.CORSoptions), (req: any, res: any) => { // GET last lines. Default : 40
+    this.app.get('/api/last', cors(this.CORSoptions), (req: any, res: any) => { // GET last lines. Default : 100
       if (!req.headers.authorization) return res.sendStatus(401);
-      let lim = 40;
+      let lim = 100;
       let page = 0;
       if (req.query.lim) lim = +req.query.lim;
       if (req.query.page) page = +req.query.page;
@@ -312,14 +299,37 @@ export default class API {
           else { res.status(200) };
         });
     });
+    this.app.get('/api/maps-files-tree', cors(this.CORSoptions), (req: any, res: any) => { // GET Files(maps) tree
+      if (!req.headers.authorization) return res.sendStatus(401);
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> MAPS_FILES_TREE [', req.originalUrl, ']');
+      let root = FSTreeNode.buildTree(process.env.MAPS_PATH!, 'maps');
+      res.send(JSON.stringify(root));
+    });
+    this.app.post('/api/save-map', cors(this.CORSoptions), (req: any, res: any) => { // POST Write map file
+      if (!req.headers.authorization)  { res.sendStatus(401); return ; }
+      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_MAP_FILE', req.body.file.path, '[', req.originalUrl, ']');
+        fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
+          if (err) { res.status(500).send(err) }
+          else { res.send(`Map ${req.body.file.path} successfully saved`) };
+        });
+    });
+    this.app.delete('/api/delete-map', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // DELETE Removes map file
+      if (!req.headers.authorization)  { res.sendStatus(401); return ; }
+      res.set('Content-Type', 'text/plain');
+      Logger.log('default', 'DELETE │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_MAP', req.body.file.name, '[', req.originalUrl, ']');
+        fs.unlink(req.body.file.path, (err: NodeJS.ErrnoException | null) => {
+          if (err) {  res.status(500).send(err); }
+          else { res.status(200) };
+        });
+    });
     http.createServer(this.app).listen(HTTP_PORT, () => {
-      Logger.log('default', 'HTTP LL server listening on port', HTTP_PORT);
+      Logger.log('default', 'HTTP LLS listening on port', HTTP_PORT);
     });
     // let httpsServer = https.createServer({
     // // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
     // key: fs.readFileSync(process.env.SSL_PRIVKEY_PATH!)
     // }, this.app).listen(HTTPS_PORT, () => {
-    //   Logger.log('HTTPS LL server listening on port', HTTPS_PORT);
+    //   Logger.log('HTTPS LLS listening on port', HTTPS_PORT);
     // });
     //
     /** WEBSOCKET SERVICE **/
