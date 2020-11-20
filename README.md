@@ -1,4 +1,4 @@
-# ![logo](https://raw.githubusercontent.com/neverm1ndo/libertylogs/docs/logo_150x150.png) LibertyLogs
+# ![logo](https://raw.githubusercontent.com/neverm1ndo/libertylogs/master/docs/logo_150x150.png) LibertyLogs
 **LibertyLogs** - программа для чтения логов сервера, записи и изменения конфигурационных файлов игрового сервера.
 
 Документация:
