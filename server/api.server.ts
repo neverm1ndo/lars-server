@@ -278,7 +278,7 @@ export default class API {
         res.set('Content-Type', 'text/plain');
         fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
           if (err) {  res.status(500).send(err) }
-          else { res.send(data) };
+          else { res.send(this.parser.parseMap(data)) };
         });
       }
     });
@@ -304,6 +304,18 @@ export default class API {
       Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> MAPS_FILES_TREE [', req.originalUrl, ']');
       let root = FSTreeNode.buildTree(process.env.MAPS_PATH!, 'maps');
       res.send(JSON.stringify(root));
+    });
+    this.app.get('/api/map-file', cors(this.CORSoptions), (req: any, res: any) => { // GET Files(maps) tree
+      if (!req.headers.authorization) return res.sendStatus(401);
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> MAP [', req.originalUrl, ']');
+      res.set('Content-Type', 'application/xml');
+      fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
+        if (err) {  res.status(500).send(err) }
+        else {
+          res.send(data)
+        };
+      });
+      // res.send(JSON.stringify(root));
     });
     this.app.post('/api/save-map', cors(this.CORSoptions), (req: any, res: any) => { // POST Write map file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
