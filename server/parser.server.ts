@@ -9,7 +9,7 @@ export class Parser {
 
   public parseMap(xml: string): { objects: number, coords: { x: string | null, y: string | null, z: string | null }, dim?: string | null, int?: string | null } {
     let parser = new DOMParser();
-    let map = parser.parseFromString(xml, 'text/xml');
+    let map = parser.parseFromString(xml);
     let firstobj =  map.getElementsByTagName("object")[0];
     return {
       objects: map.getElementsByTagName("map")[0].childNodes.length,
