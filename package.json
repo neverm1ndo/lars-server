@@ -32,6 +32,7 @@
     "@types/md5": "^2.2.0",
     "@types/mongoose": "^5.7.36",
     "@types/ws": "^7.2.7",
+    "@types/xmldom": "^0.1.30",
     "chokidar": "^3.4.3",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
@@ -44,7 +45,8 @@
     "mongoose": "^5.10.7",
     "mysql2": "^2.2.5",
     "rxjs": "^6.6.3",
-    "ws": "^7.3.1"
+    "ws": "^7.3.1",
+    "xmldom": "^0.4.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.8",

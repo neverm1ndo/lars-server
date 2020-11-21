@@ -1,6 +1,7 @@
 import { LogLine } from './interfaces/logline';
 import { GeoData } from './interfaces/geodata';
 import iconv from 'iconv-lite';
+import { DOMParser } from 'xmldom';
 
 export class Parser {
 
