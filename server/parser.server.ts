@@ -6,22 +6,6 @@ export class Parser {
 
   constructor() {}
 
-  public parseMap(xml: string): { objects: number, coords: { x: string | null, y: string | null, z: string | null }, dim?: string | null, int?: string | null } {
-    let parser = new DOMParser();
-    let map = parser.parseFromString(xml, 'text/xml');
-    let firstobj =  map.getElementsByTagName("object")[0];
-    return {
-      objects: map.getElementsByTagName("map")[0].childNodes.length,
-      coords: {
-        x: firstobj.getAttribute('x'),
-        y: firstobj.getAttribute('y'),
-        z: firstobj.getAttribute('z'),
-      },
-      dim: firstobj.getAttribute('dimension'),
-      int: firstobj.getAttribute('interior')
-    };
-  }
-
   public parseGeo(line: string): GeoData | undefined { // FIXME: Тут надо как-то поэлегантнее
     let r_geodata = new RegExp('{\(.*)}');
     let r_geodata2 = new RegExp(', ');

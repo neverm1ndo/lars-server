@@ -308,11 +308,12 @@ export default class API {
     this.app.get('/api/map-file', cors(this.CORSoptions), (req: any, res: any) => { // GET Files(maps) tree
       if (!req.headers.authorization) return res.sendStatus(401);
         Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> MAP [', req.originalUrl, ']');
-              if (req.query.path) {
+        if (req.query.path) {
+        res.set('Content-Type', 'text/xml');
         fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
           if (err) {  res.status(500).send(err) }
           else {
-            res.send(this.parser.parseMap(data));
+            res.send(data);
           };
         });
       }
