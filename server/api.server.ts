@@ -12,6 +12,7 @@ import jwte from 'express-jwt';
 import md5 from 'md5';
 import bodyParser from 'body-parser';
 import helmet from 'helmet';
+import multer from 'multer';
 import WebSocket from 'ws';
 import { Parser } from './parser.server';
 import { Watcher } from './watcher';
@@ -74,6 +75,10 @@ export default class API {
   parser: Parser = new Parser();
   watcher: Watcher = new Watcher();
   first: boolean = false;
+  mapStorage: multer.StorageEngine;
+  confStorage: multer.StorageEngine;
+  upmap: multer.Multer;
+  upcfg: multer.Multer;
 
   constructor(first: boolean) {
     this.first = first;
@@ -102,6 +107,28 @@ export default class API {
       database: process.env.DB_NAME,
       password: process.env.DB_PASSWORD
     });
+    this.mapStorage = multer.diskStorage(
+      {
+        destination: function (req: any, file: any, cb) {
+          cb(null, process.env.CFG_PATH!)
+        },
+        filename: function (req: any, file: any, cb) {
+          cb(null, file.originalname)
+        }
+      }
+    );
+    this.confStorage = multer.diskStorage(
+      {
+        destination: function (req: any, file: any, cb) {
+          cb(null, process.env.MAPS_PATH!)
+        },
+        filename: function (req: any, file: any, cb) {
+          cb(null, file.originalname)
+        }
+      }
+    );
+    this.upmap =  multer({ storage: this.mapStorage });
+    this.upcfg =  multer({ storage: this.confStorage });
   }
 
   wsmsg(msg: WSMessage): string {
@@ -194,7 +221,7 @@ export default class API {
         }
       })
       .catch((err: any): void => {
-        res.sendStatus(401).send('Failed authorization');
+        res.sendStatus(401);
         Logger.log('error', `[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email)
         Logger.log('error', err);
       })
@@ -215,14 +242,6 @@ export default class API {
           res.sendStatus(401).send('Failed authorization');
         }
       });
-    this.app.get('/api/uber', cors(this.CORSoptions), (req: any, res: any) => { // TEST function. Could be expensive
-      if (!req.headers.authorization) return res.sendStatus(401);
-      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES [', req.originalUrl, ']');
-      LOG_LINE.find({}, (err: any, lines: mongoose.Document[]) => {
-        if (err) return Logger.log('error', err);
-        res.send(lines);
-      });
-    });
     this.app.get('/api/last', cors(this.CORSoptions), (req: any, res: any) => { // GET last lines. Default : 100
       if (!req.headers.authorization) return res.sendStatus(401);
       let lim = 100;
@@ -282,20 +301,20 @@ export default class API {
         });
       }
     });
-    this.app.post('/api/save-config-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // POST Rewrite changed config(any) file
+    this.app.post('/api/save-config', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // POST Write map file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONFIG_FILE', req.body.file.path, '[', req.originalUrl, ']');
+      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
         fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
           if (err) { res.status(500).send(err) }
-          else { res.send(`File ${req.body.file.path} successfully saved`) };
+          else { res.send(`Config ${req.body.file.path} successfully saved`) };
         });
     });
     this.app.delete('/api/delete-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // DELETE Removes config file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
       Logger.log('default', 'DELETE │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
         fs.unlink(req.query.path, (err: NodeJS.ErrnoException | null) => {
-          if (err) {  res.status(500).send(err); }
-          else { res.status(200) };
+          if (err) {  res.sendStatus(500); }
+          else { res.sendStatus(200) };
         });
     });
     this.app.get('/api/maps-files-tree', cors(this.CORSoptions), (req: any, res: any) => { // GET Files(maps) tree
@@ -317,21 +336,15 @@ export default class API {
         });
       }
     });
-    this.app.post('/api/save-map', cors(this.CORSoptions), (req: any, res: any) => { // POST Write map file
+    this.app.post('/api/upload-map', cors(this.CORSoptions), this.upmap.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_MAP_FILE', req.body.file.path, '[', req.originalUrl, ']');
-        fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
-          if (err) { res.status(500).send(err) }
-          else { res.send(`Map ${req.body.file.path} successfully saved`) };
-        });
+      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
+      res.sendStatus(200);
     });
-    this.app.delete('/api/delete-map', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // DELETE Removes map file
+    this.app.post('/api/upload-cfg', cors(this.CORSoptions), this.upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('default', 'DELETE │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_MAP', req.query.path, '[', req.originalUrl, ']');
-        fs.unlink(req.query.path, (err: NodeJS.ErrnoException | null) => {
-          if (err) {  res.status(500).send(err); }
-          else { res.status(200) };
-        });
+      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
+      res.sendStatus(200);
     });
     http.createServer(this.app).listen(HTTP_PORT, () => {
       Logger.log('default', 'HTTP LLS listening on port', HTTP_PORT);
