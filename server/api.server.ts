@@ -248,7 +248,7 @@ export default class API {
       let page = 0;
       if (req.query.lim) lim = +req.query.lim;
       if (req.query.page) page = +req.query.page;
-      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> LINES', lim, page,' [', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> LINES', lim, page,' [', req.originalUrl, ']');
       LOG_LINE.find({}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page }, (err: any, lines: mongoose.Document[]) => {
         if (err) return Logger.log('error', err);
         res.send(lines);
@@ -260,7 +260,7 @@ export default class API {
       let page = 0;
       if (req.query.lim) lim = +req.query.lim;
       if (req.query.page) page = +req.query.page;
-        Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SEARCH\n',
+        Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> SEARCH\n',
                    '                            └ ', JSON.stringify(req.query));
         if (req.query.ip) {
           LOG_LINE.find({"geo.ip": req.query.ip}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: mongoose.Document[]) => {
@@ -286,13 +286,13 @@ export default class API {
     });
     this.app.get('/api/config-files-tree', cors(this.CORSoptions), (req: any, res: any) => { // GET Files(configs) and directories tree
       if (!req.headers.authorization) return res.sendStatus(401);
-      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
       let root = FSTreeNode.buildTree(process.env.CFG_PATH!, 'configs');
       res.send(JSON.stringify(root));
     });
     this.app.get('/api/config-file', cors(this.CORSoptions), (req: any, res: any) => {
       if (!req.headers.authorization) return res.sendStatus(401);
-      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
       if (req.query.path) {
         res.set('Content-Type', 'text/plain');
         fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
@@ -303,7 +303,7 @@ export default class API {
     });
     this.app.post('/api/save-config', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // POST Write map file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
+      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
         fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
           if (err) { res.status(500).send(err) }
           else { res.status(200).send(`Config ${req.body.file.path} successfully saved`) };
@@ -311,7 +311,7 @@ export default class API {
     });
     this.app.delete('/api/delete-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // DELETE Removes config file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('default', 'DELETE │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
+      Logger.log('default', 'DELETE │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
         fs.unlink(req.query.path, (err: NodeJS.ErrnoException | null) => {
           if (err) {  res.sendStatus(500); }
           else { res.sendStatus(200) };
@@ -319,13 +319,13 @@ export default class API {
     });
     this.app.get('/api/maps-files-tree', cors(this.CORSoptions), (req: any, res: any) => { // GET Files(maps) tree
       if (!req.headers.authorization) return res.sendStatus(401);
-      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> MAPS_FILES_TREE [', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> MAPS_FILES_TREE [', req.originalUrl, ']');
       let root = FSTreeNode.buildTree(process.env.MAPS_PATH!, 'maps');
       res.send(JSON.stringify(root));
     });
     this.app.get('/api/map-file', cors(this.CORSoptions), (req: any, res: any) => { // GET Files(maps) tree
       if (!req.headers.authorization) return res.sendStatus(401);
-        Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> MAP [', req.originalUrl, ']');
+        Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> MAP [', req.originalUrl, ']');
         if (req.query.path) {
         res.set('Content-Type', 'text/xml');
         fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
@@ -338,12 +338,12 @@ export default class API {
     });
     this.app.post('/api/upload-map', cors(this.CORSoptions), this.upmap.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
+      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> UPLOAD_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
       res.sendStatus(200);
     });
     this.app.post('/api/upload-cfg', cors(this.CORSoptions), this.upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
-      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
+      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mmrole: \x1b[103m${req.user.group_id}`, '\x1b[0m' ,'-> UPLOAD_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
       res.sendStatus(200);
     });
     http.createServer(this.app).listen(HTTP_PORT, () => {
