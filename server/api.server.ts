@@ -306,7 +306,7 @@ export default class API {
       Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[34mROLE: ${req.user.role}`, '\x1b[0m' ,'-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
         fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
           if (err) { res.status(500).send(err) }
-          else { res.send(`Config ${req.body.file.path} successfully saved`) };
+          else { res.status(200).send(`Config ${req.body.file.path} successfully saved`) };
         });
     });
     this.app.delete('/api/delete-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // DELETE Removes config file
