@@ -6,3 +6,5 @@ logs/*
 client/*
 *.env
 cert/*
+diary/*
+*.lls

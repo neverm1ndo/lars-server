@@ -12,8 +12,8 @@ export class Logger {
   }
   private static writeToFile(args: any[]): void {
     const now = new Date;
-    const dirpath = path.join(__dirname + '/DIARY');
-    const logpath = path.join(__dirname + '/DIARY/LIBLOG' + this.convert(now.getFullYear()) + this.convert(now.getMonth()) + this.convert(now.getDay())  + '.liblog');
+    const dirpath = path.resolve(process.cwd(), 'diary');
+    const logpath = path.resolve(process.cwd(), 'diary/liblog' + this.convert(now.getFullYear()) + this.convert(now.getMonth()) + this.convert(now.getDay())  + '.lls');
     if (!fs.existsSync(dirpath)) {
       fs.mkdirSync(dirpath);
     }
