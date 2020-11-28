@@ -206,26 +206,26 @@ export default class API {
   this.app.post('/login', cors(this.CORSoptions), bodyParser.json() ,(req: any, res: any): void => {
     Logger.log('default', 'Trying to authorize', req.body.email);
     this.connection.promise()
-      .query("SELECT username, user_id, user_type, user_avatar, user_password FROM phpbb_users WHERE user_email = ?", [req.body.email])
+      .query("SELECT username, user_id, user_type, user_avatar, user_password, group_id FROM phpbb_users WHERE user_email = ?", [req.body.email])
       .then(([rows]: any[]): void => {
         let user = rows[0];
         if (this.checkPassword(req.body.password, user.user_password)) {
-          Logger.log(`[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
-          res.send(JSON.stringify({
+          Logger.log('default', `[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
+          res.status(200).send(JSON.stringify({
             name: user.username,
             role: user.user_type,
             id: user.user_id,
+            gr: user.group_id,
             avatar: 'http://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar,
-            token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id }, this.app.get('secret'), { algorithm: 'HS256'})
+            token: jwt.sign({ user: user.username, role: user.user_type, id: user.user_id, group_id: user.group_id }, this.app.get('secret'), { algorithm: 'HS256'})
           }));
         }
       })
       .catch((err: any): void => {
-        res.sendStatus(401);
+        res.status(401).send(err);
         Logger.log('error', `[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email)
         Logger.log('error', err);
-      })
-      .then((): void => this.connection.end());
+      });
   });
       this.app.post('/login-secret', bodyParser.json(), cors(this.CORSoptions), (req: any, res: any): void => {
         if (req.body.password === this.app.get('secret')) {
