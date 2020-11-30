@@ -144,7 +144,7 @@ export default class API {
           if (fs.lstatSync(fullPath).isDirectory()) {
             this.firstLaunch(fullPath);
           } else {
-            fs.readFile(fullPath,(err: NodeJS.ErrnoException | null, buffer: Buffer) => {
+            fs.readFile(fullPath, (err: NodeJS.ErrnoException | null, buffer: Buffer) => {
               if (err) return err;
               this.parser.parse(buffer).forEach((line: LogLine) => {
                 let ln = new LOG_LINE(line);
@@ -170,10 +170,8 @@ export default class API {
 
   private subs() {
     Logger.log('default', 'Subbing to all events...');
-    this.watcher.result$.pipe(
-      map(val => val.toString())
-    ).subscribe((unparsed: string) => {
-      this.parser.parse(unparsed).forEach((line: LogLine) => {
+    this.watcher.result$.subscribe((buffer: Buffer) => {
+      this.parser.parse(buffer).forEach((line: LogLine) => {
         let ln = new LOG_LINE(line);
         ln.save();
       })
@@ -242,6 +240,15 @@ export default class API {
           res.sendStatus(401).send('Failed authorization');
         }
       });
+      this.app.get('/api/check-token', (req: any, res: any): void => {
+        if (!req.headers.authorization) return res.status(401).send('Unauthorized access');
+        console.log(req.user, this.app.get('secret'), jwt.verify(req.user.token, this.app.get('secret')))
+        if (jwt.verify(req.user.token, this.app.get('secret'))) {
+          return res.status(200).send('Access token is valid')
+        } else {
+          return res.status(401).send('Invalid access token');
+        }
+      })
     this.app.get('/api/last', cors(this.CORSoptions), (req: any, res: any) => { // GET last lines. Default : 100
       if (!req.headers.authorization) return res.sendStatus(401);
       let lim = 100;

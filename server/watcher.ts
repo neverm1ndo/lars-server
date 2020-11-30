@@ -19,21 +19,21 @@ export class Watcher {
               };
             });
         });
-  public result$: Observable<string>;
+  public result$: Observable<Buffer>;
   public watcher: any = chokidar.watch(process.env.LOGS_PATH!, {
     ignored: /(^|[\/\\])\../, // ignore dotfiles
     persistent: true
   });
   constructor() {
-    this.result$ = new Observable<string>((subscriber) => {
+    this.result$ = new Observable<Buffer>((subscriber) => {
       if (this.watcher) {
         this.watcher.on('change', ( filepath: string ) => {
-          fs.readFile(path.resolve(process.cwd(), filepath), { encoding: 'utf8' }, (err, data) => {
+          fs.readFile(path.resolve(process.cwd(), filepath), (err, data) => {
             if (err) {
               Logger.log('error', err)
             } else {
-              let split = data.split('\n');
-              subscriber.next(split[split.length - 2]);
+              let split = data.toString().split('\n');
+              subscriber.next(Buffer.from(split[split.length - 2], 'binary'));
             }
           });
         });

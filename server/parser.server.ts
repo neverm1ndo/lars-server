@@ -69,7 +69,6 @@ export class Parser {
     }
   }
   public parse(textplane: string | Buffer): LogLine[] {
-    // console.log(textplane.toString());
     let parsed: LogLine[] = [];
     this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
       let splits = line.split(' ');
@@ -85,7 +84,6 @@ export class Parser {
             result.id = +splits[i].match('(\[0-9]+)')![0];
             break;
           }
-          // if (s == 'мин,') result.punish = splits[index - 1] + s;
         }
         result.geo = this.parseGeo(line);
         result.content = this.parseContent(line);
