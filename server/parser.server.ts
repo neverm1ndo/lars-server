@@ -42,10 +42,14 @@ export class Parser {
     if (parsed) {
       return parsed;
     } else {
-      parsed = line.split(r_contentdata2)[2].trim();
-      if (parsed) {
-        if (!parsed.includes('{')) {
-          return parsed;
+      if (line.split(r_contentdata2)[2]) {
+        parsed = line.split(r_contentdata2)[2].trim();
+        if (parsed) {
+          if (!parsed.includes('{')) {
+            return parsed;
+          } else {
+            return undefined;
+          }
         } else {
           return undefined;
         }
