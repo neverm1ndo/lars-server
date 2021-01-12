@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import chokidar from 'chokidar';
 import dotenv from 'dotenv';
+import bufferSplit from 'buffer-split';
 import { Logger } from './logger';
 
 import { Observable } from 'rxjs';
@@ -32,9 +33,9 @@ export class Watcher {
             if (err) {
               Logger.log('error', err)
             } else {
-              let split = buffer.toString().split('\n');
-              console.log(split[split.length - 2]);
-              subscriber.next(Buffer.from(split[split.length - 2]));
+              let delim = new Buffer('\n');
+              let splited = bufferSplit(buffer, delim);
+              subscriber.next(splited[splited.length - 2]);
             }
           });
         });
