@@ -28,12 +28,13 @@ export class Watcher {
     this.result$ = new Observable<Buffer>((subscriber) => {
       if (this.watcher) {
         this.watcher.on('change', ( filepath: string ) => {
-          fs.readFile(path.resolve(process.cwd(), filepath), (err, data) => {
+          fs.readFile(path.resolve(process.cwd(), filepath), (err, buffer: Buffer) => {
             if (err) {
               Logger.log('error', err)
             } else {
-              let split = data.toString().split('\n');
-              subscriber.next(Buffer.from(split[split.length - 2], 'binary'));
+              let split = buffer.toString().split('\n');
+              console.log(split[split.length - 2]);
+              subscriber.next(Buffer.from(split[split.length - 2]));
             }
           });
         });
