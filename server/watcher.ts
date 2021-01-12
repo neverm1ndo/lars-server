@@ -33,7 +33,7 @@ export class Watcher {
             if (err) {
               Logger.log('error', err)
             } else {
-              let delim = new Buffer('\n');
+              let delim = Buffer.from('\n');
               let splited = bufferSplit(buffer, delim);
               subscriber.next(splited[splited.length - 2]);
             }
