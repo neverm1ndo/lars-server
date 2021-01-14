@@ -1,5 +1,4 @@
 import express from 'express';
-import https from 'https';
 import http from 'http';
 import cors from 'cors';
 import mysql from 'mysql2';
@@ -225,21 +224,6 @@ export default class API {
         Logger.log('error', err);
       });
   });
-      this.app.post('/login-secret', bodyParser.json(), cors(this.CORSoptions), (req: any, res: any): void => {
-        if (req.body.password === this.app.get('secret')) {
-          Logger.log('default', `[${req.connection.remoteAddress}]`, 'Login in by the test service account...');
-          res.send(JSON.stringify({
-            name: 'TEST',
-            role: 0,
-            id: 0,
-            avatar: 'https://avatars1.githubusercontent.com/u/6806120?s=460&u=4d9f445122df253c138d32175e7b7da1dfe63b05&v=4',
-            token: jwt.sign({ user: 'TEST', role: 0, id: 0 }, this.app.get('secret'), { algorithm: 'HS256'})
-          }));
-        } else {
-          Logger.log('error', 'Failed login in by the test service account');
-          res.sendStatus(401).send('Failed authorization');
-        }
-      });
       this.app.get('/api/check-token', (req: any, res: any): void => {
         if (!req.headers.authorization) return res.status(401).send('Unauthorized access');
         console.log(req.user, this.app.get('secret'), jwt.verify(req.user.token, this.app.get('secret')))
@@ -356,13 +340,6 @@ export default class API {
     http.createServer(this.app).listen(HTTP_PORT, () => {
       Logger.log('default', 'HTTP LLS listening on port', HTTP_PORT);
     });
-    // let httpsServer = https.createServer({
-    // // cert: fs.readFileSync(path.resolve(process.cwd(), process.env.SSL_FULLCHAIN_PATH!)),
-    // key: fs.readFileSync(process.env.SSL_PRIVKEY_PATH!)
-    // }, this.app).listen(HTTPS_PORT, () => {
-    //   Logger.log('HTTPS LLS listening on port', HTTPS_PORT);
-    // });
-    //
     /** WEBSOCKET SERVICE **/
     let wss = new WebSocket.Server({
       port: 3000
