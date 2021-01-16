@@ -66,10 +66,10 @@ export class Parser {
   }
 
   public ANSItoUTF8(buffer: Buffer): string {
-    return iconv.encode(iconv.decode(buffer, 'win1252'), 'utf8').toString();
+    return iconv.encode(iconv.decode(buffer, 'win1251'), 'utf8').toString();
   }
   public UTF8toANSI(text: string): string {
-    return iconv.encode(iconv.decode(Buffer.from(text, 'utf8'), 'utf8'), 'win1252').toString();
+    return iconv.encode(iconv.decode(Buffer.from(text, 'utf8'), 'utf8'), 'win1251').toString();
   }
   public toUTF8(string: string | Buffer): string {
     if (typeof string == 'string') {
