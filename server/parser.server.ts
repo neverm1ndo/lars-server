@@ -65,6 +65,12 @@ export class Parser {
     return lines;
   }
 
+  public ANSItoUTF8(buffer: Buffer): string {
+    return iconv.encode(iconv.decode(buffer, 'ansi'), 'utf8').toString();
+  }
+  public UTF8toANSI(text: string): string {
+    return iconv.encode(iconv.decode(Buffer.from(text, 'utf8'), 'utf8'), 'ansi').toString();
+  }
   public toUTF8(string: string | Buffer): string {
     if (typeof string == 'string') {
       return iconv.encode(iconv.decode(Buffer.from(string, 'binary'), 'win1251'), 'utf8').toString();

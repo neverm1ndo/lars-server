@@ -21,12 +21,9 @@ import { FSTreeNode } from './FSTree';
 import { WSMessage } from './interfaces/ws.message';
 import { LogLine } from './interfaces/logline';
 
-import { map } from 'rxjs/operators';
-
 dotenv.config({ path:path.resolve(process.cwd(), 'server/.env') });
 
 const HTTP_PORT: number = 8080;
-const HTTPS_PORT: number = 8443;
 
 const LOG_LINE = mongoose.model( 'LogLine', new Schema ({
   unix: { type: Number, required: true },
@@ -286,16 +283,16 @@ export default class API {
       Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
       if (req.query.path) {
         res.set('Content-Type', 'text/plain');
-        fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
+        fs.readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
           if (err) {  res.status(500).send(err) }
-          else { res.send(data) };
+          else { res.send(this.parser.ANSItoUTF8(buf)) };
         });
       }
     });
     this.app.post('/api/save-config', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // POST Write map file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
       Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
-        fs.writeFile(req.body.file.path, req.body.file.data, (err: NodeJS.ErrnoException | null) => {
+        fs.writeFile(req.body.file.path, this.parser.UTF8toANSI(req.body.file.data), (err: NodeJS.ErrnoException | null) => {
           if (err) { res.status(500).send(err) }
           else { res.status(200).send(`Config ${req.body.file.path} successfully saved`) };
         });
