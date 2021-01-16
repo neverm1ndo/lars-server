@@ -109,7 +109,7 @@ export default class API {
     this.mapStorage = multer.diskStorage(
       {
         destination: function (req: any, file: any, cb) {
-          cb(null, process.env.CFG_PATH!)
+          cb(null, process.env.MAPS_PATH!)
         },
         filename: function (req: any, file: any, cb) {
           cb(null, file.originalname)
@@ -119,7 +119,7 @@ export default class API {
     this.confStorage = multer.diskStorage(
       {
         destination: function (req: any, file: any, cb) {
-          cb(null, process.env.MAPS_PATH!)
+          cb(null, process.env.CFG_PATH!)
         },
         filename: function (req: any, file: any, cb) {
           cb(null, file.originalname)
