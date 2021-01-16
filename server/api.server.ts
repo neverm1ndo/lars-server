@@ -12,6 +12,7 @@ import md5 from 'md5';
 import bodyParser from 'body-parser';
 import helmet from 'helmet';
 import multer from 'multer';
+import iconv from 'iconv-lite';
 import WebSocket from 'ws';
 import { Parser } from './parser.server';
 import { Watcher } from './watcher';
@@ -292,10 +293,10 @@ export default class API {
     this.app.post('/api/save-config', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // POST Write map file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }
       Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
-        fs.writeFile(req.body.file.path, this.parser.UTF8toANSI(req.body.file.data), (err: NodeJS.ErrnoException | null) => {
-          if (err) { res.status(500).send(err) }
-          else { res.status(200).send(`Config ${req.body.file.path} successfully saved`) };
-        });
+      fs.writeFile(req.body.file.path, this.parser.UTF8toANSI(req.body.file.data), (err: NodeJS.ErrnoException | null) => {
+        if (err) { res.status(500).send(err) }
+        else { res.status(200).send(JSON.stringify({ res: `Config ${req.body.file.path} successfully saved` }))};
+      });
     });
     this.app.delete('/api/delete-file', cors(this.CORSoptions), bodyParser.json(), (req: any, res: any) => { // DELETE Removes config file
       if (!req.headers.authorization)  { res.sendStatus(401); return ; }

@@ -4,7 +4,8 @@ import iconv from 'iconv-lite';
 
 export class Parser {
 
-  constructor() {}
+  constructor() {
+  }
 
   public parseGeo(line: string): GeoData | undefined { // FIXME: Тут надо как-то поэлегантнее
     let r_geodata = new RegExp('{\(.*)}');
@@ -68,8 +69,8 @@ export class Parser {
   public ANSItoUTF8(buffer: Buffer): string {
     return iconv.encode(iconv.decode(buffer, 'win1251'), 'utf8').toString();
   }
-  public UTF8toANSI(text: string): string {
-    return iconv.encode(iconv.decode(Buffer.from(text, 'utf8'), 'utf8'), 'win1251').toString();
+  public UTF8toANSI(buf: any): Buffer {
+    return iconv.encode(buf.toString(), 'win1251');
   }
   public toUTF8(string: string | Buffer): string {
     if (typeof string == 'string') {
@@ -78,6 +79,7 @@ export class Parser {
       return iconv.encode(iconv.decode(string, 'win1251'), 'utf8').toString();
     }
   }
+
   public parse(textplane: string | Buffer): LogLine[] {
     let parsed: LogLine[] = [];
     this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
