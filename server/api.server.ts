@@ -12,7 +12,6 @@ import md5 from 'md5';
 import bodyParser from 'body-parser';
 import helmet from 'helmet';
 import multer from 'multer';
-import iconv from 'iconv-lite';
 import WebSocket from 'ws';
 import { Parser } from './parser.server';
 import { Watcher } from './watcher';
