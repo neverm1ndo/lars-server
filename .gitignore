@@ -1,5 +1,5 @@
 node_modules/*
-2/liblogs/node_modules/*
+dist/*
 build/*
 *.log
 logs/*
