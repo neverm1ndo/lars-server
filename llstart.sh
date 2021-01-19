@@ -6,7 +6,7 @@ NC="\e[0m"
 GREEN="\e[32m"
 LYELLOW="\e[93m"
 check () {
-	if 
+	if
 		[[ -n "`pgrep screen`" ]];
 	then
 		return 1
@@ -18,16 +18,16 @@ check () {
 launch() {
 	if check ; then
 		echo " > Запуск LL сервера..."
-		if 
-			[[ -n "`pgrep mongod`" ]]; 
-		then 
+		if
+			[[ -n "`pgrep mongod`" ]];
+		then
 			echo " > Сервер MongoDB уже запущен"
-			screen -d -m -S lls npm run server
+			screen -d -m -S lls npm run start
 		else
 			echo " > Запуск сервера MongoDB..."
-			mongod | 
+			mongod |
 	       		echo " > Сервер MongoDB запущен" |
-			screen -d -m -S lls npm run server
+			screen -d -m -S lls npm run start
 		fi
 		sleep 2s
 		if check;
@@ -40,7 +40,4 @@ launch() {
 	       echo -e " > > > ${LYELLOW} LL сервер уже запущен ${NC}"
 	fi
 }
-trap launch 0 
-
-
-		
+trap launch 0
