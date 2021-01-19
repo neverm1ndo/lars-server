@@ -20,7 +20,7 @@ npm install
 ```
 touch src/pre-start/env/production.env
 ```
-Важно [настроить конфиг](https://github.com/neverm1ndo/libertylogs/docs/configuration.md) до сборки.
+Важно [настроить конфиг](https://github.com/neverm1ndo/libertylogs/blob/master/docs/configuration.md) до сборки.
 
 Далее, можно будет запустить транспилер tsc, чтобы собрать проект:
 ```
