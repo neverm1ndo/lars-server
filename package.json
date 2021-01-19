@@ -13,9 +13,6 @@
       "src"
     ],
     "ext": "ts, html",
-    "ignore": [
-      "src/public"
-    ],
     "exec": "ts-node -r tsconfig-paths/register ./src"
   },
   "_moduleAliases": {
@@ -59,7 +56,6 @@
     }
   },
   "eslintIgnore": [
-    "src/public/",
     "build.ts"
   ],
   "dependencies": {
