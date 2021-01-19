@@ -1,8 +1,20 @@
-import { Logger } from './Logger';
 import app from '@server';
-import { WSMessage } from '@interfaces/ws.message';
 import md5 from 'md5';
 import jwt from 'jsonwebtoken';
+import { Logger } from './Logger';
+import { WSMessage } from '@interfaces/ws.message';
+import { parser, watcher } from './constants';
+import { LogLine } from '@interfaces/logline';
+import { LOG_LINE } from '@schemas/logline.schema';
+
+export const watch = (): void => {
+  watcher.result$.subscribe((buffer: Buffer) => {
+    parser.parse(buffer).forEach((line: LogLine) => {
+      let ln = new LOG_LINE(line);
+      ln.save();
+    })
+  }, (err) => { Logger.log('error', err) });
+}
 
 export const pErr = (err: Error) => {
     if (err) {

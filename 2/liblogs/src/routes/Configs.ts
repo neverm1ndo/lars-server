@@ -2,7 +2,7 @@ import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import { Parser } from '@parser';
-import { FSTreeNode } from '@shared/fs.treenode';
+import { TreeNode } from '@shared/fs.treenode';
 import cors from 'cors';
 import { writeFile, readFile } from 'fs';
 import { json } from 'body-parser';
@@ -17,7 +17,7 @@ const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 router.get('/api/config-files-tree', cors(CORSoptions), (req: any, res: any) => { // GET Files(configs) and directories tree
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
       Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
-      let root = FSTreeNode.buildTree(process.env.CFG_PATH!, 'configs');
+      let root = TreeNode.buildTree(process.env.CFG_PATH!, 'configs');
       res.send(JSON.stringify(root));
     });
     router.get('/api/config-file', cors(CORSoptions), (req: any, res: any) => { // GET single config file

@@ -1,9 +1,9 @@
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
-// import path from 'path';
 import cors from 'cors';
 import jwte from 'express-jwt';
 import helmet from 'helmet';
+import { connect } from 'mongoose';
 
 import express, { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
@@ -11,6 +11,7 @@ import 'express-async-errors';
 
 import BaseRouter from './routes';
 import { Logger } from '@shared/Logger';
+import { watch } from '@shared/functions';
 
 const app = express();
 const { BAD_REQUEST } = StatusCodes;
@@ -21,10 +22,11 @@ const { BAD_REQUEST } = StatusCodes;
  *                              Set basic express settings
  ***********************************************************************************/
 
-app.use(express.json());
+// app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 app.options('', cors());
+app.set('secret', process.env.ACCESS_TOKEN_SECRET);
 app.use('/api', jwte({
   secret: app.get('secret'),
   algorithms: ['HS256'],
@@ -38,6 +40,9 @@ app.use('/api', jwte({
     return null;
   }
 }));
+
+// MongoDB connection
+connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // Show routes called in console during development
 if (process.env.NODE_ENV === 'development') {
@@ -74,6 +79,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // app.get('*', (req: Request, res: Response) => {
 //     res.sendFile('index.html', {root: viewsDir});
 // });
+
+watch();
 
 // Export express instance
 export default app;

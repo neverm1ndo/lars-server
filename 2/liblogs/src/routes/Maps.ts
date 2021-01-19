@@ -1,7 +1,7 @@
 import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
-import { FSTreeNode } from '@shared/fs.treenode';
+import { TreeNode } from '@shared/fs.treenode';
 import cors from 'cors';
 import { readFile } from 'fs';
 
@@ -14,7 +14,7 @@ const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 router.get('/api/maps-files-tree', cors(CORSoptions), (req: any, res: any) => { // GET Files(maps) tree
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> MAPS_FILES_TREE [', req.originalUrl, ']');
-  let root = FSTreeNode.buildTree(process.env.MAPS_PATH!, 'maps');
+  let root = TreeNode.buildTree(process.env.MAPS_PATH!, 'maps');
   res.send(JSON.stringify(root));
 });
 router.get('/api/map-file', cors(CORSoptions), (req: any, res: any) => { // GET Files(maps) tree

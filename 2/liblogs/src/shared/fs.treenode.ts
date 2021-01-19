@@ -1,7 +1,7 @@
 import fs from 'fs';
-export class FSTreeNode {
+export class TreeNode {
   public path: string;
-  public items: Array<FSTreeNode>;
+  public items: Array<TreeNode>;
   public type: string = 'file';
   public name: string = 'configs';
 
@@ -12,7 +12,7 @@ export class FSTreeNode {
   }
 
   public static buildTree(rootPath: string, nodeName: string) {
-    const root = new FSTreeNode(rootPath, nodeName);
+    const root = new TreeNode(rootPath, nodeName);
 
     const stack = [root];
 
@@ -24,7 +24,7 @@ export class FSTreeNode {
 
         for (let child of children) {
           const childPath = `${currentNode.path}/${child}`;
-          const childNode = new FSTreeNode(childPath, child);
+          const childNode = new TreeNode(childPath, child);
           currentNode.items.push(childNode);
 
           if (fs.statSync(childNode.path).isDirectory()) {

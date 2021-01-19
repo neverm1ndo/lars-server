@@ -1,39 +1,32 @@
-import { Request } from 'express';
-import { IUser } from '@entities/User';
-import { createPool } from 'mysql2'
-import multer from 'multer';
+import { createPool } from 'mysql2';
+import { Parser } from '@parser';
+import { Watcher } from '@watcher';
+import multer, { Multer, diskStorage} from 'multer';
 
 export const paramMissingError = 'One or more of the required parameters was missing.';
 
-export interface IRequest extends Request {
-    body: {
-        user: IUser;
-    }
-}
+export const parser = new Parser();
+export const watcher = new Watcher();
 
-const mapStorage = multer.diskStorage(
-  {
-    destination: function (req: any, file: any, cb) {
-      cb(null, process.env.MAPS_PATH!)
-    },
-    filename: function (req: any, file: any, cb) {
-      cb(null, file.originalname)
-    }
+const mapStorage = diskStorage({
+  destination: function (req: any, file: any, cb) {
+    cb(null, process.env.MAPS_PATH!)
+  },
+  filename: function (req: any, file: any, cb) {
+    cb(null, file.originalname)
   }
-);
+});
 
-const confStorage = multer.diskStorage(
-  {
-    destination: function (req: any, file: any, cb) {
-      cb(null, process.env.CFG_PATH!)
-    },
-    filename: function (req: any, file: any, cb) {
-      cb(null, file.originalname)
-    }
+const confStorage = diskStorage({
+  destination: function (req: any, file: any, cb) {
+    cb(null, process.env.CFG_PATH!)
+  },
+  filename: function (req: any, file: any, cb) {
+    cb(null, file.originalname)
   }
-);
-export const upmap: multer.Multer =  multer({ storage: mapStorage });
-export const upcfg: multer.Multer =  multer({ storage: confStorage });
+});
+export const upmap: Multer =  multer({ storage: mapStorage });
+export const upcfg: Multer =  multer({ storage: confStorage });
 
 
 export const MSQLPool = createPool({
