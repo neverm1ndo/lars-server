@@ -22,7 +22,11 @@
     "@daos": "dist/daos",
     "@entities": "dist/entities",
     "@shared": "dist/shared",
-    "@server": "dist/Server"
+    "@interfaces": "dist/interfaces",
+    "@schemas": "dist/schemas",
+    "@server": "dist/Server",
+    "@parser": "dist/Parser",
+    "@watcher": "dist/Watcher",
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
