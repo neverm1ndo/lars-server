@@ -25,9 +25,9 @@ const { BAD_REQUEST } = StatusCodes;
 // app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
-app.options('', cors());
+app.options('*', cors());
 app.set('secret', process.env.ACCESS_TOKEN_SECRET);
-app.use('/api', jwte({
+app.use('/v2', jwte({
   secret: app.get('secret'),
   algorithms: ['HS256'],
   credentialsRequired: false,
@@ -55,7 +55,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Add APIs
-app.use('/api', BaseRouter);
+app.use('/v2', BaseRouter);
 
 // Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

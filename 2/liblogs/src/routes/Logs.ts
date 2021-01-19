@@ -11,7 +11,7 @@ import { CORSoptions } from '@shared/constants';
 const router = Router();
 const { UNAUTHORIZED } = StatusCodes;
 
-router.get('/api/logs/last', cors(CORSoptions), (req: any, res: any) => { // GET last lines. Default : 100
+router.get('/last', cors(CORSoptions), (req: any, res: any) => { // GET last lines. Default : 100
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
   let lim = 100;
   let page = 0;
@@ -23,7 +23,7 @@ router.get('/api/logs/last', cors(CORSoptions), (req: any, res: any) => { // GET
     res.send(lines);
   });
 });
-router.get('/api/logs/search', cors(CORSoptions), (req: any, res: any) => { // GET Search by nickname, ip, serals
+router.get('/search', cors(CORSoptions), (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
   let lim = 40;
   let page = 0;

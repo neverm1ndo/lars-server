@@ -3,6 +3,7 @@ import LoginRouter from './Login';
 import LogsRouter from './Logs';
 import MapsRouter from './Maps';
 import ConfigsRouter from './Configs';
+import UtilsRouter from './Utils';
 
 // Init router and path
 const router = Router();
@@ -12,6 +13,7 @@ router.use('/login', LoginRouter);
 router.use('/logs', LogsRouter);
 router.use('/maps', MapsRouter);
 router.use('/configs', ConfigsRouter);
+router.use('/utils', UtilsRouter);
 
 // Export the base-router
 export default router;
