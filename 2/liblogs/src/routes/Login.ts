@@ -38,7 +38,7 @@ router.post('/', cors(CORSoptions), bodyParser.json() ,(req: any, res: any): voi
 
 router.get('/check-token', (req: any, res: Response) => { // GET Checks token validation
   if (!req.headers.authorization) return res.status(401).send('Unauthorized access');
-  if (verifyToken(req.user.token)) {
+  if (verifyToken(req.headers.authorization)) {
     return res.status(OK).send('Access token is valid')
   } else {
     return res.status(UNAUTHORIZED).send('Invalid access token');
