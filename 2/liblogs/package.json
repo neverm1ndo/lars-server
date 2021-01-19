@@ -26,7 +26,7 @@
     "@schemas": "dist/schemas",
     "@server": "dist/Server",
     "@parser": "dist/Parser",
-    "@watcher": "dist/Watcher",
+    "@watcher": "dist/Watcher"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
