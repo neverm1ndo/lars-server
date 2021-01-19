@@ -1,17 +1,16 @@
 import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
-import cors from 'cors';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { Document } from 'mongoose';
 
 
-import { CORSoptions } from '@shared/constants';
+import { corsOpt } from '@shared/constants';
 
 const router = Router();
 const { UNAUTHORIZED } = StatusCodes;
 
-router.get('/last', cors(CORSoptions), (req: any, res: any) => { // GET last lines. Default : 100
+router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Default : 100
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
   let lim = 100;
   let page = 0;
@@ -23,7 +22,7 @@ router.get('/last', cors(CORSoptions), (req: any, res: any) => { // GET last lin
     res.send(lines);
   });
 });
-router.get('/search', cors(CORSoptions), (req: any, res: any) => { // GET Search by nickname, ip, serals
+router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
   let lim = 40;
   let page = 0;

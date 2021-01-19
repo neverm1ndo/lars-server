@@ -2,6 +2,7 @@ import { createPool } from 'mysql2';
 import { Parser } from '@parser';
 import { Watcher } from '@watcher';
 import multer, { Multer, diskStorage} from 'multer';
+import cors from 'cors';
 
 export const paramMissingError = 'One or more of the required parameters was missing.';
 
@@ -56,3 +57,4 @@ export const CORSoptions = {
     },
     preflightContinue: false,
   };
+  export const corsOpt = cors(CORSoptions);

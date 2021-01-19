@@ -1,17 +1,17 @@
 import StatusCodes from 'http-status-codes';
 import { Response, Router } from 'express';
 import { Logger } from '@shared/Logger';
-import cors from 'cors';
 import bodyParser from 'body-parser';
 
-import { CORSoptions, MSQLPool } from '@shared/constants';
+import { corsOpt, MSQLPool } from '@shared/constants';
 import { checkPassword, generateToken, verifyToken, isWorkGroup } from '@shared/functions';
 
 const router = Router();
 const { OK, UNAUTHORIZED } = StatusCodes;
 
 
-router.post('/', cors(CORSoptions), bodyParser.json() ,(req: any, res: any): void => {
+
+router.post('/', corsOpt, bodyParser.json(), (req: any, res: any): void => {
   Logger.log('default', 'Trying to authorize', req.body.email);
   MSQLPool.promise()
     .query("SELECT username, user_id, user_type, user_avatar, user_password, group_id FROM phpbb_users WHERE user_email = ?", [req.body.email])

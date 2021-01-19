@@ -16,16 +16,15 @@ import { watch } from '@shared/functions';
 const app = express();
 const { BAD_REQUEST } = StatusCodes;
 
-
+const useCors = cors();
 
 /************************************************************************************
  *                              Set basic express settings
  ***********************************************************************************/
 
-// app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
-app.options('*', cors());
+app.options('*', useCors);
 app.set('secret', process.env.ACCESS_TOKEN_SECRET);
 app.use('/v2', jwte({
   secret: app.get('secret'),
