@@ -11,9 +11,9 @@ import { isDate, firstLaunch } from '@shared/functions';
 const router = Router();
 const { UNAUTHORIZED } = StatusCodes;
 
-router.get('/launch', (req: any, res: any) => { // GET last lines. Default : 100
-  firstLaunch(process.env.LOGS_PATH!);
-});
+// router.get('/launch', (req: any, res: any) => { // GET last lines. Default : 100
+//   firstLaunch(process.env.LOGS_PATH!);
+// });
 
 router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Default : 100
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
