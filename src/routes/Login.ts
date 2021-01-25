@@ -35,6 +35,24 @@ router.post('/', corsOpt, bodyParser.json(), (req: any, res: any): void => {
       Logger.log('error', err);
     });
 });
+router.get('/user', corsOpt, (req: any, res: any): void => {
+  if (!req.headers.authorization && verifyToken(req.headers.authorization)) return res.status(401).send('Unauthorized access');
+  MSQLPool.promise()
+    .query("SELECT username, user_id, user_avatar, group_id FROM phpbb_users WHERE username = ?", [req.query.name])
+    .then(([rows]: any[]): void => {
+      let user = rows[0];
+      res.status(OK).send(JSON.stringify({
+        name: user.username,
+        id: user.user_id,
+        gr: user.group_id,
+        avatar: 'http://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar
+      }));
+    })
+    .catch((err: any): void => {
+      res.status(UNAUTHORIZED).send(err);
+      Logger.log('error', err);
+    });
+});
 
 router.get('/check-token', (req: any, res: Response) => { // GET Checks token validation
   if (!req.headers.authorization) return res.status(401).send('Unauthorized access');

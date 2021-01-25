@@ -2,7 +2,7 @@ import { GeoData } from './geodata';
 
 export interface LogLine {
   unix: number;
-  date: string;
+  date: Date;
   process: string;
   nickname?: string;
   id: number;

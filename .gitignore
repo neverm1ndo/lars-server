@@ -9,3 +9,7 @@ client/*
 cert/*
 diary/*
 *.lls
+*.map
+*.off
+*.conf
+*.text_rc

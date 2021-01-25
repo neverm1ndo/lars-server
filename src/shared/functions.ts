@@ -6,6 +6,8 @@ import { WSMessage } from '@interfaces/ws.message';
 import { parser, watcher } from './constants';
 import { LogLine } from '@interfaces/logline';
 import { LOG_LINE } from '@schemas/logline.schema';
+import { readdir, lstatSync, readFile } from 'fs';
+import { join } from 'path';
 
 export const watch = (): void => {
   watcher.result$.subscribe((buffer: Buffer) => {
@@ -16,6 +18,10 @@ export const watch = (): void => {
   }, (err) => { Logger.log('error', err) });
 }
 
+export const isDate = (date :string): boolean => {
+  return (Date.parse(date) != NaN) && (date !== '') && date !== undefined;
+} ;
+
 export const pErr = (err: Error) => {
     if (err) {
         Logger.log('error', err);
@@ -25,6 +31,28 @@ export const pErr = (err: Error) => {
 export const getRandomInt = () => {
     return Math.floor(Math.random() * 1_000_000_000_000);
 };
+
+export const firstLaunch = (dir: string): void => {
+  readdir(dir, (err: NodeJS.ErrnoException | null, dirs: any[]) => {
+    if (err) return err;
+    for (let i = 0; i < dirs.length; i++) {
+      if (typeof dirs[i] == 'string') {
+        let fullPath = join(dir, dirs[i]);
+        if (lstatSync(fullPath).isDirectory()) {
+          firstLaunch(fullPath);
+        } else {
+          readFile(fullPath,(err: NodeJS.ErrnoException | null, buffer: Buffer) => {
+            if (err) return err;
+            parser.parse(buffer).forEach((line: LogLine) => {
+              let ln = new LOG_LINE(line);
+              ln.save();
+            });
+          })
+        }
+      }
+    }
+  });
+}
 
 export const checkPassword = (pass: string, hash: string): boolean => {
     let salt = hash.slice(0, hash.length - 32);

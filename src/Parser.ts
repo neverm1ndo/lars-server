@@ -85,7 +85,7 @@ export class Parser {
        if (splits[0] !== '') {
          let result: LogLine = {
            unix: +splits[0],
-           date: splits[1],
+           date: new Date(+splits[0]*1000),
            process: splits[2],
            id: 0
          };
