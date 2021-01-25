@@ -36,7 +36,7 @@ router.post('/', corsOpt, bodyParser.json(), (req: any, res: any): void => {
     });
 });
 router.get('/user', corsOpt, (req: any, res: any): void => {
-  if (!verifyToken(req.headers.authorization)) return res.status(401).send('Unauthorized access');
+  if (!verifyToken(req.headers.authorization.split(' ')[1])) return res.status(401).send('Unauthorized access');
   MSQLPool.promise()
     .query("SELECT username, user_id, user_avatar, group_id FROM phpbb_users WHERE username = ?", [req.query.name])
     .then(([rows]: any[]): void => {
