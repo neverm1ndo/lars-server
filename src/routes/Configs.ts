@@ -6,7 +6,7 @@ import { TreeNode } from '@shared/fs.treenode';
 import { writeFile, readFile } from 'fs';
 import { json } from 'body-parser';
 
-import { corsOpt } from '@shared/constants';
+import { corsOpt, upcfg } from '@shared/constants';
 
 const router = Router();
 
@@ -43,5 +43,11 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
         else { res.status(OK).send(JSON.stringify({ res: `Config ${req.body.file.path} successfully saved` }))};
       });
     });
+    router.post('/upload-cfg', corsOpt, upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
+      if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED); return ; }
+      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> UPLOAD_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
+      res.sendStatus(OK);
+    });
+
 
 export default router;

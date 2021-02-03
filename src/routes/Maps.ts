@@ -4,7 +4,7 @@ import { Logger } from '@shared/Logger';
 import { TreeNode } from '@shared/fs.treenode';
 import { readFile } from 'fs';
 
-import { corsOpt, upcfg, upmap } from '@shared/constants';
+import { corsOpt, upmap } from '@shared/constants';
 
 const router = Router();
 
@@ -34,10 +34,4 @@ router.post('/upload-map', corsOpt, upmap.fields([{ name: 'file', maxCount: 10 }
   Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> UPLOAD_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
   res.sendStatus(OK);
 });
-router.post('/upload-cfg', corsOpt, upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
-  if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED); return ; }
-  Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> UPLOAD_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
-  res.sendStatus(OK);
-});
-
 export default router;
