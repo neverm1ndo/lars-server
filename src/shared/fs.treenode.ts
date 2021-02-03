@@ -12,6 +12,14 @@ export class TreeNode {
     this.name = nodeName;
   }
 
+  public static excludes(name: string): boolean {
+    const excludes = JSON.parse(process.env.CFG_EXCLUDE!);
+    for (let e of excludes) {
+      if (name.includes(e)) return true;
+    };
+    return false;
+  }
+
   public static buildTree(rootPath: string, nodeName: string) {
     const root = new TreeNode(rootPath, nodeName);
 
@@ -24,13 +32,15 @@ export class TreeNode {
         const children = readdirSync(currentNode.path);
 
         for (let child of children) {
+          if (!this.excludes(child)) {
           const childPath = `${currentNode.path}/${child}`;
           const childNode = new TreeNode(childPath, child);
           currentNode.items.push(childNode);
 
           if (statSync(childNode.path).isDirectory()) {
             childNode.type = 'dir';
-            stack.push(childNode);
+              stack.push(childNode);
+            }
           }
         }
       }
