@@ -16,7 +16,12 @@ const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files(configs) and directories tree
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
       Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
-      let root = TreeNode.buildTree(process.env.CFG_PATH!, 'configs');
+      let root: TreeNode;
+      if (req.user.group_id == 10) {
+        root = TreeNode.buildTree(process.env.CFG_DEV_PATH!, 'svr_sa');
+      } else {
+        root = TreeNode.buildTree(process.env.CFG_DEFAULT_PATH!, 'configs');
+      }
       res.send(JSON.stringify(root));
     });
     router.get('/config-file', corsOpt, (req: any, res: any) => { // GET single config file
