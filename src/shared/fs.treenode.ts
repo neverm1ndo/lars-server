@@ -12,10 +12,10 @@ export class TreeNode {
     this.name = nodeName;
   }
 
-  public static excludes(name: string): boolean {
+  public static excludes(name: string, nodePath: string): boolean {
     const excludes = JSON.parse(process.env.CFG_EXCLUDE!);
     for (let e of excludes) {
-      if (name.includes(e)) return true;
+      if ((nodePath + '/' + name).includes(e)) return true;
     };
     return false;
   }
@@ -32,7 +32,7 @@ export class TreeNode {
         const children = readdirSync(currentNode.path);
 
         for (let child of children) {
-          if (!this.excludes(child)) {
+          if (!this.excludes(child, currentNode.path)) {
           const childPath = `${currentNode.path}/${child}`;
           const childNode = new TreeNode(childPath, child);
           currentNode.items.push(childNode);
