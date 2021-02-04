@@ -11,7 +11,11 @@ export const watcher = new Watcher();
 
 const mapStorage = diskStorage({
   destination: function (req: any, file: any, cb) {
-    cb(null, process.env.MAPS_PATH!)
+    if (req.body.path) {
+      cb(null, req.body.path)
+    } else {
+      cb(null, process.env.MAPS_PATH!)
+    }
   },
   filename: function (req: any, file: any, cb) {
     cb(null, file.originalname)
