@@ -4,7 +4,7 @@ import { Logger } from '@shared/Logger';
 import { Parser } from '@parser';
 import { TreeNode } from '@shared/fs.treenode';
 import { writeFile, readFile, Stats } from 'fs';
-import { stat } from 'fs/promises';
+import { promises } from 'fs';
 import { json } from 'body-parser';
 
 import { corsOpt, upcfg } from '@shared/constants';
@@ -41,7 +41,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
       Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> FILE_INFO', req.query.path, '[', req.originalUrl, ']');
       if (req.query.path) {
-        stat(req.query.path).then((stats: Stats) => {
+        promises.stat(req.query.path).then((stats: Stats) => {
           res.send({size: stats.size, lastm: stats.mtime, mime: getMimeType(req.query.path)});
         }).catch((err: NodeJS.ErrnoException) => {
           res.status(INTERNAL_SERVER_ERROR).end(err);
