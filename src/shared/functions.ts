@@ -54,6 +54,16 @@ export const firstLaunch = (dir: string): void => {
   });
 }
 
+export const getMimeType = (path:string): string | undefined => {
+  let splited = path.split('.');
+  switch (splited[splited.length - 1]) {
+    case 'amx': return 'application/octet-stream';
+    case 'so': return 'application/x-sharedlib';
+    case 'db': return 'application/octet-stream';
+    case 'cadb': return 'application/octet-stream';
+  }
+}
+
 export const checkPassword = (pass: string, hash: string): boolean => {
     let salt = hash.slice(0, hash.length - 32);
     let realPassword = hash.slice(hash.length - 32, hash.length);
