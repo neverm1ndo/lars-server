@@ -24,7 +24,6 @@ const mapStorage = diskStorage({
 
 const confStorage = diskStorage({
   destination: function (req: any, file: any, cb) {
-    console.log(req.body)
     if (req.body.path) {
       cb(null, req.body.path)
     } else {
