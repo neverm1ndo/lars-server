@@ -6,14 +6,16 @@ import helmet from 'helmet';
 import { connect } from 'mongoose';
 
 import express, { NextFunction, Request, Response } from 'express';
+import expressWS from 'express-ws';
 import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
 
+import WsRouter from './routes/WS';
 import BaseRouter from './routes';
 import { Logger } from '@shared/Logger';
 import { watch } from '@shared/functions';
 
-const app = express();
+const { app } = expressWS(express());
 const { BAD_REQUEST } = StatusCodes;
 
 const useCors = cors();

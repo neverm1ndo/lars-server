@@ -61,17 +61,20 @@
   "dependencies": {
     "@types/buffer-split": "^1.0.0",
     "@types/express-jwt": "^6.0.0",
+    "@types/express-ws": "^3.0.0",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/md5": "^2.2.1",
     "@types/multer": "^1.4.5",
+    "@types/ws": "^7.4.0",
     "buffer-split": "^1.0.0",
     "command-line-args": "^5.1.1",
     "cookie-parser": "^1.4.5",
-    "express": "^4.17.1",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
+    "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
     "express-jwt": "^6.0.0",
+    "express-ws": "^4.0.0",
     "helmet": "^4.4.1",
     "http-status-codes": "^2.1.4",
     "jet-logger": "^1.0.4",
@@ -83,7 +86,8 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.2",
     "mysql2": "^2.2.5",
-    "rxjs": "^6.6.3"
+    "rxjs": "^6.6.3",
+    "ws": "^7.4.3"
   },
   "devDependencies": {
     "@types/command-line-args": "^5.0.0",
