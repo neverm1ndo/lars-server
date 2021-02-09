@@ -25,7 +25,7 @@ router.ws('/', (ws: any, req: any) => {
           const pid = stdout.split(' ')[1];
           exec(`kill ${pid}`, (err: any, stdout: any, stderr: any) => {
               if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-              ws.send({ event: 'server-stoped', msg: stdout });
+              ws.send(JSON.stringify({ event: 'server-stoped', msg: stdout }));
           });
         });
         break;
@@ -40,7 +40,7 @@ router.ws('/', (ws: any, req: any) => {
         }
         exec(cmd, (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-          ws.send({ event: 'server-rebooted', msg: stdout });
+          ws.send(JSON.stringify({ event: 'server-rebooted', msg: stdout }));
         });
         break;
       }
@@ -48,7 +48,7 @@ router.ws('/', (ws: any, req: any) => {
         Logger.log('default', 'WS │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> STOP_SVR_SA', '[', req.originalUrl, ']');
         exec(`bash ${process.env.CFG_DEV_PATH}/start.sh`, (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-          ws.send({ event: 'server-launched', msg: stdout });
+          ws.send(JSON.stringify({ event: 'server-launched', msg: stdout }));
         });
         break;
       }
