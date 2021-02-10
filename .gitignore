@@ -13,3 +13,5 @@ diary/*
 *.off
 *.conf
 *.text_rc
+*.d
+*.greenlockrc

@@ -10,7 +10,6 @@ import expressWS from 'express-ws';
 import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
 
-import WsRouter from './routes/WS';
 import BaseRouter from './routes';
 import { Logger } from '@shared/Logger';
 import { watch } from '@shared/functions';
@@ -19,10 +18,6 @@ const { app } = expressWS(express());
 const { BAD_REQUEST } = StatusCodes;
 
 const useCors = cors();
-
-/************************************************************************************
- *                              Set basic express settings
- ***********************************************************************************/
 
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -66,20 +61,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
         error: err.message,
     });
 });
-
-
-
-/************************************************************************************
- *                              Serve front-end content
- ***********************************************************************************/
-
-// const viewsDir = path.join(__dirname, 'views');
-// app.set('views', viewsDir);
-// const staticDir = path.join(__dirname, 'public');
-// app.use(express.static(staticDir));
-// app.get('*', (req: Request, res: Response) => {
-//     res.sendFile('index.html', {root: viewsDir});
-// });
 
 watch();
 
