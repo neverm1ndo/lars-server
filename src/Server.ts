@@ -21,6 +21,7 @@ const useCors = cors();
 
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
+app.use(express.static('public'));
 app.options('*', useCors);
 app.set('secret', process.env.ACCESS_TOKEN_SECRET);
 app.use('/v2', jwte({
@@ -52,6 +53,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Add APIs
 app.use('/v2', BaseRouter);
+app.use('/', express.static(__dirname + '/public'));
 
 // Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
