@@ -75,7 +75,6 @@
     "express-async-errors": "^3.1.1",
     "express-jwt": "^6.0.0",
     "express-ws": "^4.0.0",
-    "greenlock-express": "^4.0.3",
     "helmet": "^4.4.1",
     "http-status-codes": "^2.1.4",
     "jet-logger": "^1.0.4",
