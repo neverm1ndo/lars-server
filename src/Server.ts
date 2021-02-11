@@ -51,10 +51,9 @@ if (process.env.NODE_ENV === 'production') {
     app.use(helmet());
 }
 
-console.log(join(__dirname, 'public'));
 // Add APIs
 app.use('/v2', BaseRouter);
-app.use('/', express.static(join(__dirname, 'public')));
+app.use(express.static(join(__dirname)));
 
 // Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
