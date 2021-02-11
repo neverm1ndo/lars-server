@@ -3,8 +3,9 @@ import app from '@server';
 import https from 'https';
 
 // Start the server
-const port = Number(process.env.HTTP_PORT || 3000);
 https.createServer({
   key: process.env.SSL_KEY!,
   cert: process.env.SSL_CERT!
-}, app).listen(port, () => { console.log(' DEV HTTP LLS listening on port', port) });
+}, app).listen(process.env.HTTPS_PORT, () => { console.log(' DEV HTTP LLS listening on port', process.env.HTTPS_PORT) });
+
+ app.listen(process.env.HTTP_PORT, () => { console.log(' DEV HTTP LLS listening on port', process.env.HTTP_PORT) });
