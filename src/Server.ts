@@ -53,7 +53,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Add APIs
 app.use('/v2', BaseRouter);
-app.use(express.static(join(__dirname)));
+app.use('/.well-known/acme-challenge', express.static(join(__dirname, '.well-known/acme-challenge')));
 
 // Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
