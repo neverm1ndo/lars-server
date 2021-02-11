@@ -4,6 +4,7 @@ import cors from 'cors';
 import jwte from 'express-jwt';
 import helmet from 'helmet';
 import { connect } from 'mongoose';
+import { join } from 'path';
 
 import express, { NextFunction, Request, Response } from 'express';
 import expressWS from 'express-ws';
@@ -50,9 +51,10 @@ if (process.env.NODE_ENV === 'production') {
     app.use(helmet());
 }
 
+console.log(join(__dirname, 'public'));
 // Add APIs
 app.use('/v2', BaseRouter);
-app.use('/', express.static(__dirname + '/public'));
+app.use('/', express.static(join(__dirname, 'public')));
 
 // Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
