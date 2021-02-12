@@ -78,7 +78,7 @@ export const generateToken = (userInfo: any): string => {
   return jwt.sign(userInfo, app.get('secret'), { algorithm: 'HS256'});
 }
 export const verifyToken = (token: string): boolean => {
-  return jwt.verify(token, app.get('secret')) ? true : false;
+  return jwt.decode(token, app.get('secret')) ? true : false;
 }
 export const isWorkGroup = (group: number | string): boolean => {
   group = group.toString();
