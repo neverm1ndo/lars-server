@@ -21,7 +21,7 @@ getWss().clients.forEach(ws => {
 const router: Router & WithWebsocketMethod = Router();
 
 router.ws('/', (ws: any, req: any) => {
-  if (!verifyToken(req.query.token)) { ws.close(); }
+  // if (!verifyToken(req.query.token)) { ws.close(); }
   ws.on('message', (m: string) => {
     const wsm: WSMessage = JSON.parse(m);
     switch (wsm.event) {
