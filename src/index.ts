@@ -2,16 +2,17 @@ import './pre-start'; // Must be the first import
 import app from '@server';
 import https from 'https';
 import { readFileSync } from 'fs';
+import express from 'express';
 import expressWS from 'express-ws';
 
 // Start the server
-expressWS(app,
+expressWS(express(),
 https.createServer({
   key: readFileSync(process.env.SSL_KEY!, 'utf8'),
   cert: readFileSync(process.env.SSL_CERT!, 'utf8'),
   ca: readFileSync(process.env.SSL_CA!, 'utf8'),
   rejectUnauthorized: false
-}).listen(process.env.HTTPS_PORT, () => { console.log('HTTPS LLS NODE listening on port', process.env.HTTPS_PORT) }),
+}, app).listen(process.env.HTTPS_PORT, () => { console.log('HTTPS LLS NODE listening on port', process.env.HTTPS_PORT) }),
 { leaveRouterUntouched: false,
   wsOptions: {
       clientTracking: true
