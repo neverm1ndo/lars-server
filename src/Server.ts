@@ -7,7 +7,6 @@ import { connect } from 'mongoose';
 import { join } from 'path';
 
 import express, { NextFunction, Request, Response } from 'express';
-import expressWS from 'express-ws';
 import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
 
@@ -15,7 +14,8 @@ import BaseRouter from './routes';
 import { Logger } from '@shared/Logger';
 import { watch } from '@shared/functions';
 
-const { app } = expressWS(express());
+const app = express();
+
 const { BAD_REQUEST } = StatusCodes;
 
 const useCors = cors();
@@ -54,6 +54,7 @@ if (process.env.NODE_ENV === 'production') {
 // Add APIs
 app.use('/v2', BaseRouter);
 app.use('/.well-known/acme-challenge', express.static(join(__dirname, '.well-known/acme-challenge')));
+
 
 // Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

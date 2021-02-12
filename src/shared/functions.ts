@@ -80,6 +80,9 @@ export const generateToken = (userInfo: any): string => {
 export const verifyToken = (token: string): boolean => {
   return jwt.decode(token, app.get('secret')) ? true : false;
 }
+export const decodeToken = (token: string): {[key: string]: any} | null => {
+  return jwt.decode(token, app.get('secret'));
+}
 export const isWorkGroup = (group: number | string): boolean => {
   group = group.toString();
   return group.includes('9') || group.includes('10') || group.includes('11') || group.includes('12') || group.includes('13');

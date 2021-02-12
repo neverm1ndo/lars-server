@@ -1,27 +1,8 @@
-import expressWs, { WithWebsocketMethod } from 'express-ws';
-import express, { Router } from 'express';
-import { exec } from 'child_process';
 import { Logger } from '@shared/Logger';
+import { exec } from 'child_process';
 import { WSMessage } from '@interfaces/ws.message';
 
-import { verifyToken } from '@shared/functions';
-
-const { applyTo, getWss } = expressWs(express());
-
-applyTo(Router());
-applyTo({ get() { return this; } });
-getWss().clients.forEach(ws => {
-    if (ws.readyState !== ws.OPEN) {
-        ws.terminate();
-        return;
-    }
-    ws.ping();
-});
-
-const router: Router & WithWebsocketMethod = Router();
-
-router.ws('/', (ws: any, req: any) => {
-  // if (!verifyToken(req.query.token)) { ws.close(); }
+const sockets = (ws: any, req: any) => {
   ws.on('message', (m: string) => {
     const wsm: WSMessage = JSON.parse(m);
     switch (wsm.event) {
@@ -31,8 +12,8 @@ router.ws('/', (ws: any, req: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           const pid = stdout.split(' ')[1];
           exec(`kill ${pid}`, (err: any, stdout: any, stderr: any) => {
-              if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-              ws.send(JSON.stringify({ event: 'server-stoped', msg: stdout }));
+            if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
+            ws.send(JSON.stringify({ event: 'server-stoped', msg: stdout }));
           });
         });
         break;
@@ -62,6 +43,5 @@ router.ws('/', (ws: any, req: any) => {
       default: Logger.log('error', 'Unknown ws event', wsm.event); break;
     };
   });
-});
-
-export default router;
+}
+export default sockets;
