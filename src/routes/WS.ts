@@ -6,10 +6,17 @@ import { WSMessage } from '@interfaces/ws.message';
 
 import { verifyToken } from '@shared/functions';
 
-const { applyTo } = expressWs(express());
+const { applyTo, getWss } = expressWs(express());
 
 applyTo(Router());
 applyTo({ get() { return this; } });
+getWss().clients.forEach(ws => {
+    if (ws.readyState !== ws.OPEN) {
+        ws.terminate();
+        return;
+    }
+    ws.ping();
+});
 
 const router: Router & WithWebsocketMethod = Router();
 
