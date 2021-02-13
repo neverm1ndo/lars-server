@@ -46,12 +46,9 @@ const sockets = (ws: any, req: any) => {
         Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> GET_SVR_SA_STAT');
         exec('sudo ps aux | grep start.sh | grep -v grep', (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-          stdout.on('data', (data: any) => {
-            console.log(data);         
-            const pid = data.split(' ')[1];
-            if (pid) { ws.send(JSON.stringify({ event: 'server-status', msg: 'live', options: { pid: pid, stdout: stdout } })); }
-            else { ws.send(JSON.stringify({ event: 'server-status', msg: 'live' })); }
-          })
+          const pid = stdout.split(' ')[1];
+          if (pid) { ws.send(JSON.stringify({ event: 'server-status', msg: 'live', options: { pid: pid, stdout: stdout } })); }
+          else { ws.send(JSON.stringify({ event: 'server-status', msg: 'live' })); } // FIXME: status
         });
         break;
       }
