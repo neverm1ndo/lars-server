@@ -7,7 +7,7 @@ const sockets = (ws: any, req: any) => {
     const wsm: WSMessage = JSON.parse(m);
     switch (wsm.event) {
       case 'stop-server': {
-        Logger.log('default', 'WS │', req.connection.remoteAddress, '-> STOP_SVR_SA', '[', req.originalUrl, ']');
+        Logger.log('default', 'WS │', req.connection.remoteAddress, '-> STOP_SVR_SA');
         exec('sudo ps aux | grep start.sh | grep -v grep', (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           const pid = stdout.split(' ')[1];
@@ -19,7 +19,7 @@ const sockets = (ws: any, req: any) => {
         break;
       }
       case 'reboot-server': {
-        Logger.log('default', 'WS │', req.connection.remoteAddress, '-> STOP_SVR_SA', '[', req.originalUrl, ']');
+        Logger.log('default', 'WS │', req.connection.remoteAddress, '-> REBOOT_SVR_SA');
         let cmd: string;
         switch (process.platform) {
           case 'win32' : cmd = 'taskkill /IM samp03svr.exe'; break;
@@ -28,15 +28,27 @@ const sockets = (ws: any, req: any) => {
         }
         exec(cmd, (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-          ws.send(JSON.stringify({ event: 'server-rebooted', msg: stdout }));
+          setTimeout(() => {
+            ws.send(JSON.stringify({ event: 'server-rebooted', msg: stdout }));
+          }, 5000);
         });
         break;
       }
       case 'launch-server': {
-        Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> STOP_SVR_SA', '[', req.originalUrl, ']');
+        Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> LAUNCH_SVR_SA');
         exec(`sudo bash ${process.env.CFG_DEV_PATH}/start.sh`, (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           ws.send(JSON.stringify({ event: 'server-launched', msg: stdout }));
+        });
+        break;
+      }
+      case 'get-status': {
+        Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> GET_SVR_SA_STAT');
+        exec('sudo ps aux | grep start.sh | grep -v grep', (err: any, stdout: any, stderr: any) => {
+          if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
+          const pid = stdout.split(' ')[1];
+          if (pid) { ws.send(JSON.stringify({ event: 'server-status', msg: 'live', options: { pid: pid, stdout: stdout } })); }
+          else { ws.send(JSON.stringify({ event: 'server-status', msg: 'stoped' })); }
         });
         break;
       }
