@@ -24,7 +24,7 @@ router.post('/', corsOpt, bodyParser.json(), (req: any, res: any): void => {
           role: user.user_type,
           id: user.user_id,
           gr: user.group_id,
-          avatar: 'http://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar,
+          avatar: 'https://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar,
           token: generateToken({ user: user.username, role: user.user_type, id: user.user_id, group_id: user.group_id })
         }));
       }
@@ -45,7 +45,7 @@ router.get('/user', corsOpt, (req: any, res: any): void => {
         name: user.username,
         id: user.user_id,
         gr: user.group_id,
-        avatar: 'http://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar
+        avatar: 'https://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar
       }));
     })
     .catch((err: any): void => {
