@@ -8,10 +8,10 @@ const sockets = (ws: any, req: any) => {
     switch (wsm.event) {
       case 'stop-server': {
         Logger.log('default', 'WS │', req.connection.remoteAddress, '-> STOP_SVR_SA', '[', req.originalUrl, ']');
-        exec('ps aux | grep start.sh | grep -v grep', (err: any, stdout: any, stderr: any) => {
+        exec('sudo ps aux | grep start.sh | grep -v grep', (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           const pid = stdout.split(' ')[1];
-          exec(`kill ${pid}`, (err: any, stdout: any, stderr: any) => {
+          exec(`sudo kill ${pid}`, (err: any, stdout: any, stderr: any) => {
             if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
             ws.send(JSON.stringify({ event: 'server-stoped', msg: stdout }));
           });
@@ -23,7 +23,7 @@ const sockets = (ws: any, req: any) => {
         let cmd: string;
         switch (process.platform) {
           case 'win32' : cmd = 'taskkill /IM samp03svr.exe'; break;
-          case 'linux' : cmd = 'pkill samp03svr'; break;
+          case 'linux' : cmd = 'sudo pkill samp03svr'; break;
           default: ws.send({ event: 'error', msg: 'LibertyLogs не поддерживает платформу ' + process.platform }); return;
         }
         exec(cmd, (err: any, stdout: any, stderr: any) => {
@@ -34,7 +34,7 @@ const sockets = (ws: any, req: any) => {
       }
       case 'launch-server': {
         Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> STOP_SVR_SA', '[', req.originalUrl, ']');
-        exec(`bash ${process.env.CFG_DEV_PATH}/start.sh`, (err: any, stdout: any, stderr: any) => {
+        exec(`sudo bash ${process.env.CFG_DEV_PATH}/start.sh`, (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           ws.send(JSON.stringify({ event: 'server-launched', msg: stdout }));
         });
