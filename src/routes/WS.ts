@@ -7,7 +7,7 @@ const sockets = (ws: any, req: any) => {
     const wsm: WSMessage = JSON.parse(m);
     switch (wsm.event) {
       case 'stop-server': {
-        Logger.log('default', 'WS │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> STOP_SVR_SA', '[', req.originalUrl, ']');
+        Logger.log('default', 'WS │', req.connection.remoteAddress, '-> STOP_SVR_SA', '[', req.originalUrl, ']');
         exec('ps aux | grep start.sh | grep -v grep', (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           const pid = stdout.split(' ')[1];
@@ -19,7 +19,7 @@ const sockets = (ws: any, req: any) => {
         break;
       }
       case 'reboot-server': {
-        Logger.log('default', 'WS │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> STOP_SVR_SA', '[', req.originalUrl, ']');
+        Logger.log('default', 'WS │', req.connection.remoteAddress, '-> STOP_SVR_SA', '[', req.originalUrl, ']');
         let cmd: string;
         switch (process.platform) {
           case 'win32' : cmd = 'taskkill /IM samp03svr.exe'; break;
@@ -33,7 +33,7 @@ const sockets = (ws: any, req: any) => {
         break;
       }
       case 'launch-server': {
-        Logger.log('default', 'WS │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> STOP_SVR_SA', '[', req.originalUrl, ']');
+        Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> STOP_SVR_SA', '[', req.originalUrl, ']');
         exec(`bash ${process.env.CFG_DEV_PATH}/start.sh`, (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           ws.send(JSON.stringify({ event: 'server-launched', msg: stdout }));
