@@ -8,7 +8,7 @@ const sockets = (ws: any, req: any) => {
     switch (wsm.event) {
       case 'stop-server': {
         Logger.log('default', 'WS │', req.connection.remoteAddress, '-> STOP_SVR_SA');
-        execFile('sudo', ['/home/svr_sa/killer.sh'], (err: any, stdout: any, stderr: any) => {
+        execFile('sudo bash /home/svr_sa/killer.sh', (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           ws.send(JSON.stringify({ event: 'server-stoped', msg: stdout }));
         });
@@ -32,7 +32,7 @@ const sockets = (ws: any, req: any) => {
       }
       case 'launch-server': {
         Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> LAUNCH_SVR_SA');
-        exec(`sudo bash ${process.env.CFG_DEV_PATH}/start.sh`, (err: any, stdout: any, stderr: any) => {
+        exec(`sudo nohup ${process.env.CFG_DEV_PATH}/start.sh`, (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           ws.send(JSON.stringify({ event: 'server-launched', msg: stdout }));
         });
@@ -40,7 +40,7 @@ const sockets = (ws: any, req: any) => {
       }
       case 'get-status': {
         Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> GET_SVR_SA_STAT');
-        execFile('sudo', ['/home/nmnd/get.server.state.sh'], (err: any, stdout: any, stderr: any) => {
+        execFile('sudo bash /home/nmnd/get.server.state.sh', (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           if (stdout) { ws.send(JSON.stringify({ event: 'server-status', msg: 'live' })); }
           else { ws.send(JSON.stringify({ event: 'server-status', msg: 'stoped' })); } // FIXME: status
