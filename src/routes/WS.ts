@@ -34,8 +34,10 @@ const sockets = (ws: any, req: any) => {
         Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> LAUNCH_SVR_SA');
         exec(`bash /home/nmnd/starter.sh`, (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-          ws.send(JSON.stringify({ event: 'server-launched', msg: stdout }));
         });
+        setTimeout(() => {
+          ws.send(JSON.stringify({ event: 'server-launched' }));
+        })
         break;
       }
       case 'get-status': {
