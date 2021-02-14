@@ -44,8 +44,8 @@ const sockets = (ws: any, req: any) => {
         Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> GET_SVR_SA_STAT');
         exec('sudo bash /home/nmnd/get.server.state.sh', (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-          if (stdout) { ws.send(JSON.stringify({ event: 'server-status', msg: 'live' })); }
-          else { ws.send(JSON.stringify({ event: 'server-status', msg: 'stoped' })); } // FIXME: status
+          if (stdout) { ws.send(JSON.stringify({ event: 'server-status', msg: 'live', options: { state: stdout } })); }
+          else { ws.send(JSON.stringify({ event: 'server-status', msg: 'stoped', options: { state: stdout } })); } // FIXME: status
         });
         break;
       }
