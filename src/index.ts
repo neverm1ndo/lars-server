@@ -6,6 +6,7 @@ import WebSocket from 'ws';
 import sockets from './routes/WS';
 
 // Start the server
+
 const server = https.createServer({
   key: readFileSync(process.env.SSL_KEY!, 'utf8'),
   cert: readFileSync(process.env.SSL_CERT!, 'utf8'),
@@ -13,6 +14,7 @@ const server = https.createServer({
   rejectUnauthorized: false
 }, app);
 const wss = new WebSocket.Server({ server });
-
-wss.on('connection', (ws: WebSocket, req: any) => { sockets(ws, req) });
+wss.on('connection', (ws: WebSocket, req: any) => {
+  sockets(ws, req)
+});
 server.listen(process.env.HTTPS_PORT, () => { console.log('HTTPS LLS NODE listening on port', process.env.HTTPS_PORT) })

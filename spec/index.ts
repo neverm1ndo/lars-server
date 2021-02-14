@@ -2,7 +2,7 @@ import find from 'find';
 import Jasmine from 'jasmine';
 import dotenv from 'dotenv';
 import commandLineArgs from 'command-line-args';
-import logger from '@shared/Logger';
+// import logger from '@shared/Logger';
 
 
 // Setup command line options
@@ -39,9 +39,9 @@ jasmine.loadConfig({
 // On complete callback function
 jasmine.onComplete((passed: boolean) => {
     if (passed) {
-        logger.info('All tests have passed :)');
+        console.info('All tests have passed :)');
     } else {
-        logger.err('At least one test has failed :(');
+        console.error('At least one test has failed :(');
     }
 });
 
@@ -53,7 +53,7 @@ if (options.testFile) {
             jasmine.specFiles = [files[0]];
             jasmine.execute();
         } else {
-            logger.err('Test file not found!');
+            console.error('Test file not found!');
         }
     });
 } else {
