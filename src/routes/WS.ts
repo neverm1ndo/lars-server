@@ -8,7 +8,7 @@ const sockets = (ws: any, req: any) => {
     switch (wsm.event) {
       case 'stop-server': {
         Logger.log('default', 'WS │', req.connection.remoteAddress, '-> STOP_SVR_SA');
-        execFile('sudo', ['/'], (err: any, stdout: any, stderr: any) => {
+        execFile('sudo', ['/home/svr_sa/killer.sh'], (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           ws.send(JSON.stringify({ event: 'server-stoped', msg: stdout }));
         });
