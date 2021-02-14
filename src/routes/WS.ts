@@ -1,5 +1,5 @@
 import { Logger } from '@shared/Logger';
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { WSMessage } from '@interfaces/ws.message';
 
 const sockets = (ws: any, req: any) => {
@@ -8,13 +8,9 @@ const sockets = (ws: any, req: any) => {
     switch (wsm.event) {
       case 'stop-server': {
         Logger.log('default', 'WS │', req.connection.remoteAddress, '-> STOP_SVR_SA');
-        exec('sudo ps aux | grep start.sh | grep -v grep', (err: any, stdout: any, stderr: any) => {
+        execFile('sudo', ['/'], (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-          const pid = stdout.split(' ')[1];
-          exec(`sudo kill ${pid}`, (err: any, stdout: any, stderr: any) => {
-            if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-            ws.send(JSON.stringify({ event: 'server-stoped', msg: stdout }));
-          });
+          ws.send(JSON.stringify({ event: 'server-stoped', msg: stdout }));
         });
         break;
       }
@@ -44,11 +40,10 @@ const sockets = (ws: any, req: any) => {
       }
       case 'get-status': {
         Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> GET_SVR_SA_STAT');
-        exec('sudo ps aux | grep start.sh | grep -v grep', (err: any, stdout: any, stderr: any) => {
+        execFile('sudo', ['/home/nmnd/get.server.state.sh'], (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
-          const pid = stdout.split(' ')[1];
-          if (pid) { ws.send(JSON.stringify({ event: 'server-status', msg: 'live', options: { pid: pid, stdout: stdout } })); }
-          else { ws.send(JSON.stringify({ event: 'server-status', msg: 'live' })); } // FIXME: status
+          if (stdout) { ws.send(JSON.stringify({ event: 'server-status', msg: 'live' })); }
+          else { ws.send(JSON.stringify({ event: 'server-status', msg: 'stoped' })); } // FIXME: status
         });
         break;
       }
