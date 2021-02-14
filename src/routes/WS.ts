@@ -32,7 +32,7 @@ const sockets = (ws: any, req: any) => {
       }
       case 'launch-server': {
         Logger.log('default', 'WS │', req.connection.remoteAddress ,'-> LAUNCH_SVR_SA');
-        exec(`sudo nohup ${process.env.CFG_DEV_PATH}/start.sh`, (err: any, stdout: any, stderr: any) => {
+        exec(`bash ${process.env.CFG_DEV_PATH}/start_starter.sh`, (err: any, stdout: any, stderr: any) => {
           if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           ws.send(JSON.stringify({ event: 'server-launched', msg: stdout }));
         });
