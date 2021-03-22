@@ -8,6 +8,7 @@ import { LogLine } from '@interfaces/logline';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { readdir, lstatSync, readFile } from 'fs';
 import { join } from 'path';
+import { User } from '@interfaces/user';
 
 export const watch = (): void => {
   watcher.result$.subscribe((buffer: Buffer) => {
@@ -80,8 +81,14 @@ export const generateToken = (userInfo: any): string => {
 export const verifyToken = (token: string): boolean => {
   return jwt.decode(token, app.get('secret')) ? true : false;
 }
-export const decodeToken = (token: string): {[key: string]: any} | null => {
-  return jwt.decode(token, app.get('secret'));
+export const decodeToken = (token: string): User | null => {
+  const user = jwt.decode(token, app.get('secret'));
+  if (!user) return null;
+  return {
+    name: user.user,
+    id: user.id,
+    group_id: user.group_id
+  };
 }
 export const isWorkGroup = (group: number | string): boolean => {
   group = group.toString();
