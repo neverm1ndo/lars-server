@@ -12,7 +12,7 @@ router.get('/list', corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> ADMIN_LIST [', req.originalUrl, ']');
   MSQLPool.promise()
-    .query("SELECT username, user_id, user_avatar, group_id FROM phpbb_users WHERE group_id = (?, ?, ?, ?, ?, ?)", [9, 10, 11, 12, 13, 14])
+    .query("SELECT username, user_id, user_avatar, group_id FROM phpbb_users WHERE group_id IN (?, ?, ?, ?, ?, ?)", [9, 10, 11, 12, 13, 14])
     .then(([rows]: any[]): void => {
       res.send(JSON.stringify(rows));
     })
