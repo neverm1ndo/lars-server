@@ -12,26 +12,27 @@ export interface Client {
 
 export class ClientManager {
 
-  pool: Client[] = [];
+  pool: WebSocket[] = [];
 
-  add(client: Client) {
+  add(client: WebSocket) {
     this.pool.push(client);
   }
-  remove(ws: WebSocket) {
-    new Promise<Client>((resolve: any, reject: any) => {
-        this.pool.forEach((client: Client) => {
-          if (client.ws == ws) {
-            resolve(client);
-          }
-        });
-        reject();
-    }).then((client: Client) => {
-      this.pool.splice(this.pool.indexOf(client) , 1);
-    }).catch(() => { console.error('[client-manager] client not exists')})
+  remove(client: WebSocket) {
+    this.pool.splice(this.pool.indexOf(client) , 1);
+    // new Promise<Client>((resolve: any, reject: any) => {
+    //     this.pool.forEach((client: Client) => {
+    //       if (client.ws == ws) {
+    //         resolve(client);
+    //       }
+    //     });
+    //     reject();
+    // }).then((client: Client) => {
+    //   this.pool.splice(this.pool.indexOf(client) , 1);
+    // }).catch(() => { console.error('[client-manager] client not exists')})
   }
   sendall(message: WSMessage) {
-    this.pool.forEach((client: Client) => {
-      client.ws.send(JSON.stringify(message));
+    this.pool.forEach((client: WebSocket) => {
+      client.send(JSON.stringify(message));
     });
   }
 }

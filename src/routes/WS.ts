@@ -12,7 +12,7 @@ const sockets = (ws: any, req: any) => {
   let params = new URLSearchParams(req.url);
   let user: User | null = decodeToken(params.get('/?token')!);
   if (user) {
-    cm.add({ user: user, ws: ws });
+    cm.add(ws);
   } else {
     ws.close();
   }
