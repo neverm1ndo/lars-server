@@ -27,6 +27,9 @@ router.post('/', corsOpt, bodyParser.json(), (req: any, res: any): void => {
           avatar: 'https://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar,
           token: generateToken({ user: user.username, role: user.user_type, id: user.user_id, group_id: user.group_id })
         }));
+      } else {
+        Logger.log('default', `[${req.connection.remoteAddress}]`, `Authorization from ${user.username}: WORKGROUP ${isWorkGroup(user.group_id)}->`, req.body.email);
+        res.status(UNAUTHORIZED).send(`In Workgroup: ${isWorkGroup(user.group_id)}`);
       }
     })
     .catch((err: any): void => {
