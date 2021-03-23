@@ -78,7 +78,7 @@ const sockets = (ws: any, req: any) => {
       }
       case 'user-action': {
         Logger.log('default', 'WS │', req.connection.remoteAddress, user?.name, '-> WS_USER_ACTION', wsm.options.action);
-        cm.updateClientAction(ws, wsm.options.action);
+        // cm.updateClientAction(ws, wsm.options.action);
         break;
       }
       default: Logger.log('error', 'Unknown ws event', wsm.event); break;
