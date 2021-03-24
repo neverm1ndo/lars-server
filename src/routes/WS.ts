@@ -48,7 +48,7 @@ const sockets = (ws: any, req: any) => {
             }, 5000);
           });
         } else {
-         ws.send(JSON.stringify({ event: 'error', msg: 'Access not permitted' }));
+         ws.send(JSON.stringify({ event: 'error', msg: 'Access denied' }));
         }
         break;
       }
@@ -64,7 +64,7 @@ const sockets = (ws: any, req: any) => {
           }, 10000);
           break;
         } else {
-         ws.send(JSON.stringify({ event: 'error', msg: 'Access not permitted' }));
+         ws.send(JSON.stringify({ event: 'error', msg: 'Access denied' }));
         }
       }
       case 'get-status': {

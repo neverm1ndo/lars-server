@@ -17,7 +17,7 @@ const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files(configs) and directories tree
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
-      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> CONFIG_FILES_TREE [', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CONFIG_FILES_TREE [', req.originalUrl, ']');
       let root: TreeNode;
       if (req.user.group_id == 10) {
         root = TreeNode.buildTree(process.env.CFG_DEV_PATH!, 'svr_sa');
@@ -28,7 +28,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
     });
     router.get('/config-file', corsOpt, (req: any, res: any) => { // GET single config file
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
-      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
       if (req.query.path) {
         res.set('Content-Type', 'text/plain');
         readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
@@ -39,7 +39,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
     });
     router.get('/file-info', corsOpt, (req: any, res: any) => { // GET stat of file
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
-      Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> FILE_INFO', req.query.path, '[', req.originalUrl, ']');
+      Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> FILE_INFO', req.query.path, '[', req.originalUrl, ']');
       if (req.query.path) {
         promises.stat(req.query.path).then((stats: Stats) => {
           res.send({size: stats.size, lastm: stats.mtime, mime: getMimeType(req.query.path)});
@@ -50,7 +50,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
     });
     router.post('/save-config', corsOpt, json(), (req: any, res: any) => { // POST Write map file
       if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED); return ; }
-      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
+      Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
       writeFile(req.body.file.path, parser.UTF8toANSI(req.body.file.data), (err: NodeJS.ErrnoException | null) => {
         if (err) { res.status(INTERNAL_SERVER_ERROR).send(err) }
         else { res.status(OK).send(JSON.stringify({ res: `Config ${req.body.file.path} successfully saved` }))};
@@ -58,7 +58,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
     });
     router.post('/upload-cfg', corsOpt, upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
       if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED); return ; }
-      Logger.log('default', 'POST │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> UPLOAD_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
+      Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> UPLOAD_FILE', '[', req.originalUrl, ']');
       res.sendStatus(OK);
     });
 

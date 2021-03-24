@@ -21,7 +21,7 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
   let page = 0;
   if (req.query.lim) lim = +req.query.lim;
   if (req.query.page) page = +req.query.page;
-  Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> LINES', lim, page,' [', req.originalUrl, ']');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> LINES', lim, page,' [', req.originalUrl, ']');
   LOG_LINE.find({}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page }, (err: any, lines: Document[]) => {
     if (err) return Logger.log('error', err);
     res.send(lines);
@@ -38,7 +38,7 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
   if (req.query.lim) lim = +req.query.lim;
   if (req.query.page) page = +req.query.page;
   if (isDate(req.query.dateTo) && isDate(req.query.dateFrom)) { date = { from: req.query.dateFrom, to: req.query.dateTo }};
-    Logger.log('default', 'GET │', req.connection.remoteAddress, '\x1b[94m', req.user.user,`\x1b[91mrole: \x1b[93m${req.user.group_id}`, '\x1b[0m' ,'-> SEARCH\n',
+    Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SEARCH\n',
                '                            └ ', JSON.stringify(req.query));
     if (req.query.ip) {
       LOG_LINE.find({"geo.ip": req.query.ip, date: { $gte: new Date(date.from + ' GMT+0300'), $lte: new Date(date.to + ' GMT+0300') } }, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: Document[]) => {
