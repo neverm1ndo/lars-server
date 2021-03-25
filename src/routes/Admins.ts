@@ -46,11 +46,11 @@ router.get('/all', corsOpt, (req: any, res: any) => {
 });
 router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, req.query.path, '[', req.originalUrl, ']');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
   MSQLPool.promise()
     .query("UPDATE phpbb_users SET group_id = ? WHERE username = ?", [req.body.group, req.body.username])
     .then((): void => {
-      res.sendStatus(OK);
+      res.sendStatus(OK).send();
     })
     .catch((err: any): void => {
       res.status(UNAUTHORIZED).send(err);
