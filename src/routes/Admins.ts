@@ -49,12 +49,12 @@ router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => 
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, req.query.path, '[', req.originalUrl, ']');
   MSQLPool.promise()
     .query("UPDATE phpbb_users SET group_id = ? WHERE username = ?", [req.body.group, req.body.username])
-    .then(([rows]: any[]): void => {
-      res.send(OK);
+    .then((): void => {
+      res.sendStatus(OK);
     })
     .catch((err: any): void => {
       res.status(UNAUTHORIZED).send(err);
-      Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.user, `Failed to change ${req.query.username} admin status to ${req.query.group}`)
+      Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.user, `Failed to change ${req.body.username} admin status to ${req.body.group}`)
       Logger.log('error', err);
     });
 });
