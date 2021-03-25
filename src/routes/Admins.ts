@@ -50,7 +50,7 @@ router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => 
   MSQLPool.promise()
     .query("UPDATE phpbb_users SET group_id = ? WHERE username = ?", [req.body.group, req.body.username])
     .then((): void => {
-      res.sendStatus(OK).send();
+      res.sendStatus(OK).send(JSON.stringify({status: 'ok'}));
     })
     .catch((err: any): void => {
       res.status(UNAUTHORIZED).send(err);
