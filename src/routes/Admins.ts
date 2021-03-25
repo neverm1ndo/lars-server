@@ -15,7 +15,7 @@ router.get('/list', corsOpt, (req: any, res: any) => {
   MSQLPool.promise()
     .query("SELECT username, user_id, user_regdate, user_email, user_avatar, group_id FROM phpbb_users WHERE group_id IN (?, ?, ?, ?, ?, ?)", [9, 10, 11, 12, 13, 14])
     .then(([rows]: any[]): void => {
-      for (let i = 0; i > rows.length; i++) {
+      for (let i = 0; i < rows.length; i++) {
         if (!rows[i].user_avatar) {
           rows[i].user_avatar = 'https://www.gta-liberty.ru/styles/prosilver_ex/theme/images/no_avatar.gif';
         } else {
