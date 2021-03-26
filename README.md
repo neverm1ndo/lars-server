@@ -1,5 +1,5 @@
-# ![logo](https://raw.githubusercontent.com/neverm1ndo/libertylogs/master/docs/logo_60x60.png) LibertyLogs
-**LibertyLogs** - программа для чтения логов сервера, записи и изменения конфигурационных файлов игрового сервера.
+# ![logo](https://raw.githubusercontent.com/neverm1ndo/libertylogs/master/docs/logo_60x60.png) LARS
+**LARS** - программа для чтения логов, записи и изменения конфигурационных файлов, загрузчик и просмотрщик карт игрового сервера.
 
 Документация:
 
