@@ -17,4 +17,4 @@ const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws: WebSocket, req: any) => {
   sockets(ws, req)
 });
-server.listen(process.env.HTTPS_PORT, () => { console.log('HTTPS LLS NODE listening on port', process.env.HTTPS_PORT) })
+server.listen(process.env.HTTPS_PORT, () => { console.log('HTTPS LARS NODE listening on port', process.env.HTTPS_PORT) })

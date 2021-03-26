@@ -17,7 +17,7 @@ check () {
 }
 launch() {
 	if check ; then
-		echo " > Запуск LL сервера..."
+		echo " > Запуск LARS сервера..."
 		if
 			[[ -n "`pgrep mongod`" ]];
 		then
@@ -32,12 +32,12 @@ launch() {
 		sleep 2s
 		if check;
 		then
-			echo -e " > > > ${RED}Не удалось запустить сервер LL!${NC}"
+			echo -e " > > > ${RED}Не удалось запустить сервер LARS!${NC}"
 		else
-			echo -e " > > > ${GREEN}Сервер LL успешно запущен${NC}"
+			echo -e " > > > ${GREEN}Сервер LARS успешно запущен${NC}"
 		fi
 	else
-	       echo -e " > > > ${LYELLOW} LL сервер уже запущен ${NC}"
+	       echo -e " > > > ${LYELLOW} LARS сервер уже запущен ${NC}"
 	fi
 }
 trap launch 0
