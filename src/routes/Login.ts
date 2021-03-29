@@ -4,7 +4,7 @@ import { Logger } from '@shared/Logger';
 import bodyParser from 'body-parser';
 
 import { corsOpt, MSQLPool } from '@shared/constants';
-import { checkPassword, generateToken, verifyToken, isWorkGroup } from '@shared/functions';
+import { checkPassword, generateToken, verifyToken, isWorkGroup, decodeToken } from '@shared/functions';
 
 const router = Router();
 const { OK, UNAUTHORIZED } = StatusCodes;
@@ -60,7 +60,17 @@ router.get('/user', corsOpt, (req: any, res: any): void => {
 router.get('/check-token', (req: any, res: Response) => { // GET Checks token validation
   if (!req.headers.authorization) return res.status(401).send('Unauthorized access');
   if (verifyToken(req.headers.authorization)) {
-    return res.status(OK).send('Access token is valid')
+    const user = decodeToken(req.headers.authorization);
+    MSQLPool.promise()
+      .query("SELECT group_id FROM phpbb_users WHERE user_id = ?", [user!.id])
+      .then(([rows]: any[]): void => {
+        if (rows[0].group_id == user?.group_id) {
+          Logger.log('default', `[${req.connection.remoteAddress}]`, 'Successfull token validation ->', req.body.email);
+          res.status(OK).send('Access token is valid')
+        } else {
+          res.status(UNAUTHORIZED).send('Invalid access token');
+        }
+      });
   } else {
     return res.status(UNAUTHORIZED).send('Invalid access token');
   }
