@@ -2,6 +2,7 @@ import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import bodyParser from 'body-parser';
+import { cm } from './WS';
 
 import { corsOpt, MSQLPool } from '@shared/constants';
 
@@ -34,7 +35,7 @@ router.get('/all', corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> ADMIN_LIST [', req.originalUrl, ']');
   MSQLPool.promise()
-    .query("SELECT * FROM phpbb_users WHERE group_id IN (?, ?, ?, ?, ?, ?)", [9, 10, 11, 12, 13, 14])
+    .query('SELECT * FROM phpbb_users WHERE group_id IN (?, ?, ?, ?, ?, ?)', [9, 10, 11, 12, 13, 14])
     .then(([rows]: any[]): void => {
       res.send(JSON.stringify(rows));
     })
@@ -48,7 +49,7 @@ router.get('/sub-groups', corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SUB_GROUPS_LIST [', req.originalUrl, ']');
   MSQLPool.promise()
-    .query("SELECT * FROM phpbb_user_group", [])
+    .query('SELECT * FROM phpbb_user_group', [])
     .then(([rows]: any[]): void => {
       res.send(JSON.stringify(rows));
     })
@@ -58,11 +59,16 @@ router.get('/sub-groups', corsOpt, (req: any, res: any) => {
       Logger.log('error', err);
     });
 });
+router.get('/expire-token', corsOpt, (req: any, res: any) => {
+  if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> TOKEN_SESSION_EXPIRATION [', req.originalUrl, ']');
+  cm.closeSession(req.query.username);
+});
 router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
+  Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
   MSQLPool.promise()
-    .query("UPDATE phpbb_users SET group_id = ? WHERE username = ?", [req.body.group, req.body.username])
+    .query('UPDATE phpbb_users SET group_id = ? WHERE username = ?', [req.body.group, req.body.username])
     .then((): void => {
       res.status(OK).send(JSON.stringify({status: 'ok'}));
     })

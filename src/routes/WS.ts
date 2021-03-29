@@ -6,7 +6,7 @@ import { decodeToken } from '@shared/functions';
 import { URLSearchParams } from 'url';
 import { User } from '@interfaces/user';
 
-const cm = new ClientManager();
+export const cm = new ClientManager();
 
 const sockets = (ws: any, req: any) => {
   let params = new URLSearchParams(req.url);
