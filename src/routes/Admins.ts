@@ -63,7 +63,7 @@ router.get('/expire-token', corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> TOKEN_SESSION_EXPIRATION [', req.originalUrl, ']');
   cm.closeSession(req.query.username);
-  res.status(OK).send('Token expired');
+  res.status(OK).send(JSON.stringify({status: 'Token expired'}));
 });
 router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
