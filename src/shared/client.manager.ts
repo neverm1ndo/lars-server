@@ -1,13 +1,13 @@
 import { WSMessage } from '@interfaces/ws.message';
 import { User } from '@interfaces/user';
-
-type UserAction = 'redacting' | 'idle' | 'inlogs' | 'inmaps';
+import { Logger } from '@shared/Logger';
+type UserActionType = 'redacting' | 'idle' | 'inlogs' | 'inmaps';
 
 export interface Client {
   user: User;
   ws: WebSocket;
   action?: {
-    type: UserAction;
+    type: UserActionType;
     path?: string;
   };
 }
@@ -15,9 +15,16 @@ export interface Client {
 export class ClientManager {
 
   pool: Client[] = [];
+  cleared: string[] = [];
 
   add(client: Client) {
-    this.pool.push(client);
+    this.cleared.forEach((username: string) => {
+      if (client.user.name == username) {
+        this.closeSession(username);
+      } else {
+        this.pool.push(client);
+      }
+    });
   }
   remove(client: WebSocket) {
     // this.pool.splice(this.pool.indexOf(client) , 1);
@@ -27,12 +34,12 @@ export class ClientManager {
             resolve(client);
           }
         });
-        reject();
+        reject(client);
     }).then((client: Client) => {
       this.pool.splice(this.pool.indexOf(client) , 1);
-    }).catch(() => { console.error('[client-manager] client not exists')})
+    }).catch((client: Client) => { Logger.log('error', ' [CM] Client %s does not exists', client.user.name)})
   }
-  updateClientAction(ws: WebSocket, action: UserAction) {
+  updateClientAction(ws: WebSocket, action: UserActionType) {
     this.pool.forEach((client: Client, index: number) => {
       if (client.ws == ws) {
         this.pool[index].action!.type = action;
@@ -41,10 +48,12 @@ export class ClientManager {
     });
   }
   closeSession(username: string) {
+    this.cleared.push(username);
     this.pool.forEach((client: Client) => {
       if (username == client.user.name) {
         client.ws.send(JSON.stringify({ event: 'expire-token', message: 'You session closed by admin' }));
-      }
+        this.cleared.splice(this.cleared.indexOf(username) , 1);
+      };
     })
   }
   sendall(message: WSMessage) {

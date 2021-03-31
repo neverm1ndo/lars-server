@@ -13,8 +13,6 @@ const sockets = (ws: any, req: any) => {
   let user: User | null = decodeToken(params.get('/?token')!);
   if (user) {
     cm.add({ws, user});
-  } else {
-    ws.close();
   }
   ws.on('message', (m: string) => {
     const wsm: WSMessage = JSON.parse(m);
