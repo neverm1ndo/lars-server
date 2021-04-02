@@ -31,26 +31,28 @@ export class ClientManager {
     new Promise<Client>((resolve: any, reject: any) => {
         this.pool.forEach((poolClient: Client) => {
           if (client == poolClient.ws) {
-            resolve(client);
+            resolve(poolClient);
           }
         });
         reject(client);
     }).then((client: Client) => {
+      Logger.log('error', ' [CM] Client %s removed', client.user.name);
       this.pool.splice(this.pool.indexOf(client) , 1);
-    }).catch((client: Client) => { Logger.log('error', ' [CM] Client %s does not exists', client.user.name)})
+    }).catch(() => { Logger.log('error', ' [CM] Client %s does not exists')})
   }
-  updateClientAction(ws: WebSocket, action: UserActionType) {
-    this.pool.forEach((client: Client, index: number) => {
-      if (client.ws == ws) {
-        this.pool[index].action!.type = action;
-        this.sendall({ event: 'user-activity', msg: JSON.stringify({ user: client.user.name, action: action })})
-      }
-    });
-  }
+  // updateClientAction(ws: WebSocket, action: UserActionType) {
+  //   this.pool.forEach((client: Client, index: number) => {
+  //     if (client.ws == ws) {
+  //       this.pool[index].action!.type = action;
+  //       this.sendall({ event: 'user-activity', msg: JSON.stringify({ user: client.user.name, action: action })})
+  //     }
+  //   });
+  // }
   closeSession(username: string) {
     this.cleared.push(username);
     this.pool.forEach((client: Client) => {
       if (username == client.user.name) {
+        Logger.log('default', 'Closing session for', username, '| Clients pool:', this.pool )
         client.ws.send(JSON.stringify({ event: 'expire-token', message: 'You session closed by admin' }));
         this.cleared.splice(this.cleared.indexOf(username) , 1);
       };
