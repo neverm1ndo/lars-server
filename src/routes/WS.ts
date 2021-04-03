@@ -1,7 +1,7 @@
 import { Logger } from '@shared/Logger';
 import { exec } from 'child_process';
 import { WSMessage } from '@interfaces/ws.message';
-import { ClientManager } from '@shared/client.manager';
+import { ClientManager, UserActionType } from '@shared/client.manager';
 import { decodeToken } from '@shared/functions';
 import { URLSearchParams } from 'url';
 import { User } from '@interfaces/user';
@@ -74,16 +74,16 @@ const sockets = (ws: any, req: any) => {
         });
         break;
       }
-      // case 'user-action': {
-      //   Logger.log('default', 'WS │', req.connection.remoteAddress, user?.name, '-> WS_USER_ACTION', wsm.options.action);
-      //   // cm.updateClientAction(ws, wsm.options.action);
-      //   break;
-      // }
+      case 'user-action': {
+        Logger.log('default', 'WS │', req.connection.remoteAddress, user?.name, '-> WS_USER_ACTION', wsm.msg);
+        cm.updateClientAction(ws, wsm.msg);
+        break;
+      }
       default: Logger.log('error', 'Unknown ws event', wsm.event); break;
     };
   });
   ws.on('close', (ws: WebSocket) => {
-    Logger.log('default', 'WS │', req.connection.remoteAddress, user?.name,'-> CLOSED_CONNECTION');
+    Logger.log('default', 'WS │', user?.name,'-> CLOSED_CONNECTION');
     cm.remove(ws);
   });
 }

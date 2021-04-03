@@ -14,7 +14,7 @@ router.get('/list', corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> ADMIN_LIST [', req.originalUrl, ']');
   MSQLPool.promise()
-    .query("SELECT username, user_id, user_regdate, user_email, user_avatar, group_id FROM phpbb_users WHERE group_id IN (?, ?, ?, ?, ?, ?)", [9, 10, 11, 12, 13, 14])
+    .query("SELECT username, user_last_ip, user_id, user_regdate, user_email, user_avatar, group_id FROM phpbb_users WHERE user_id IN (SELECT user_id FROM phpbb_user_group WHERE group_id IN (?, ?, ?, ?, ?, ?))", [9, 10, 11, 12, 13, 14])
     .then(([rows]: any[]): void => {
       for (let i = 0; i < rows.length; i++) {
         if (!rows[i].user_avatar) {
@@ -35,7 +35,7 @@ router.get('/all', corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> ADMIN_LIST [', req.originalUrl, ']');
   MSQLPool.promise()
-    .query('SELECT * FROM phpbb_users WHERE group_id IN (?, ?, ?, ?, ?, ?)', [9, 10, 11, 12, 13, 14])
+    .query('SELECT user_id, group_id, username FROM phpbb_users WHERE user_id IN (SELECT user_id FROM phpbb_user_group WHERE group_id IN (?, ?, ?, ?, ?, ?))', [9, 10, 11, 12, 13, 14])
     .then(([rows]: any[]): void => {
       res.send(JSON.stringify(rows));
     })
