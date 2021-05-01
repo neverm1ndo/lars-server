@@ -5,6 +5,7 @@
 
 * [Первичная установка](https://github.com/neverm1ndo/libertylogs/blob/master/docs/setup.md)
 * [Конфигурация сервера](https://github.com/neverm1ndo/libertylogs/blob/master/docs/configuration.md)
+* [Wiki](https://github.com/neverm1ndo/lars-server/wiki)
 
 ## Стек технологий
 
