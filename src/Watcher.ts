@@ -35,7 +35,11 @@ export class Watcher {
             } else {
               const delim = Buffer.from('\n');
               const splited = bufferSplit(buffer, delim);
-              subscriber.next(splited[splited.length - 2]);
+              if (splited.length > 2) {
+                subscriber.next(splited[splited.length - 2]);
+              } else {
+                subscriber.next(splited[splited.length - 1]);
+              }
             }
           });
         });
