@@ -1,7 +1,6 @@
 /**
- * Setup the jet-logger.
+ * Setup the logger.
  *
- * Documentation: https://github.com/seanpmaxwell/jet-logger
  */
 
  import fs from 'fs';
@@ -14,12 +13,12 @@
      return pad.substring(0, pad.length - str.toString().length) + str.toString();
    }
    private static timestamp(now: Date): string {
-     return `[${this.convert(now.getFullYear())}-${this.convert(now.getMonth())}-${this.convert(now.getDate())} | ${this.convert(now.getHours())}:${this.convert(now.getMinutes())}:${this.convert(now.getSeconds())}] `;
+     return `[${this.convert(now.getFullYear())}-${this.convert(now.getMonth() + 1)}-${this.convert(now.getDate())} | ${this.convert(now.getHours())}:${this.convert(now.getMinutes())}:${this.convert(now.getSeconds())}] `;
    }
    private static writeToFile(args: any[]): void {
      const now = new Date;
      const dirpath = path.resolve(process.cwd(), 'diary');
-     const logpath = path.resolve(process.cwd(), 'diary/liblog' + this.convert(now.getFullYear()) + this.convert(now.getMonth()) + this.convert(now.getDay())  + '.lls');
+     const logpath = path.resolve(process.cwd(), 'diary/liblog' + this.convert(now.getFullYear()) + this.convert(now.getMonth() + 1) + this.convert(now.getDay())  + '.lls');
      if (!fs.existsSync(dirpath)) {
        fs.mkdirSync(dirpath);
      }

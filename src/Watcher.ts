@@ -35,7 +35,7 @@ export class Watcher {
             } else {
               const delim = Buffer.from('\n');
               const splited = bufferSplit(buffer, delim);
-              if (splited.length > 2) { //FIXME: Fix registering first line in new log file
+              if (splited.length > 2) {
                 subscriber.next(splited[splited.length - 2]);
               } else {
                 subscriber.next(splited[0]);

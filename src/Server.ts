@@ -5,6 +5,8 @@ import jwte from 'express-jwt';
 import helmet from 'helmet';
 import { connect } from 'mongoose';
 import { join } from 'path';
+// import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+// import passport from 'passport';
 
 import express, { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
@@ -37,6 +39,12 @@ app.use('/v2', jwte({
     return null;
   }
 }));
+
+// passport
+
+// passport.use(new JwtStrategy({}, function (jwt_payload, done) {
+//
+// }))
 
 // MongoDB connection
 connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true });
