@@ -10,6 +10,7 @@ import sockets from './routes/WS';
 const server = https.createServer({
   key: readFileSync(process.env.SSL_KEY!, 'utf8'),
   cert: readFileSync(process.env.SSL_CERT!, 'utf8'),
+  ca: readFileSync(process.env.SSL_CA!, 'utf8'),
   rejectUnauthorized: false
 }, app);
 const wss = new WebSocket.Server({ server });
