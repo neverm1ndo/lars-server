@@ -58,12 +58,13 @@ router.get('/user', corsOpt, (req: any, res: any): void => {
 });
 
 router.get('/check-token', (req: any, res: Response) => { // GET Checks token validation
-  if (!req.headers.authorization) return res.status(UNAUTHORIZED).send('Unauthorized access');
-  if (verifyToken(req.headers.authorization)) {
-    const user = decodeToken(req.headers.authorization);
+  if (!req.headers.authorization) return res.status(BAD_REQUEST).send('Authorization token is empty');
+  const token: string = req.headers.authorization.split(' ')[1];
+  if (verifyToken(token)) {
+    const user = decodeToken(token);
     Logger.log('default', `[${req.connection.remoteAddress}]`, 'Token validation ->', user?.name);
     MSQLPool.promise()
-      .query("SELECT group_id FROM phpbb_users WHERE user_id = ?", [user!.id])
+      .query("SELECT group_id FROM phpbb_users WHERE user_id = ?", [user?.id])
       .then(([rows]: any[]): void => {
         if (rows[0].group_id == user?.group_id) {
           Logger.log('default', `[${req.connection.remoteAddress}]`, 'Successfull token validation ->', user?.name);
@@ -75,7 +76,7 @@ router.get('/check-token', (req: any, res: Response) => { // GET Checks token va
         res.status(UNAUTHORIZED).send(err);
       });
   } else {
-    return res.status(BAD_REQUEST).send('Authorization token is empty');
+    return res.status(UNAUTHORIZED).send('Invalid access token');
   }
 })
 
