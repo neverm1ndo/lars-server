@@ -7,7 +7,7 @@ import { corsOpt, MSQLPool } from '@shared/constants';
 import { checkPassword, generateToken, verifyToken, isWorkGroup, decodeToken } from '@shared/functions';
 
 const router = Router();
-const { OK, UNAUTHORIZED } = StatusCodes;
+const { OK, UNAUTHORIZED, BAD_REQUEST } = StatusCodes;
 
 
 
@@ -39,7 +39,7 @@ router.post('/', corsOpt, bodyParser.json(), (req: any, res: any): void => {
     });
 });
 router.get('/user', corsOpt, (req: any, res: any): void => {
-  if (!verifyToken(req.headers.authorization.split(' ')[1])) return res.status(401).send('Unauthorized access');
+  if (!verifyToken(req.headers.authorization.split(' ')[1])) return res.status(UNAUTHORIZED).send('Unauthorized access');
   MSQLPool.promise()
     .query("SELECT username, user_id, user_avatar, group_id FROM phpbb_users WHERE username = ?", [req.query.name])
     .then(([rows]: any[]): void => {
@@ -58,21 +58,24 @@ router.get('/user', corsOpt, (req: any, res: any): void => {
 });
 
 router.get('/check-token', (req: any, res: Response) => { // GET Checks token validation
-  if (!req.headers.authorization) return res.status(401).send('Unauthorized access');
+  if (!req.headers.authorization) return res.status(UNAUTHORIZED).send('Unauthorized access');
   if (verifyToken(req.headers.authorization)) {
     const user = decodeToken(req.headers.authorization);
+    Logger.log('default', `[${req.connection.remoteAddress}]`, 'Token validation ->', user?.name);
     MSQLPool.promise()
       .query("SELECT group_id FROM phpbb_users WHERE user_id = ?", [user!.id])
       .then(([rows]: any[]): void => {
         if (rows[0].group_id == user?.group_id) {
-          Logger.log('default', `[${req.connection.remoteAddress}]`, 'Successfull token validation ->', req.body.email);
+          Logger.log('default', `[${req.connection.remoteAddress}]`, 'Successfull token validation ->', user?.name);
           res.status(OK).send('Access token is valid')
         } else {
-          res.status(UNAUTHORIZED).send('Invalid access token');
+          throw 'Invalid access token';
         }
+      }).catch((err: string) => {
+        res.status(UNAUTHORIZED).send(err);
       });
   } else {
-    return res.status(UNAUTHORIZED).send('Invalid access token');
+    return res.status(BAD_REQUEST).send('Authorization token is empty');
   }
 })
 
