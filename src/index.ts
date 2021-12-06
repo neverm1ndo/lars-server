@@ -4,15 +4,28 @@ import https from 'https';
 import { readFileSync } from 'fs';
 import WebSocket from 'ws';
 import sockets from './routes/WS';
+import options from './pre-start/index'
 
 // Start the server
 
-const server = https.createServer({
+interface HttpsOptions {
+  key: string,
+  cert: string,
+  ca?: string,
+  rejectUnauthorized: boolean
+}
+
+const httpsOptions: HttpsOptions = {
   key: readFileSync(process.env.SSL_KEY!, 'utf8'),
   cert: readFileSync(process.env.SSL_CERT!, 'utf8'),
-  ca: readFileSync(process.env.SSL_CA!, 'utf8'),
   rejectUnauthorized: false
-}, app);
+};
+
+if (options.env !== 'development') {
+  httpsOptions.ca = readFileSync(process.env.SSL_CA!, 'utf8');
+}
+
+const server = https.createServer(httpsOptions , app);
 const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws: WebSocket, req: any) => {
   sockets(ws, req)
