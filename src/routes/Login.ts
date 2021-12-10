@@ -48,7 +48,7 @@ router.get('/user', corsOpt, (req: any, res: any): void => {
         name: user.username,
         id: user.user_id,
         gr: user.group_id,
-        avatar: 'https://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar
+        avatar: user.user_avatar?'https://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar : 'https://www.gta-liberty.ru/styles/prosilver_ex/theme/images/no_avatar.gif',
       }));
     })
     .catch((err: any): void => {
