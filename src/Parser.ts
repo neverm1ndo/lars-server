@@ -80,7 +80,7 @@ export class Parser {
 
   public parse(textplane: string | Buffer): LogLine[] {
     let parsed: LogLine[] = [];
-    const idRegex = new RegExp(/\s\([0-9]+\)/g);
+    const idRegex = new RegExp(/\([0-9]+\)/g);
     this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
       let splits = line.split(' ');
        if (splits[0] !== '') {
