@@ -80,6 +80,7 @@ export class Parser {
 
   public parse(textplane: string | Buffer): LogLine[] {
     let parsed: LogLine[] = [];
+    const idRegex = new RegExp(/\s\([0-9]+\)/g);
     this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
       let splits = line.split(' ');
        if (splits[0] !== '') {
@@ -89,9 +90,9 @@ export class Parser {
            process: splits[2],
            id: 0
          };
-        for (let i = 3; i < splits.length; i++) {
-          if (splits[i].match('(\[0-9]+)'))  {
-            result.id = +splits[i].match('(\[0-9]+)')![0];
+        for (let i = 4; i < splits.length; i++) {
+          if (splits[i].match(idRegex))  {
+            result.id = +splits[i].match(idRegex)![0];
             break;
           }
         }
