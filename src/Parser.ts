@@ -99,7 +99,7 @@ export class Parser {
         }
         result.geo = this.parseGeo(line);
         result.content = this.parseContent(line);
-        if (splits[3].length > 3) {
+        if (splits[3].length >= 3) {
           result.nickname = splits[3];
         } else {
           for (let i = 3; i < splits.length; i++) {
