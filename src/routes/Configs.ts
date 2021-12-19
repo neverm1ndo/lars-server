@@ -8,12 +8,12 @@ import { promises } from 'fs';
 import { json } from 'body-parser';
 
 import { corsOpt, upcfg } from '@shared/constants';
-import { getMimeType } from '@shared/functions';
+import { getMimeType, getCharset } from '@shared/functions';
 
 const router = Router();
 
 const parser = new Parser();
-const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
+const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, BAD_REQUEST } = StatusCodes;
 
 router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files(configs) and directories tree
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
@@ -30,11 +30,17 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
       Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
       if (req.query.path) {
-        res.set('Content-Type', 'text/plain');
-        readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
-          if (err) {  res.status(INTERNAL_SERVER_ERROR).send(err) }
-          else { res.send(parser.ANSItoUTF8(buf)) };
-        });
+        // res.set('Content-Type', 'application/json');
+        promises.stat(req.query.path).then((stats: Stats) => {
+          readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
+            if (err) {  res.status(INTERNAL_SERVER_ERROR).send(err) }
+            else { res.send({text: parser.ANSItoUTF8(buf), stats: { size: stats.size, lastm: stats.mtime, mime: getMimeType(req.query.path), charset: 'ANSI' }})};
+          });
+        }).catch((err: NodeJS.ErrnoException) => {
+          res.status(INTERNAL_SERVER_ERROR).end(err);
+        })
+      } else {
+        res.status(BAD_REQUEST);
       }
     });
     router.get('/file-info', corsOpt, (req: any, res: any) => { // GET stat of file

@@ -9,6 +9,7 @@ import { LOG_LINE } from '@schemas/logline.schema';
 import { readdir, lstatSync, readFile } from 'fs';
 import { join } from 'path';
 import { User } from '@interfaces/user';
+import { lookup, charset } from 'mime-types';
 
 export const watch = (): void => {
   watcher.result$.subscribe((buffer: Buffer) => {
@@ -55,14 +56,24 @@ export const firstLaunch = (dir: string): void => {
   });
 }
 
-export const getMimeType = (path:string): string | undefined => {
+export const getMimeType = (path:string): string | false => {
   let splited = path.split('.');
+  if (!splited) return '*/*';
   switch (splited[splited.length - 1]) {
     case 'amx': return 'application/octet-stream';
     case 'so': return 'application/x-sharedlib';
     case 'db': return 'application/octet-stream';
     case 'cadb': return 'application/octet-stream';
+    case 'map': return 'text/xml';
+    default: break;
   }
+  const mime = lookup(path);
+  if (!mime) return '*/*';
+  return lookup(path);
+}
+
+export const getCharset = (typeString: string): string | false => {
+  return charset(typeString);
 }
 
 export const checkPassword = (pass: string, hash: string): boolean => {
