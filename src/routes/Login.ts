@@ -7,7 +7,7 @@ import { corsOpt, MSQLPool } from '@shared/constants';
 import { checkPassword, generateToken, verifyToken, isWorkGroup, decodeToken } from '@shared/functions';
 
 const router = Router();
-const { OK, UNAUTHORIZED, BAD_REQUEST } = StatusCodes;
+const { OK, UNAUTHORIZED, BAD_REQUEST, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 
 
@@ -33,8 +33,8 @@ router.post('/', corsOpt, bodyParser.json(), (req: any, res: any): void => {
       }
     })
     .catch((err: any): void => {
-      res.status(UNAUTHORIZED).send(err);
-      Logger.log('error', `[${req.connection.remoteAddress}]`, 401, 'Failed authorization ->', req.body.email)
+      res.status(INTERNAL_SERVER_ERROR).send(err);
+      Logger.log('error', `[${req.connection.remoteAddress}]`, INTERNAL_SERVER_ERROR, 'Failed authorization ->', req.body.email)
       Logger.log('error', err);
     });
 });
@@ -52,13 +52,13 @@ router.get('/user', corsOpt, (req: any, res: any): void => {
       }));
     })
     .catch((err: any): void => {
-      res.status(UNAUTHORIZED).send(err);
+      res.status(INTERNAL_SERVER_ERROR).send(err);
       Logger.log('error', err);
     });
 });
 
 router.get('/check-token', (req: any, res: Response) => { // GET Checks token validation
-  if (!req.headers.authorization) return res.status(BAD_REQUEST).send('Authorization token is empty');
+  if (!req.headers.authorization) return res.status(UNAUTHORIZED).send('Authorization token is empty');
   const token: string = req.headers.authorization.split(' ')[1];
   if (verifyToken(token)) {
     const user = decodeToken(token);
@@ -73,7 +73,7 @@ router.get('/check-token', (req: any, res: Response) => { // GET Checks token va
           throw 'Invalid access token';
         }
       }).catch((err: string) => {
-        res.status(UNAUTHORIZED).send(err);
+        res.status(INTERNAL_SERVER_ERROR).send(err);
       });
   } else {
     return res.status(UNAUTHORIZED).send('Invalid access token');

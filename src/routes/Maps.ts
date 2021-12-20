@@ -11,13 +11,14 @@ const router = Router();
 const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 router.get('/maps-files-tree', corsOpt, (req: any, res: any) => { // GET Files(maps) tree
-  if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
+  if (!req.headers.authorization) return res.send(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> MAPS_FILES_TREE [', req.originalUrl, ']');
   let root = TreeNode.buildTree(process.env.MAPS_PATH!, 'maps');
+  if (!root) return res.send(INTERNAL_SERVER_ERROR);
   res.send(JSON.stringify(root));
 });
 router.get('/map-file', corsOpt, (req: any, res: any) => { // GET Files(maps) tree
-  if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
+  if (!req.headers.authorization) return res.send(UNAUTHORIZED);
     Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> MAP [', req.originalUrl, ']');
     if (req.query.path) {
     res.set('Content-Type', 'text/xml');
@@ -30,7 +31,7 @@ router.get('/map-file', corsOpt, (req: any, res: any) => { // GET Files(maps) tr
   }
 });
 router.post('/upload-map', corsOpt, upmap.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
-  if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED); return ; }
+  if (!req.headers.authorization)  { res.send(UNAUTHORIZED); return ; }
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> UPLOAD_FILE', /**req.body.file.path,**/ '[', req.originalUrl, ']');
   res.sendStatus(OK);
 });

@@ -9,7 +9,7 @@ import { corsOpt } from '@shared/constants';
 import { isDate, firstLaunch } from '@shared/functions';
 
 const router = Router();
-const { UNAUTHORIZED } = StatusCodes;
+const { UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 // router.get('/launch', (req: any, res: any) => { // GET last lines. Default : 100
 //   firstLaunch(process.env.LOGS_PATH!);
@@ -23,12 +23,15 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
   if (req.query.page) page = +req.query.page;
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> LINES', lim, page,' [', req.originalUrl, ']');
   LOG_LINE.find({}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page }, (err: any, lines: Document[]) => {
-    if (err) return Logger.log('error', err);
+    if (err) {
+      Logger.log('error', err);
+      return res.send(INTERNAL_SERVER_ERROR).end(err);
+    }
     res.send(lines);
   });
 });
 router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
-  if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
+  if (!req.headers.authorization) return res.send(UNAUTHORIZED);
   let lim = 40;
   let page = 0;
   let date = {
@@ -42,21 +45,30 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
                '                            └ ', JSON.stringify(req.query));
     if (req.query.ip) {
       LOG_LINE.find({"geo.ip": req.query.ip, date: { $gte: new Date(date.from + ' GMT+0300'), $lte: new Date(date.to + ' GMT+0300') } }, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: Document[]) => {
-        if (err) return Logger.log('error', err);
+        if (err) {
+          Logger.log('error', err);
+          return res.send(INTERNAL_SERVER_ERROR).end(err);
+        }
         res.send(lines);
       });
       return true;
     }
     if (req.query.nickname) {
         LOG_LINE.find({ nickname: req.query.nickname, date: { $gte: new Date(date.from + ' GMT+0300'), $lte: new Date(date.to + ' GMT+0300') }}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page }, (err: any, lines: Document[]) => {
-        if (err) return Logger.log('error', err);
+          if (err) {
+            Logger.log('error', err);
+            return res.send(INTERNAL_SERVER_ERROR).end(err);
+          }
         res.send(lines);
       });
       return true;
     }
     if (req.query.as && req.query.ss) {
       LOG_LINE.find({"geo.as": req.query.as, "geo.ss": req.query.ss, date: { $gte: new Date(date.from + ' GMT+0300'), $lte: new Date(date.to + ' GMT+0300') } }, [], { sort: { unix : -1 }, limit: lim, skip: lim*page}, (err: any, lines: Document[]) => {
-        if (err) return Logger.log('error', err);
+        if (err) {
+          Logger.log('error', err);
+          return res.send(INTERNAL_SERVER_ERROR).end(err);
+        }
         res.send(lines);
       });
       return true;

@@ -8,7 +8,7 @@ import { corsOpt, MSQLPool } from '@shared/constants';
 
 const router = Router();
 
-const { OK, UNAUTHORIZED } = StatusCodes;
+const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 router.get('/list', corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== 10) return res.sendStatus(UNAUTHORIZED);
@@ -26,7 +26,7 @@ router.get('/list', corsOpt, (req: any, res: any) => {
       res.send(JSON.stringify(rows));
     })
     .catch((err: any): void => {
-      res.status(UNAUTHORIZED).send(err);
+      res.status(INTERNAL_SERVER_ERROR).send(err);
       Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.user, 'Failed admin list query');
       Logger.log('error', err);
     });
@@ -40,7 +40,7 @@ router.get('/all', corsOpt, (req: any, res: any) => {
       res.send(JSON.stringify(rows));
     })
     .catch((err: any): void => {
-      res.status(UNAUTHORIZED).send(err);
+      res.status(INTERNAL_SERVER_ERROR).send(err);
       Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.user, 'Failed admin list query');
       Logger.log('error', err);
     });
@@ -54,7 +54,7 @@ router.get('/sub-groups', corsOpt, (req: any, res: any) => {
       res.send(JSON.stringify(rows));
     })
     .catch((err: any): void => {
-      res.status(UNAUTHORIZED).send(err);
+      res.status(INTERNAL_SERVER_ERROR).send(err);
       Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.user, 'Failed admin list query');
       Logger.log('error', err);
     });
@@ -74,7 +74,7 @@ router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => 
       res.status(OK).send(JSON.stringify({status: 'ok'}));
     })
     .catch((err: any): void => {
-      res.status(UNAUTHORIZED).send(err);
+      res.status(INTERNAL_SERVER_ERROR).send(err);
       Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.user, `Failed to change ${req.body.username} admin status to ${req.body.group}`)
       Logger.log('error', err);
     });

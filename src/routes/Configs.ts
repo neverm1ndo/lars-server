@@ -24,6 +24,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
       } else {
         root = TreeNode.buildTree(process.env.CFG_DEFAULT_PATH!, 'configs');
       }
+      if (!root) res.send(INTERNAL_SERVER_ERROR).end('Cant read file tree');
       res.send(JSON.stringify(root));
     });
     router.get('/config-file', corsOpt, (req: any, res: any) => { // GET single config file
