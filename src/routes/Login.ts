@@ -12,6 +12,8 @@ const { OK, UNAUTHORIZED, BAD_REQUEST, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 
 router.post('/', corsOpt, bodyParser.json(), (req: any, res: any): void => {
+  if (!req.body.email) { res.status(BAD_REQUEST).send(`E-mail form is empty`); return;}
+  if (!req.body.password) { res.status(BAD_REQUEST).send(`Password form is empty`); return;}
   Logger.log('default', 'Trying to authorize', req.body.email);
   MSQLPool.promise()
     .query("SELECT username, user_id, user_type, user_avatar, user_password, group_id FROM phpbb_users WHERE user_email = ?", [req.body.email])
