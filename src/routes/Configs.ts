@@ -8,7 +8,7 @@ import { promises } from 'fs';
 import { json } from 'body-parser';
 
 import { corsOpt, upcfg } from '@shared/constants';
-import { getMimeType, getCharset } from '@shared/functions';
+import { getMimeType } from '@shared/functions';
 
 const router = Router();
 
