@@ -6,14 +6,10 @@ import { Document } from 'mongoose';
 
 
 import { corsOpt } from '@shared/constants';
-import { isDate, firstLaunch } from '@shared/functions';
+import { isDate } from '@shared/functions';
 
 const router = Router();
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
-
-// router.get('/launch', (req: any, res: any) => { // GET last lines. Default : 100
-//   firstLaunch(process.env.LOGS_PATH!);
-// });
 
 router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Default : 100
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
