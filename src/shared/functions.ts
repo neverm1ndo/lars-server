@@ -101,6 +101,9 @@ export const decodeToken = (token: string): User | null => {
     group_id: user.group_id
   };
 }
+export const parseSearchFilter = (filt: string): string[] => {
+  return filt.split(',');
+}
 export const isWorkGroup = (group: number | string): boolean => {
   group = group.toString();
   return group.includes('9') || group.includes('10') || group.includes('11') || group.includes('12') || group.includes('13');

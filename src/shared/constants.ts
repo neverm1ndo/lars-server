@@ -56,13 +56,14 @@ export const CORSoptions = {
     ],
     credentials: true,
     methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
-    origin: (origin: any, callback: any) => {
-      if (JSON.parse(process.env.CORS_WL!).indexOf(origin) !== -1) {
-        callback(null, true)
-      } else {
-        callback(new Error('Not allowed by CORS'))
-      }
-    },
+    // origin: (origin: any, callback: any) => {
+    //   if (JSON.parse(process.env.CORS_WL!).indexOf(origin) !== -1) {
+    //     callback(null, true)
+    //   } else {
+    //     callback(new Error('Not allowed by CORS'))
+    //   }
+    // },
+    origin: '*',
     preflightContinue: false,
   };
   export const corsOpt = cors(CORSoptions);

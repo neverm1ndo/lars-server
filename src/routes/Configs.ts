@@ -6,20 +6,24 @@ import { TreeNode } from '@shared/fs.treenode';
 import { writeFile, readFile, Stats } from 'fs';
 import { promises } from 'fs';
 import { json } from 'body-parser';
+import Workgroup from '@enums/workgroup.enum';
 
 import { corsOpt, upcfg } from '@shared/constants';
 import { getMimeType } from '@shared/functions';
 
+
 const router = Router();
 
 const parser = new Parser();
-const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, BAD_REQUEST } = StatusCodes;
+const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
+const { DEV, CFR } = Workgroup;
 
 router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files(configs) and directories tree
-      if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
+      if (!req.headers.authorization) return res.send(UNAUTHORIZED);
+      if (req.user.group_id !== DEV || req.user.group_id !== CFR) return res.send(UNAUTHORIZED);
       Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CONFIG_FILES_TREE [', req.originalUrl, ']');
       let root: TreeNode;
-      if (req.user.group_id == 10) {
+      if (req.user.group_id == DEV) {
         root = TreeNode.buildTree(process.env.CFG_DEV_PATH!, 'svr_sa');
       } else {
         root = TreeNode.buildTree(process.env.CFG_DEFAULT_PATH!, 'configs');
@@ -31,7 +35,6 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
       Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
       if (req.query.path) {
-        // res.set('Content-Type', 'application/json');
         promises.stat(req.query.path).then((stats: Stats) => {
           readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
             if (err) {  res.status(INTERNAL_SERVER_ERROR).send(err) }
@@ -41,7 +44,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
           res.status(INTERNAL_SERVER_ERROR).end(err);
         })
       } else {
-        res.status(BAD_REQUEST);
+        res.status(CONFLICT);
       }
     });
     router.get('/file-info', corsOpt, (req: any, res: any) => { // GET stat of file

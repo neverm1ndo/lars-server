@@ -23,6 +23,7 @@
     "@schemas": "dist/schemas",
     "@server": "dist/Server",
     "@parser": "dist/Parser",
+    "@enums": "dist/enums",
     "@watcher": "dist/Watcher"
   },
   "eslintConfig": {

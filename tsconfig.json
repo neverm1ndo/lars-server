@@ -86,6 +86,9 @@
       ],
       "@schemas/*": [
         "src/schemas/*"
+      ],
+      "@enums/*": [
+        "src/enums/*"
       ]
     },
   },

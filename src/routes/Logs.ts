@@ -6,25 +6,30 @@ import { Document } from 'mongoose';
 
 
 import { corsOpt } from '@shared/constants';
-import { isDate } from '@shared/functions';
+import { isDate, parseSearchFilter } from '@shared/functions';
 
 const router = Router();
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Default : 100
+  let filter: string[] = [];
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
+  if (req.query.filter) filter = parseSearchFilter(req.query.filter);
+  console.log(filter)
   let lim = 100;
   let page = 0;
   if (req.query.lim) lim = +req.query.lim;
   if (req.query.page) page = +req.query.page;
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> LINES', lim, page,' [', req.originalUrl, ']');
-  LOG_LINE.find({}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page }, (err: any, lines: Document[]) => {
+  LOG_LINE.find({}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page },)
+  .where('process').nin(filter)
+  .exec((err: any, lines: Document[]) => {
     if (err) {
       Logger.log('error', err);
       return res.send(INTERNAL_SERVER_ERROR).end(err);
     }
     res.send(lines);
-  });
+    });
 });
 router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.headers.authorization) return res.send(UNAUTHORIZED);

@@ -1,10 +1,13 @@
 import { Logger } from '@shared/Logger';
 import { exec } from 'child_process';
 import { WSMessage } from '@interfaces/ws.message';
-import { ClientManager, UserActionType } from '@shared/client.manager';
+import { ClientManager } from '@shared/client.manager';
 import { decodeToken } from '@shared/functions';
 import { URLSearchParams } from 'url';
 import { User } from '@interfaces/user';
+import Workgroup from '@enums/workgroup.enum';
+
+const { DEV } = Workgroup;
 
 export const cm = new ClientManager();
 
@@ -18,9 +21,9 @@ const sockets = (ws: any, req: any) => {
     const wsm: WSMessage = JSON.parse(m);
     switch (wsm.event) {
       case 'stop-server': {
-        if (user?.group_id == 10) {
+        if (user?.group_id == DEV) {
           Logger.log('default', 'WS │', req.connection.remoteAddress, user?.name,'-> STOP_SVR_SA');
-          exec('sudo bash /home/nmnd/killer.sh', (err: any, stdout: any, stderr: any) => {
+          exec('sudo bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
             if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
             cm.sendall({ event: 'server-stoped', msg: stdout });
           });
@@ -30,7 +33,7 @@ const sockets = (ws: any, req: any) => {
         break;
       }
       case 'reboot-server': {
-        if (user?.group_id == 10) {
+        if (user?.group_id == DEV) {
           Logger.log('default', 'WS │', req.connection.remoteAddress, user?.name, '-> REBOOT_SVR_SA');
           let cmd: string;
           switch (process.platform) {
@@ -38,7 +41,7 @@ const sockets = (ws: any, req: any) => {
             case 'linux' : cmd = 'sudo pkill samp03svr'; break;
             default: ws.send({ event: 'error', msg: 'LibertyLogs не поддерживает платформу ' + process.platform }); return;
           }
-          exec(cmd, (err: any, stdout: any, stderr: any) => {
+          exec(cmd, (err: any, stdout: any) => {
             if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
             cm.sendall({ event: 'server-status', msg: 'rebooting' });
             setTimeout(() => {
@@ -51,9 +54,9 @@ const sockets = (ws: any, req: any) => {
         break;
       }
       case 'launch-server': {
-        if (user?.group_id == 10) {
+        if (user?.group_id == DEV) {
           Logger.log('default', 'WS │', req.connection.remoteAddress, user?.name, '-> LAUNCH_SVR_SA');
-          exec(`bash /home/nmnd/starter.sh`, (err: any, stdout: any, stderr: any) => {
+          exec(`bash /home/nmnd/starter.sh`, (err: any) => {
             if (err) { ws.send(JSON.stringify({ event: 'error', msg: err.message })); return; }
           });
           cm.sendall({ event: 'server-status', msg: 'loading' });
