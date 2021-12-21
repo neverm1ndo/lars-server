@@ -8,6 +8,8 @@ import { promises } from 'fs';
 import { json } from 'body-parser';
 import Workgroup from '@enums/workgroup.enum';
 
+import Backuper from '@backuper';
+
 import { corsOpt, upcfg } from '@shared/constants';
 import { getMimeType } from '@shared/functions';
 
@@ -19,8 +21,8 @@ const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 const { DEV, CFR } = Workgroup;
 
 router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files(configs) and directories tree
-      if (!req.headers.authorization) return res.send(UNAUTHORIZED);
-      if (req.user.group_id !== DEV || req.user.group_id !== CFR) return res.send(UNAUTHORIZED);
+      if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
+      if (req.user.group_id !== DEV && req.user.group_id !== CFR) return res.sendStatus(UNAUTHORIZED);
       Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CONFIG_FILES_TREE [', req.originalUrl, ']');
       let root: TreeNode;
       if (req.user.group_id == DEV) {
@@ -61,9 +63,14 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
     router.post('/save-config', corsOpt, json(), (req: any, res: any) => { // POST Write map file
       if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED); return ; }
       Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
-      writeFile(req.body.file.path, parser.UTF8toANSI(req.body.file.data), (err: NodeJS.ErrnoException | null) => {
-        if (err) { res.status(INTERNAL_SERVER_ERROR).send(err) }
-        else { res.status(OK).send(JSON.stringify({ res: `Config ${req.body.file.path} successfully saved` }))};
+      Backuper.backup(req.body.file.path).then(() => {
+        writeFile(req.body.file.path, parser.UTF8toANSI(req.body.file.data), (err: NodeJS.ErrnoException | null) => {
+          if (err) { res.status(INTERNAL_SERVER_ERROR).send(err) }
+          else { res.status(OK).send(JSON.stringify({ res: `Config ${req.body.file.path} successfully saved` }))};
+        });
+      }).catch((err) => {
+        Logger.log('error', err.message);
+        res.status(INTERNAL_SERVER_ERROR).end('Backuper error: ' + err.message);
       });
     });
     router.post('/upload-cfg', corsOpt, upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file

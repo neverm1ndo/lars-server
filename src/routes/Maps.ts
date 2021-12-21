@@ -13,7 +13,7 @@ const { DEV, MAPPER } = Workgroup;
 
 router.get('/maps-files-tree', corsOpt, (req: any, res: any) => { // GET Files(maps) tree
   if (!req.headers.authorization) return res.send(UNAUTHORIZED);
-  if (req.user.group_id !== DEV || req.user.group_id !== MAPPER) return res.send(UNAUTHORIZED);
+  if (req.user.group_id !== DEV && req.user.group_id !== MAPPER) return res.send(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> MAPS_FILES_TREE [', req.originalUrl, ']');
   let root = TreeNode.buildTree(process.env.MAPS_PATH!, 'maps');
   if (!root) return res.send(INTERNAL_SERVER_ERROR);
