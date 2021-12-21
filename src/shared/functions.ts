@@ -9,6 +9,7 @@ import { LOG_LINE } from '@schemas/logline.schema';
 import { readdir, lstatSync, readFile } from 'fs';
 import { join } from 'path';
 import { User } from '@interfaces/user';
+import { cm } from '../routes/WS';
 import { lookup, charset } from 'mime-types';
 import { Processes } from '@enums/processes.enum';
 
@@ -17,6 +18,7 @@ export const watch = (): void => {
     parser.parse(buffer).forEach((line: LogLine) => {
       let ln = new LOG_LINE(line);
       ln.save();
+      cm.sendall({ event: 'new-log-line' });
     })
   }, (err) => { Logger.log('error', err) });
 }
