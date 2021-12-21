@@ -13,11 +13,7 @@ export const watcher = new Watcher();
 
 const mapStorage = diskStorage({
   destination: function (req: any, file: any, cb) {
-    if (req.body.path) {
-      cb(null, req.body.path)
-    } else {
-      cb(null, process.env.MAPS_PATH!)
-    }
+    cb(null, req.body.path?req.body.path:process.env.MAPS_PATH!)
   },
   filename: function (req: any, file: any, cb) {
     cb(null, file.originalname)
@@ -26,11 +22,7 @@ const mapStorage = diskStorage({
 
 const confStorage = diskStorage({
   destination: function (req: any, file: any, cb) {
-    if (req.body.path) {
-      cb(null, req.body.path)
-    } else {
-      cb(null, process.env.CFG_DEFAULT_PATH!)
-    }
+    cb(null, req.body.path?req.body.path:process.env.CFG_DEFAULT_PATH!)
   },
   filename: function (req: any, file: any, cb) {
     cb(null, file.originalname)
