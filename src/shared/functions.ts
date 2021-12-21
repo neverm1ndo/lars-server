@@ -3,13 +3,14 @@ import md5 from 'md5';
 import jwt from 'jsonwebtoken';
 import { Logger } from './Logger';
 import { WSMessage } from '@interfaces/ws.message';
-import { parser, watcher } from './constants';
+import { parser, watcher, processTranslation } from './constants';
 import { LogLine } from '@interfaces/logline';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { readdir, lstatSync, readFile } from 'fs';
 import { join } from 'path';
 import { User } from '@interfaces/user';
 import { lookup, charset } from 'mime-types';
+import { Processes } from '@enums/processes.enum';
 
 export const watch = (): void => {
   watcher.result$.subscribe((buffer: Buffer) => {
@@ -101,8 +102,12 @@ export const decodeToken = (token: string): User | null => {
     group_id: user.group_id
   };
 }
-export const parseSearchFilter = (filt: string): string[] => {
-  return filt.split(',');
+export const getProcessFromTranslation = <T, K extends keyof T>(processes: T, translations: K[]): Array<T[K]> => {
+  return translations.map((t) => processes[t]);
+}
+export const parseSearchFilter = (filt: string): Array<Processes> => {
+  const splited: Array<keyof typeof processTranslation> = filt.split(',').filter((f): boolean => processTranslation.hasOwnProperty(f)) as Array<keyof typeof processTranslation>;
+  return getProcessFromTranslation(processTranslation, splited);
 }
 export const isWorkGroup = (group: number | string): boolean => {
   group = group.toString();
