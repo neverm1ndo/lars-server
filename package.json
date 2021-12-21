@@ -24,7 +24,8 @@
     "@server": "dist/Server",
     "@parser": "dist/Parser",
     "@enums": "dist/enums",
-    "@watcher": "dist/Watcher"
+    "@watcher": "dist/Watcher",
+    "@backuper": "dist/Backuper"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",

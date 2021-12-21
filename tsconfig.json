@@ -81,6 +81,9 @@
       "@parser": [
         "src/Parser"
       ],
+      "@backuper": [
+        "src/Backuper"
+      ],
       "@interfaces/*": [
         "src/interfaces/*"
       ],
