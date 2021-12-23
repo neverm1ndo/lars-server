@@ -5,6 +5,7 @@ import MapsRouter from './Maps';
 import ConfigsRouter from './Configs';
 import UtilsRouter from './Utils';
 import AdminsRouter from './Admins';
+import BackupsRouter from './Backups';
 
 // Init router and path
 const router = Router();
@@ -16,6 +17,7 @@ router.use('/maps', MapsRouter);
 router.use('/configs', ConfigsRouter);
 router.use('/utils', UtilsRouter);
 router.use('/admins', AdminsRouter);
+router.use('/backups', BackupsRouter);
 
 // Export the base-router
 export default router;
