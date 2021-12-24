@@ -1,8 +1,9 @@
 import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
-import { json } from 'body-parser';
-import { unlink } from 'fs';
+import { Response } from 'express';
+// import { json } from 'body-parser';
+// import { unlink } from 'fs';
 import Workgroup from '@enums/workgroup.enum';
 // import { TreeNode } from '@shared/fs.treenode';
 import { BACKUP } from '@schemas/backup.schema';
@@ -27,16 +28,16 @@ router.get('/backups-list', corsOpt, (req: any, res: any) => { // GET download c
     res.send(data);
   })
 });
-router.get('/restore-backup', corsOpt, (req: any, res: any) => {
+router.get('/restore-backup', corsOpt, (req: any, res: Response) => {
   if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED).end('Empty authorization token'); return ; }
   if (req.user.group_id !== DEV && req.user.group_id !== BACKUPER) { res.sendStatus(UNAUTHORIZED).end('Access denied for workgroup: ' + isWorkGroup(req.user.group_id)); return; }
   if (!req.query.path || !req.query.unix) { res.sendStatus(CONFLICT).end('Bad request: required parameters missed'); return;}
   Backuper.restore(req.query.path,  Number(req.query.unix)).then(() => {
     Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> RESTORED_BACKUP', req.query.path, '[', req.originalUrl, ']');
+    res.status(OK).send([]);
   }).catch((err) => {
-    console.error(err);
-    res.send(INTERNAL_SERVER_ERROR)
-  });
+    res.status(INTERNAL_SERVER_ERROR).send({message: err.message});
+  })
 })
 
 export default router;
