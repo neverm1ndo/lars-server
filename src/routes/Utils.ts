@@ -2,7 +2,7 @@ import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import { json } from 'body-parser';
-import { unlink } from 'fs';
+import { unlink } from 'fs-extra';
 import Workgroup from '@enums/workgroup.enum';
 import Backuper from '@backuper';
 
@@ -20,11 +20,16 @@ router.delete('/delete-file', corsOpt, json(), (req: any, res: any) => { // DELE
   if (req.user.group_id !== DEV) { res.send(UNAUTHORIZED).end('Access denied for workgroup: ' + isWorkGroup(req.user.group_id)); return ; }
   if (!req.query.path) { return res.send(CONFLICT); }
   Logger.log('default', 'DELETE │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
-  Backuper.backup(req.query.path, req.user).then(() => {
-    unlink(req.query.path, (err: NodeJS.ErrnoException | null) => {
-      if (err) {  res.sendStatus(INTERNAL_SERVER_ERROR).end(err); }
-      else { res.send(OK).end(`File ${req.query.path} successfully deleted`) };
-    });
+  Backuper.backup(req.query.path, req.user, 'delete').then(() => {
+    return new Promise<void>((res, rej) => {
+      return unlink(req.query.path, (err: NodeJS.ErrnoException | null) => {
+        return (!!err ? rej(err) : res());
+      });
+    })
+  }).then(() => {
+      res.sendStatus(OK)
+  }).catch((err) => {
+      res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
   }).catch((err) => {
     Logger.log('error', err.message);
     res.status(INTERNAL_SERVER_ERROR).end('Backuper error: ' + err.message);
