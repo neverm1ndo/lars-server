@@ -75,6 +75,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
     });
     router.post('/upload-cfg', corsOpt, upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
       if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED); return ; }
+      if (req.user.group_id !== DEV && req.user.group_id !== CFR)  { res.send(UNAUTHORIZED); return ; }
       Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> UPLOAD_FILE', '[', req.originalUrl, ']');
       res.sendStatus(OK);
     });
