@@ -9,16 +9,16 @@ import { LOG_LINE } from '@schemas/logline.schema';
 import { readdir, lstatSync, readFile } from 'fs';
 import { join } from 'path';
 import { User } from '@interfaces/user';
-import { cm } from '../routes/WS';
 import { lookup, charset } from 'mime-types';
 import { Processes } from '@enums/processes.enum';
+import { io } from '../index';
 
 export const watch = (): void => {
   watcher.result$.subscribe((buffer: Buffer) => {
     parser.parse(buffer).forEach((line: LogLine) => {
       let ln = new LOG_LINE(line);
       ln.save();
-      cm.sendall({ event: 'new-log-line' });
+      io.sockets.emit('new-log-line');
     })
   }, (err) => { Logger.log('error', err) });
 }
@@ -96,13 +96,24 @@ export const verifyToken = (token: string): boolean => {
   return jwt.decode(token, app.get('secret')) ? true : false;
 }
 export const decodeToken = (token: string): User | null => {
-  const user = jwt.decode(token, app.get('secret'));
+  // const user = jwt.decode(token, app.get('secret'));
+  let user;
+  // console.log(user);
+  // return {
+  //   name: user.user,
+  //   id: user.id,
+  //   group_id: user.group_id
+  // };
+  jwt.verify(token, app.get('secret'), (err: any, decoded: any) => {
+    user = {
+        name: decoded.user,
+        id: decoded.id,
+        group_id: decoded.group_id
+      }
+  })
   if (!user) return null;
-  return {
-    name: user.user,
-    id: user.id,
-    group_id: user.group_id
-  };
+  return user;
+
 }
 export const getProcessFromTranslation = <T, K extends keyof T>(processes: T, translations: K[]): Array<T[K]> => {
   return translations.map((t) => processes[t]);

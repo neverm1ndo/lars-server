@@ -93,6 +93,7 @@
     "mysql2": "^2.2.5",
     "passport-jwt": "^4.0.0",
     "rxjs": "^6.6.3",
+    "socket.io": "^4.4.0",
     "ws": "^7.4.3"
   },
   "devDependencies": {

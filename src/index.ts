@@ -2,9 +2,10 @@ import './pre-start'; // Must be the first import
 import app from '@server';
 import https from 'https';
 import { readFileSync } from 'fs';
-import WebSocket from 'ws';
-import sockets from './routes/WS';
+import sockets, { socketAuth } from './routes/Sockets';
 import options from './pre-start/index'
+import { Server, Socket } from 'socket.io';
+import { socketCORS } from '@shared/constants';
 
 // Start the server
 
@@ -26,9 +27,12 @@ if (options.env !== 'development') {
 }
 
 const server = https.createServer(httpsOptions , app);
-const wss = new WebSocket.Server({ server });
-wss.on('connection', (ws: WebSocket, req: any) => {
-  sockets(ws, req)
-});
+
+export const io = new Server(server, { cors: socketCORS });
+io.use(socketAuth);
+io.on('connection', (socket: Socket) => {
+  sockets(socket);
+})
+
 server.listen(process.env.HTTPS_PORT, () => { console.log('HTTPS LARS NODE listening on port', process.env.HTTPS_PORT) })
 app.listen(process.env.HTTP_PORT, () => { console.log('HTTP LARS NODE listening on port', process.env.HTTP_PORT)})
