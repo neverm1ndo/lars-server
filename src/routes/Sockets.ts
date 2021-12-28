@@ -58,7 +58,7 @@ const sockets = (socket: Socket) => {
           socket.broadcast.to('devs').emit('server-rebooted', stdout);
           socket.emit('server-rebooted', stdout);
           Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
-        }, 5000);
+        }, 8000);
       });
   });
   socket.on('stop-server', () => {
