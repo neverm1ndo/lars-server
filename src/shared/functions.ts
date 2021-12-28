@@ -19,6 +19,11 @@ export const watch = (): void => {
       let ln = new LOG_LINE(line);
       ln.save();
       io.sockets.emit('new-log-line');
+      switch (line.process) {
+        case Processes.GUARD_BLOCK_ON: io.sockets.emit('alert:guard-block-on', line); break;
+        case Processes.DISCONNECT_KICKBAN: io.sockets.emit('alert:kickban', line); break;
+        default: break;
+      }
     })
   }, (err) => { Logger.log('error', err) });
 }
