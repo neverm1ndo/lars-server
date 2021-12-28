@@ -38,7 +38,7 @@ const sockets = (socket: Socket) => {
     Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> GET_SVR_SA_STAT');
     exec('sudo bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
       if (err) { socket.emit('server-error', err.message ); return; }
-      socket.emit('server-status', stdout == 'true');
+      socket.emit('server-status', stdout == 'true'?'live':'stoped');
     });
   });
   socket.on('reboot-server', () => {
@@ -72,15 +72,15 @@ const sockets = (socket: Socket) => {
   socket.on('launch-server', () => {
     if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
     Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> LAUNCH_SVR_SA');
-    exec(`bash /home/nmnd/starter.sh`, (err: any) => {
-      if (err) { socket.emit( 'server-error', err.message ); return; }
-    });
     socket.broadcast.to('devs').emit( 'server-status', 'loading' );
     socket.emit( 'server-status', 'loading' );
-    setTimeout(() => {
-      socket.broadcast.to('devs').emit('server-launched');
-      socket.emit('server-launched');
-    }, 10000);
+    exec(`bash /home/nmnd/starter.sh`, (err: any) => {
+      if (err) { socket.emit( 'server-error', err.message ); return; }
+      setTimeout(() => {
+        socket.broadcast.to('devs').emit('server-launched');
+        socket.emit('server-launched');
+      }, 10000);
+    });
   });
   socket.on('user-action', (action) => {
     Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> WS_USER_ACTION', action);
