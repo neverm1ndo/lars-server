@@ -35,21 +35,21 @@ const sockets = (socket: Socket) => {
   })
   socket.on('get-status', () => {
     if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
-    Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> GET_SVR_SA_STAT');
     exec('sudo bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
       if (err) { socket.emit('server-error', err.message ); return; }
+      Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> GET_SVR_SA_STAT', stdout == 'true'?'live':'stoped');
       socket.emit('server-status', stdout == 'true'?'live':'stoped');
     });
   });
   socket.on('reboot-server', () => {
     if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
-      Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> REBOOT_SVR_SA');
       let cmd: string;
       switch (process.platform) {
         case 'win32' : cmd = 'taskkill /IM samp03svr.exe'; break;
         case 'linux' : cmd = 'sudo pkill samp03svr'; break;
         default: socket.emit('error', 'LARS Server не поддерживает платформу ' + process.platform ); return;
       }
+      Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> REBOOT_SVR_SA');
       exec(cmd, (err: any, stdout: any) => {
         if (err) { socket.emit('error', err.message ); return; }
         socket.broadcast.to('devs').emit('server-status', 'rebooting')
@@ -57,16 +57,18 @@ const sockets = (socket: Socket) => {
         setTimeout(() => {
           socket.broadcast.to('devs').emit('server-rebooted', stdout);
           socket.emit('server-rebooted', stdout);
+          Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
         }, 5000);
       });
   });
   socket.on('stop-server', () => {
     if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
-      Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOP_SVR_SA');
+    Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOP_SVR_SA');
       exec('sudo bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
         if (err) { socket.emit('server-error', err.message); return; }
         socket.broadcast.to('devs').emit('server-stoped', stdout);
         socket.emit('server-stoped', stdout);
+        Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
       });
   });
   socket.on('launch-server', () => {
@@ -79,6 +81,7 @@ const sockets = (socket: Socket) => {
       setTimeout(() => {
         socket.broadcast.to('devs').emit('server-launched');
         socket.emit('server-launched');
+        Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> LAUNCHED_SVR_SA');
       }, 10000);
     });
   });
@@ -86,6 +89,7 @@ const sockets = (socket: Socket) => {
     Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> WS_USER_ACTION', action);
     socket.data.activity = action;
     socket.emit('user-activity', { user: socket.data.username, action})
+    socket.broadcast.to('devs').emit('user-activity', { user: socket.data.username, action})
   });
 }
 export default sockets;
