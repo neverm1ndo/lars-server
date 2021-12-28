@@ -38,8 +38,7 @@ const sockets = (socket: Socket) => {
     Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> GET_SVR_SA_STAT');
     exec('sudo bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
       if (err) { socket.emit('server-error', err.message ); return; }
-      if (Boolean(stdout)) { socket.emit('server-status', 'live', { state: Boolean(stdout) }); }
-      else { socket.emit('server-status', 'stoped', { state: Boolean(stdout) }); } // FIXME: status
+      socket.emit('server-status', stdout == 'true');
     });
   });
   socket.on('reboot-server', () => {
