@@ -38,7 +38,7 @@ const sockets = (socket: Socket) => {
     exec('sudo bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
       if (err) { socket.emit('server-error', err.message ); return; }
       Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> GET_SVR_SA_STAT',  'live:' + stdout);
-      socket.emit('server-status', stdout == 'true'?'live':'stoped');
+      socket.emit('server-status', stdout === 'true'?'live':'stoped');
     });
   });
   socket.on('reboot-server', () => {
