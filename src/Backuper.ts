@@ -57,7 +57,7 @@ export default class Backuper {
   static getBackupFile(name: string, unix: number) {
     return new Promise((res, rej) => {
       readFile(join(process.env.BACKUPS_PATH!, `${name}_${unix}`), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
-        if (err) rej(err);
+        if (err) { rej(err); return; }
         res(parser.ANSItoUTF8(buf))
       })
     })
