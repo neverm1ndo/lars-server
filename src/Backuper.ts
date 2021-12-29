@@ -19,6 +19,14 @@ export default class Backuper {
           return (!!err ? rej(err) : res());
       });
     })
+    const isBinary = ((ext: string): boolean => {
+      const mime = getMimeType(ext);
+      switch (mime) {
+        case 'application/x-sharedlib': return true;
+        case 'application/octet-stream': return true;
+        default: return false;
+      }
+    })(ext);
     let backup = new BACKUP({
       unix,
       date: new Date(unix),
@@ -33,7 +41,8 @@ export default class Backuper {
         path,
         name: pathsplit[pathsplit.length - 1],
         mime: getMimeType(filename+'.'+ext),
-        text: parser.ANSItoUTF8(readFileSync(path))
+        binary: isBinary,
+        text: isBinary?'':parser.ANSItoUTF8(readFileSync(path))
       }
     });
     return Promise.all([copyFile, backup.save()])

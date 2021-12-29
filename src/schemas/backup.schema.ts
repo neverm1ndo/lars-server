@@ -13,6 +13,7 @@ export const BACKUP = model( 'Backup', new Schema ({
     path: String,
     name: String,
     mime: String,
+    binary: Boolean,
     text: String
   }
 }));
