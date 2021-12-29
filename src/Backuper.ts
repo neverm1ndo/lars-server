@@ -1,5 +1,5 @@
 import { copy } from 'fs-extra';
-import { readFileSync } from 'fs';
+import { readFile } from 'fs';
 import { join } from 'path'
 import { BACKUP } from '@schemas/backup.schema';
 import { getMimeType } from '@shared/functions';
@@ -41,8 +41,7 @@ export default class Backuper {
         path,
         name: pathsplit[pathsplit.length - 1],
         mime: getMimeType(filename+'.'+ext),
-        binary: isBinary,
-        text: isBinary?'':parser.ANSItoUTF8(readFileSync(path))
+        binary: isBinary
       }
     });
     return Promise.all([copyFile, backup.save()])
@@ -53,6 +52,14 @@ export default class Backuper {
       return copy(join(process.env.BACKUPS_PATH!, `${pathsplit[pathsplit.length - 1]}_${unix}`), path, (err) => {
           return (!!err ? rej(err) : res());
       });
+    })
+  }
+  static getBackupFile(name: string, unix: number) {
+    return new Promise((res, rej) => {
+      readFile(join(process.env.BACKUPS_PATH!, `${name}_${unix}`), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
+        if (err) rej(err);
+        res(parser.ANSItoUTF8(buf))
+      })
     })
   }
 }
