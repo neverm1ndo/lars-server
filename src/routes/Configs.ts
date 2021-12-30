@@ -60,7 +60,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
         })
       }
     });
-    router.post('/save-config', corsOpt, json(), (req: any, res: any) => { // POST Write map file
+    router.post('/save-config', corsOpt, json({limit: '5mb'}), (req: any, res: any) => { // POST Write map file
       if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED); return ; }
       Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
       Backuper.backup(req.body.file.path, req.user, 'change').then(() => {
