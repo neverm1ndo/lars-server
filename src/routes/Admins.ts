@@ -9,14 +9,14 @@ import { corsOpt, MSQLPool } from '@shared/constants';
 
 const router = Router();
 
-const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
-const { DEV } = Workgroup;
+const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
+const { CHALLENGER, DEV, ADMIN, CFR, MAPPER, BACKUPER } = Workgroup;
 
 router.get('/list', corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> ADMIN_LIST [', req.originalUrl, ']');
   MSQLPool.promise()
-    .query("SELECT username, user_last_ip, user_id, user_regdate, user_email, user_avatar, group_id FROM phpbb_users WHERE user_id IN (SELECT user_id FROM phpbb_user_group WHERE group_id IN (?, ?, ?, ?, ?, ?))", [9, 10, 11, 12, 13, 14])
+    .query('SELECT phpbb_users.user_id, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id IN (?, ?, ?, ?, ?, ?) AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id', [CHALLENGER, DEV, ADMIN, MAPPER, CFR, BACKUPER])
     .then(([rows]: any[]): void => {
       for (let i = 0; i < rows.length; i++) {
         if (!rows[i].user_avatar) {
@@ -33,34 +33,6 @@ router.get('/list', corsOpt, (req: any, res: any) => {
       Logger.log('error', err);
     });
 });
-router.get('/all', corsOpt, (req: any, res: any) => {
-  if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> ADMIN_LIST [', req.originalUrl, ']');
-  MSQLPool.promise()
-    .query('SELECT user_id, group_id, username FROM phpbb_users WHERE user_id IN (SELECT user_id FROM phpbb_user_group WHERE group_id IN (?, ?, ?, ?, ?, ?))', [9, 10, 11, 12, 13, 14])
-    .then(([rows]: any[]): void => {
-      res.send(JSON.stringify(rows));
-    })
-    .catch((err: any): void => {
-      res.status(INTERNAL_SERVER_ERROR).send(err);
-      Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.user, 'Failed admin list query');
-      Logger.log('error', err);
-    });
-});
-router.get('/sub-groups', corsOpt, (req: any, res: any) => {
-  if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SUB_GROUPS_LIST [', req.originalUrl, ']');
-  MSQLPool.promise()
-    .query('SELECT * FROM phpbb_user_group', [])
-    .then(([rows]: any[]): void => {
-      res.send(JSON.stringify(rows));
-    })
-    .catch((err: any): void => {
-      res.status(INTERNAL_SERVER_ERROR).send(err);
-      Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.user, 'Failed admin list query');
-      Logger.log('error', err);
-    });
-});
 router.get('/expire-token', corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> TOKEN_SESSION_EXPIRATION [', req.originalUrl, ']');
@@ -69,9 +41,25 @@ router.get('/expire-token', corsOpt, (req: any, res: any) => {
 });
 router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => {
   if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
+  if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
   Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
   MSQLPool.promise()
-    .query('UPDATE phpbb_users SET group_id = ? WHERE username = ?', [req.body.group, req.body.username])
+    .query('UPDATE phpbb_user_group, phpbb_users SET phpbb_user_group.group_id = ?, phpbb_users.group_id = ? WHERE phpbb_user_group.user_id = phpbb_users.user_id AND phpbb_users.user_id = ?;', [req.body.group, req.body.group, req.body.id])
+    .then((): void => {
+      res.status(OK).send(JSON.stringify({status: 'ok'}));
+    })
+    .catch((err: any): void => {
+      res.status(INTERNAL_SERVER_ERROR).send(err);
+      Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.user, `Failed to change ${req.body.username} admin status to ${req.body.group}`)
+      Logger.log('error', err);
+    });
+});
+router.put('/change-secondary-group', bodyParser.json(), corsOpt, (req: any, res: any) => {
+  if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
+  if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
+  Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_SECONDARY_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
+  MSQLPool.promise()
+    .query('UPDATE phpbb_user_group INNER JOIN (SELECT MAX(group_id) as group_id FROM phpbb_user_group WHERE group_id BETWEEN 9 AND 14 AND user_id = ? GROUP BY user_id) AS secondary_group SET phpbb_user_group.group_id = ? WHERE phpbb_user_group.group_id = secondary_group.group_id AND user_id = ?', [req.body.id, req.body.group, req.body.id])
     .then((): void => {
       res.status(OK).send(JSON.stringify({status: 'ok'}));
     })
