@@ -1,4 +1,4 @@
-import { copy } from 'fs-extra';
+import { copy, unlink, readdir } from 'fs-extra';
 import { readFile } from 'fs';
 import { join } from 'path'
 import { BACKUP } from '@schemas/backup.schema';
@@ -53,6 +53,27 @@ export default class Backuper {
           return (!!err ? rej(err) : res());
       });
     })
+  }
+  static remove(): Promise<any> {
+    const unlinkFiles: Promise<void> = new Promise((res, rej) => {
+      readdir(process.env.BACKUPS_PATH!, (err: NodeJS.ErrnoException, files: string[]) => {
+        if (err) rej(err);
+        files.filter((file: string) => {
+          const unix = file.split('_');
+          if (Number(unix[unix.length - 1]) < Date.now() - 604800000) return file;
+          return file;
+        }).forEach((file, index) => {
+          return unlink(join(process.env.BACKUPS_PATH!, file), (err) => {
+            if (!!err) return rej(err);
+            if (index == files.length - 1) res();
+          });
+        })
+      })
+    })
+    const rmBackupNote = BACKUP.deleteMany({expires: { $lte: new Date() }}, [], (err: any) => {
+      if (err) return;
+    });
+    return Promise.all([unlinkFiles, rmBackupNote]);
   }
   static getBackupFile(name: string, unix: number) {
     return new Promise((res, rej) => {

@@ -1,8 +1,11 @@
 import { createPool } from 'mysql2';
 import { Parser } from '@parser';
 import { Watcher } from '@watcher';
+import Backuper from '@backuper';
+import { Logger } from './Logger';
 import multer, { Multer, diskStorage} from 'multer';
 import cors from 'cors';
+import { CronJob } from 'cron';
 
 import { Processes } from '@enums/processes.enum';
 
@@ -30,6 +33,14 @@ const confStorage = diskStorage({
 });
 export const upmap: Multer =  multer({ storage: mapStorage });
 export const upcfg: Multer =  multer({ storage: confStorage });
+
+export const rmOldBackups = new CronJob('0 0 */1 * * *', () => {
+  Backuper.remove().then(() => {
+    Logger.log('default', 'CRON', '->' ,'AUTO_CLEAR_OLD_BACKUPS');
+  }).catch(err => {
+    Logger.log('error', err.message);
+  })
+}, null, true, 'Europe/Moscow')
 
 
 export const MSQLPool = createPool({

@@ -5,6 +5,7 @@ import jwte from 'express-jwt';
 import helmet from 'helmet';
 import { connect } from 'mongoose';
 import { join } from 'path';
+import { rmOldBackups } from '@shared/constants'
 // import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 // import passport from 'passport';
 
@@ -73,6 +74,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
+rmOldBackups.start();
 watch();
 
 // Export express instance
