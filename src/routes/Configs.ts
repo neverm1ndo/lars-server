@@ -17,7 +17,7 @@ import { getMimeType } from '@shared/functions';
 const router = Router();
 
 const parser = new Parser();
-const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
+const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT, NOT_FOUND } = StatusCodes;
 const { DEV, CFR } = Workgroup;
 
 router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files(configs) and directories tree
@@ -30,7 +30,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
       } else {
         root = TreeNode.buildTree(process.env.CFG_DEFAULT_PATH!, 'configs');
       }
-      if (!root) res.send(INTERNAL_SERVER_ERROR).end('Cant read file tree');
+      if (!root) res.status(INTERNAL_SERVER_ERROR).send({ message: 'Cant read file tree' });
       res.send(JSON.stringify(root));
     });
     router.get('/config-file', corsOpt, (req: any, res: any) => { // GET single config file
@@ -39,11 +39,11 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
       if (req.query.path) {
         promises.stat(req.query.path).then((stats: Stats) => {
           readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
-            if (err) {  res.status(INTERNAL_SERVER_ERROR).send(err) }
-            else { res.send({text: parser.ANSItoUTF8(buf), stats: { size: stats.size, lastm: stats.mtime, mime: getMimeType(req.query.path), charset: 'ANSI' }})};
+            if (err) {  res.status(NOT_FOUND).send(err) }
+            else { res.send(parser.ANSItoUTF8(buf))};
           });
         }).catch((err: NodeJS.ErrnoException) => {
-          res.status(INTERNAL_SERVER_ERROR).end(err);
+          res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
         })
       } else {
         res.status(CONFLICT);
@@ -52,13 +52,12 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
     router.get('/file-info', corsOpt, (req: any, res: any) => { // GET stat of file
       if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
       Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> FILE_INFO', req.query.path, '[', req.originalUrl, ']');
-      if (req.query.path) {
+      if (!req.query.path) { return res.status(CONFLICT).send({ message: 'Empty path param'})}
         promises.stat(req.query.path).then((stats: Stats) => {
           res.send({size: stats.size, lastm: stats.mtime, mime: getMimeType(req.query.path)});
         }).catch((err: NodeJS.ErrnoException) => {
-          res.status(INTERNAL_SERVER_ERROR).end(err);
+          res.status(NOT_FOUND).send({ message: err.message });
         })
-      }
     });
     router.post('/save-config', corsOpt, json({limit: '5mb'}), (req: any, res: any) => { // POST Write map file
       if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED); return ; }
@@ -70,7 +69,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
         });
       }).catch((err) => {
         Logger.log('error', err.message);
-        res.status(INTERNAL_SERVER_ERROR).end('Backuper error: ' + err.message);
+        res.status(INTERNAL_SERVER_ERROR).send('Backuper error: ' + err.message);
       });
     });
     router.post('/upload-cfg', corsOpt, upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
