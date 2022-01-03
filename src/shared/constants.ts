@@ -89,6 +89,8 @@ export const CORSoptions = {
     authIncorrect: Processes.AUTH_INCORRECT,
     chatAdm: Processes.CHAT_ADM,
     chatBlock: Processes.CHAT_BLOCK_BLOCKED,
+    chatBlockNin: Processes.CHAT_BLOCK_NIGM,
+    chatBlockRep: Processes.CHAT_BLOCK_REPEATED,
     chatBlockFlood: Processes.CHAT_BLOCK_FLOOD,
     chatClose: Processes.CHAT_CLOSE,
     chatHandBlock: Processes.CHAT_MUTE_HAND,
@@ -130,6 +132,7 @@ export const CORSoptions = {
     guardBlockOff: Processes.GUARD_BLOCK_OFF,
     guardBlockOn: Processes.GUARD_BLOCK_OFF,
     healthPick: Processes.HEALTH_PICKUP,
+    healthBuy: Processes.HEALTH_BUY,
     pauseEnd: Processes.PAUSE_END,
     pauseStart: Processes.PAUSE_START,
     pickArt: Processes.PICKUP_ART,
@@ -147,4 +150,6 @@ export const CORSoptions = {
     toBackupSave: Processes.TIMEOUT_BACKUP_SAVE,
     weapBuy: Processes.WEAP_BUY,
     weapPick: Processes.WEAP_PICKUP,
+    playerCnGet: Processes.PLAYER_CN_GET,
+    playerCnRes: Processes.PLAYER_CN_RES,
   }
