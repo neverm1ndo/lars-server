@@ -37,7 +37,7 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
   let page = 0;
   let date = {
     from: 'Jan 01 2000 00:00:00',
-    to: 'Jan 01 2022 00:00:00'
+    to: 'Jan 01 2025 00:00:00' // wtf hardcoded
   };
   if (req.query.lim) lim = +req.query.lim;
   if (req.query.page) page = +req.query.page;
