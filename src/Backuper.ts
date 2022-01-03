@@ -61,7 +61,6 @@ export default class Backuper {
         files.filter((file: string) => {
           const unix = file.split('_');
           if (Number(unix[unix.length - 1]) < Date.now() - 604800000) return file;
-          return file;
         }).forEach((file, index) => {
           return unlink(join(process.env.BACKUPS_PATH!, file), (err) => {
             if (!!err) return rej(err);
