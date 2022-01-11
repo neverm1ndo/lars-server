@@ -18,7 +18,7 @@
    private static writeToFile(args: any[]): void {
      const now = new Date;
      const dirpath = path.resolve(process.cwd(), 'diary');
-     const logpath = path.resolve(process.cwd(), 'diary/liblog' + this.convert(now.getFullYear()) + this.convert(now.getMonth() + 1) + this.convert(now.getDay())  + '.lls');
+     const logpath = path.resolve(process.cwd(), 'diary/liblog' + this.convert(now.getFullYear()) + this.convert(now.getMonth() + 1) + this.convert(now.getDate())  + '.lls');
      if (!fs.existsSync(dirpath)) {
        fs.mkdirSync(dirpath);
      }
