@@ -91,5 +91,8 @@ const sockets = (socket: Socket) => {
     socket.emit('user-activity', { user: socket.data.username, action})
     socket.broadcast.to('devs').emit('user-activity', { user: socket.data.username, action})
   });
+  socket.on('update', () => {
+    socket.emit('update:soft')
+  });
 }
 export default sockets;
