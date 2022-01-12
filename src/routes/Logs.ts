@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { Document, CallbackError } from 'mongoose';
+import { URL } from 'url';
 
 
 import { corsOpt } from '@shared/constants';
@@ -32,7 +33,7 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
 });
 router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.headers.authorization) return res.send(UNAUTHORIZED);
-  if (!req.query.search) return res.redirect('/v2/logs/last');
+  if (!req.query.search) return res.redirect('/v2/logs/last?filter=' + req.query.filter);
   const query = parseSearchQuery(req.query.search);
 
   let filter: string[] = [];
