@@ -9,6 +9,7 @@ import { LOG_LINE } from '@schemas/logline.schema';
 import { readdir, lstatSync, readFile } from 'fs';
 import { join } from 'path';
 import { User } from '@interfaces/user';
+import { SearchQuery } from '@interfaces/search';
 import { lookup, charset } from 'mime-types';
 import { Processes } from '@enums/processes.enum';
 import { io } from '../index';
@@ -134,4 +135,50 @@ export const isWorkGroup = (group: number | string): boolean => {
 
 export const wsmsg = (msg: WSMessage): string => {
   return JSON.stringify(msg);
+}
+
+export const parseSearchQuery = (query: any): SearchQuery => {
+  let result: SearchQuery = {};
+  let splited: any[] = [];
+  if (query.includes('&')) {
+    splited = query.split('&');
+  } else {
+    splited = [query];
+  }
+   if ((splited.length > 1) || (splited[0].includes(':'))) {
+     result.nickname = [];
+     result.ip = [];
+     for (let i = 0; i < splited.length; i++) {
+       if (splited[i].includes(':')) {
+         let q = {
+           type : splited[i].split(':')[0],
+           val: splited[i].split(':')[1]
+         };
+         if ((q.type === 'nickname') || (q.type === 'nn')) {
+           result.nickname.push(q.val);
+         }
+         if (q.type === 'ip') {
+           result.ip.push(q.val);
+         }
+         if ((q.type === 'serals') || (q.type === 'srl')) {
+           result.as = q.val.split('*')[0];
+           result.ss = q.val.split('*')[1];
+         }
+       } else {
+         if (i === 0) {
+           result.nickname.push(splited[i]);
+         } else if ( i < splited.length - 1 ) {
+           result.nickname.push(splited[i]);
+         } else {
+           result.nickname.push(splited[i]);
+         }
+       }
+     }
+   } else {
+     result.nickname = [splited[0]];
+   }
+  Object.keys(result).forEach((key: string) => {
+    if (result[key as keyof SearchQuery]?.length === 0) delete result[key as keyof SearchQuery];
+  });
+  return result;
 }
