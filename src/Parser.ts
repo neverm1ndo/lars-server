@@ -26,7 +26,7 @@ export class Parser {
         as: +this.parseGeoThing(unparsedgeo, 'as'),
         ss: this.parseGeoThing(unparsedgeo, 'ss'),
         org: this.parseGeoThing(unparsedgeo, 'org'),
-        c: this.parseGeoThing(unparsedgeo, '\.')
+        c: this.parseGeoThing(unparsedgeo, 'cli')
       };
     } else { // No geodata
       return undefined;
