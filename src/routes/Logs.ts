@@ -37,7 +37,7 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
     const redirURL = new URL('/v2/logs/last');
     const redirParams = new URLSearchParams(req.query);
     redirURL.search = redirParams.toString();
-    return res.redirect(redirURL);
+    return res.redirect(format(redirURL));
   }
   const query = parseSearchQuery(req.query.search);
 
