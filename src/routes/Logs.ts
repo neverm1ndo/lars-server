@@ -34,10 +34,7 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
 router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.headers.authorization) return res.send(UNAUTHORIZED);
   if (!req.query.search) {
-    const redirURL = new URL('/v2/logs/last');
-    const redirParams = new URLSearchParams(req.query);
-    redirURL.search = redirParams.toString();
-    return res.redirect(redirURL.toString());
+    return res.redirect(format({ pathname: '/v2/logs/last', query: req.query }));
   }
   const query = parseSearchQuery(req.query.search);
 
