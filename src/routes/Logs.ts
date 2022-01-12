@@ -32,7 +32,7 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
 });
 router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.headers.authorization) return res.send(UNAUTHORIZED);
-  if (!req.query.search) return res.redirect('/last');
+  if (!req.query.search) return res.redirect('/v2/logs/last');
   const query = parseSearchQuery(req.query.search);
 
   let filter: string[] = [];
@@ -66,6 +66,8 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
   if (!mdbq['geo.as']) { delete mdbq['geo.as'] };
   if (!mdbq['geo.ss']) { delete mdbq['geo.ss'] };
   if (!mdbq['nickname']?.$in) { delete mdbq['nickname'] };
+
+  console.log(mdbq)
 
   LOG_LINE.find(mdbq,
   [],
