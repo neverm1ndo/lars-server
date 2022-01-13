@@ -9,6 +9,8 @@ import Backuper from '@backuper';
 import { corsOpt } from '@shared/constants';
 import { isWorkGroup } from '@shared/functions';
 
+import { io } from '../index';
+
 const { DEV } = Workgroup;
 
 const router = Router();
@@ -41,6 +43,13 @@ router.get('/download-file', (req: any, res: any) => { // GET download config fi
   if (!req.query.path) { return res.send(CONFLICT); }
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
   res.sendFile(req.query.path);
+});
+router.get('/update-emitter', (req: any, res: any) => { // GET download config file
+  if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED).end('Empty authorization token'); return ; }
+  if (req.user.group_id !== DEV) { res.send(UNAUTHORIZED).end('Access denied for workgroup: ' + isWorkGroup(req.user.group_id)); return; }
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> UPDATE_MESSAGE_EMIT');
+  io.sockets.emit('update:soft');
+  res.sendStatus(OK);
 });
 
 export default router;
