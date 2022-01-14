@@ -6,7 +6,7 @@ export class Parser {
   constructor() {}
 
   parseGeoThing(unparsed: string, name: string): string {
-    let geodata = new RegExp(`(?<=${name}:).*((?=,)|(?=}))`, 'g');
+    let geodata = new RegExp(`(?<=${name}:)(.[^,| }]*)`);
     return unparsed.match(geodata)![0];
   }
   parseCountry(unparsed: string): string {
