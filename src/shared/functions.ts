@@ -23,6 +23,7 @@ export const watch = (): void => {
       switch (line.process) {
         case Processes.GUARD_BLOCK_ON: io.sockets.emit('alert:guard-block-on', line); break;
         case Processes.DISCONNECT_KICKBAN: io.sockets.emit('alert:kickban', line); break;
+        case Processes.CHAT_REPORT: io.sockets.emit('alert:report', line); break;
         default: break;
       }
     })
