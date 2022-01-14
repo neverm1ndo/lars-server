@@ -33,7 +33,7 @@ export class Parser {
     const contentdataContainerAny = new RegExp(/(?<=')(.*)(?=')/); // Main (some data in quotes)
     const contentdataContainerTime = new RegExp(/\d+\s(минуты?а?)(\sи\s\d+\s(секунды?а?))?/); // Timer content
     const contentdataContainerOther = new RegExp(/(?<=\(\d+\)\s).*(?=\s\{)|(?=(\s'(.*)'))/); // Any other
-    const contentdataContainerNoQuotes = new RegExp(/(?<=\(\d+\)\s).*(?=(\s\{))/); // Without quotes
+    const contentdataContainerNoQuotes = new RegExp(/(?<=\(\d+\)\s)(.[^,|}|{]*)/); // Without quotes
     let parsed = line.match(contentdataContainerAny);
     if (parsed) return parsed[0];
     parsed = line.match(contentdataContainerTime);
