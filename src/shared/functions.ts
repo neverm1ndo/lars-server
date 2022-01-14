@@ -18,7 +18,9 @@ export const watch = (): void => {
   watcher.result$.subscribe((buffer: Buffer) => {
     parser.parse(buffer).forEach((line: LogLine) => {
       let ln = new LOG_LINE(line);
-      ln.save();
+      ln.save().catch((err) => {
+        Logger.log('err', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
+      });
       io.sockets.emit('new-log-line');
       switch (line.process) {
         case Processes.GUARD_BLOCK_ON: io.sockets.emit('alert:guard-block-on', line); break;
