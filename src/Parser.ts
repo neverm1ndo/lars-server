@@ -15,46 +15,35 @@ export class Parser {
     return unparsed.match(countrydata)![0];
   }
 
-  public parseGeo(line: string): GeoData | undefined { // FIXME: Тут надо как-то поэлегантнее
-    let r_geodata = new RegExp('{\(.*)}');
-    let unparsedgeo = line.split(r_geodata)[1];
-    if (unparsedgeo) {
-      return {
-        country: this.parseCountry(unparsedgeo),
-        cc: this.parseGeoThing(unparsedgeo, 'cc'),
-        ip: this.parseGeoThing(unparsedgeo, 'ip'),
-        as: +this.parseGeoThing(unparsedgeo, 'as'),
-        ss: this.parseGeoThing(unparsedgeo, 'ss'),
-        org: this.parseGeoThing(unparsedgeo, 'org'),
-        c: this.parseGeoThing(unparsedgeo, 'cli')
-      };
-    } else { // No geodata
-      return undefined;
-    }
+  public parseGeo(line: string): GeoData | undefined {
+    let geodataContainer = new RegExp(/{(.*)}/, 'g');
+    let unparsedgeo = line.match(geodataContainer);
+    if (!unparsedgeo) return undefined; // empty geodata field
+    return {
+      country: this.parseCountry(unparsedgeo[0]),
+      cc: this.parseGeoThing(unparsedgeo[0], 'cc'),
+      ip: this.parseGeoThing(unparsedgeo[0], 'ip'),
+      as: +this.parseGeoThing(unparsedgeo[0], 'as'),
+      ss: this.parseGeoThing(unparsedgeo[0], 'ss'),
+      org: this.parseGeoThing(unparsedgeo[0], 'org'),
+      c: this.parseGeoThing(unparsedgeo[0], 'cli')
+    };
   }
 
   public parseContent(line: string): string | undefined {
-    let r_contentdata = new RegExp("'\(.*)'"); // Main
-    let r_contentdata2 = new RegExp("\(\\(\[0-9]+\\)\)"); // Secondary
-    let parsed = line.split(r_contentdata)[1];
-    if (parsed) {
-      return parsed;
-    } else {
-      if (line.split(r_contentdata2)[2]) {
-        parsed = line.split(r_contentdata2)[2].trim();
-        if (parsed) {
-          if (!parsed.includes('{')) {
-            return parsed;
-          } else {
-            return undefined;
-          }
-        } else {
-          return undefined;
-        }
-      } else {
-        return undefined;
-      }
-    }
+    const contentdataContainerAny = new RegExp(/'(.*)'/); // Main (some data in quotes)
+    const contentdataContainerTime = new RegExp(/\d+\s(минуты?а?)(\sи\s\d+\s(секунды?а?))?/); // Timer content
+    const contentdataContainerOther = new RegExp(/(?<=\(\d+\)\s).*(?=\s\{)|(?=(\s'(.*)'))/); // Any other
+    const contentdataContainerNoQuotes = new RegExp(/(?<=\(\d+\)\s).*(?=(\s))/); // Without quotes
+    let parsed = line.match(contentdataContainerAny);
+    if (parsed) return parsed[0];
+    parsed = line.match(contentdataContainerTime);
+    if (parsed) return parsed[0];
+    parsed = line.match(contentdataContainerOther);
+    if (parsed) return parsed[0];
+    parsed = line.match(contentdataContainerNoQuotes);
+    if (parsed) return parsed[0];
+    return undefined; // empty content field
   }
 
   private splitter(textplane: string): string[] {
@@ -79,8 +68,7 @@ export class Parser {
 
   public parse(textplane: string | Buffer): LogLine[] {
     let parsed: LogLine[] = [];
-    const idRegex = new RegExp(/\([0-9]+\)/g);
-    const idRegex2 = new RegExp(/[0-9]+/);
+    const idRegex = new RegExp(/(?<=\()\d+(?=\))/);
     this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
       let splits = line.split(' ');
        if (splits[0] !== '') {
@@ -88,27 +76,11 @@ export class Parser {
            unix: +splits[0],
            date: new Date(+splits[0]*1000),
            process: splits[2],
-           id: 0
+           nickname: splits[3],
+           id: +line.match(idRegex)![0],
+           content: this.parseContent(line),
+           geo: this.parseGeo(line),
          };
-        for (let i = 4; i < splits.length; i++) {
-          if (splits[i].match(idRegex))  {
-            result.id = +splits[i].match(idRegex)![0].match(idRegex2)![0];
-            break;
-          }
-        }
-        result.geo = this.parseGeo(line);
-        result.content = this.parseContent(line);
-        if (splits[3].length >= 3) {
-          result.nickname = splits[3];
-        } else {
-          for (let i = 3; i < splits.length; i++) {
-            if (splits[i - 1] == 'мин,') {
-              result.nickname = splits[i];
-              break;
-            }
-          }
-        }
-
         parsed.push(result);
       }
     });
