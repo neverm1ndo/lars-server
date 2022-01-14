@@ -22,12 +22,12 @@ launch() {
 			[[ -n "`pgrep mongod`" ]];
 		then
 			echo " > Сервер MongoDB уже запущен"
-			screen -d -m -S lls npm run start
+			sudo screen -d -m -S lars npm run start
 		else
 			echo " > Запуск сервера MongoDB..."
 			mongod |
 	       		echo " > Сервер MongoDB запущен" |
-			screen -d -m -S lls npm run start
+			sudo screen -d -m -S lars npm run start
 		fi
 		sleep 2s
 		if check;
