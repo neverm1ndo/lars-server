@@ -19,7 +19,7 @@ export const watch = (): void => {
     parser.parse(buffer).forEach((line: LogLine) => {
       let ln = new LOG_LINE(line);
       ln.save().catch((err) => {
-        Logger.log('err', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
+        Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
       });
       io.sockets.emit('new-log-line');
       switch (line.process) {
