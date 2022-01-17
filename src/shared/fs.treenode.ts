@@ -17,7 +17,7 @@ export class TreeNode {
 
   static isExcludedDirPath(path: string): boolean {
     for (let i = 0; i < exclusions.length; i++) {
-      if (path.includes(normalize(exclusions[i]))) return true;
+      if (path === (normalize(exclusions[i]))) return true;
     }
     return false;
   }
@@ -30,22 +30,22 @@ export class TreeNode {
     while (stack.length) {
       const currentNode = stack.pop();
       if (currentNode) {
-        console.log(this.isExcludedDirPath(currentNode.path), currentNode.path)
         const children = readdirSync(currentNode.path);
         children
         .filter((child: string) => !this.isExcludedDirPath(currentNode.path) && !exclusions.includes(child))
         .forEach((child: string) => {
           const childPath = join(currentNode.path, child);
           const childNode = new TreeNode(childPath, child);
-          currentNode.items.push(childNode);
-          if (statSync(childNode.path).isDirectory()) {
-            childNode.type = 'dir';
-            stack.push(childNode);
+          if (!this.isExcludedDirPath(childNode.path)) {
+            currentNode.items.push(childNode);
+            if (statSync(childNode.path).isDirectory()) {
+              childNode.type = 'dir';
+              stack.push(childNode);
+            }
           }
         })
       }
     }
-
     return root;
   }
 }
