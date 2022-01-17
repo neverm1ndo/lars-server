@@ -25,7 +25,7 @@ launch() {
 			sudo screen -d -m -S lars npm run start
 		else
 			echo " > Запуск сервера MongoDB..."
-			mongod |
+			sudo service mongod start |
 	       		echo " > Сервер MongoDB запущен" |
 			sudo screen -d -m -S lars npm run start
 		fi
