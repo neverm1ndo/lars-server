@@ -26,7 +26,7 @@ export class TreeNode {
       if (currentNode) {
         const children = readdirSync(currentNode.path);
         children
-        .filter((child: string) => !exclusions.includes(currentNode.path) && !exclusions.includes(child))
+        .filter((child: string) => !exclusions.join().match(currentNode.path) && !exclusions.includes(child))
         .forEach((child: string) => {
           const childPath = join(currentNode.path, child);
           const childNode = new TreeNode(childPath, child);
