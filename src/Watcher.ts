@@ -37,7 +37,7 @@ export class Watcher {
   getLogFIle() {
     const date = new Date();
     let logpath = path.join(process.env.LOGS_PATH!, this.convert(date.getMonth() + 1), date.getFullYear()+this.convert(date.getMonth()+1)+this.convert(date.getDate())+'.log')
-    if (process.env.NODE_ENV) logpath = path.join(process.env.LOGS_PATH!, '20200931.log')
+    if (process.env.NODE_ENV === 'development') logpath = path.join(process.env.LOGS_PATH!, '20200931.log')
     fs.readFile(logpath, (err: NodeJS.ErrnoException | null, buffer: Buffer) => {
       if (err) { Logger.log('error', err) }
       const delim = Buffer.from('\n');
