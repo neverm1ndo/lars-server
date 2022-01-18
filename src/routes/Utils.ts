@@ -29,7 +29,7 @@ router.delete('/delete-file', corsOpt, json(), (req: any, res: any) => { // DELE
       });
     })
   }).then(() => {
-      res.sendStatus(OK)
+      res.send({status: 'deleted'});
   }).catch((err) => {
       res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
   }).catch((err) => {
