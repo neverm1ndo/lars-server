@@ -53,6 +53,7 @@ const sockets = (socket: Socket) => {
       exec(cmd, (err: any, stdout: any) => {
         if (err) { socket.emit('error', err.message ); return; }
         socket.broadcast.to('devs').emit('server-status', 'rebooting')
+        socket.broadcast.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.group_id });
         socket.emit('server-status', 'rebooting')
         setTimeout(() => {
           socket.broadcast.to('devs').emit('server-rebooted', stdout);
@@ -67,6 +68,7 @@ const sockets = (socket: Socket) => {
       exec('sudo bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
         if (err) { socket.emit('server-error', err.message); return; }
         socket.broadcast.to('devs').emit('server-stoped', stdout);
+        socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.group_id });
         socket.emit('server-stoped', stdout);
         Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
       });
@@ -93,6 +95,10 @@ const sockets = (socket: Socket) => {
   });
   socket.on('update', () => {
     socket.emit('update:soft')
+  });
+  socket.on('disconnect', (reason) => {
+    Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> DISCONNECT', reason);
+    socket.broadcast.to('devs').emit('user-activity', 'offline', reason);
   });
 }
 export default sockets;
