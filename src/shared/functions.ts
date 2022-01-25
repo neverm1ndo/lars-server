@@ -27,7 +27,10 @@ export const watch = (): void => {
   watcher.result$.subscribe((buffer: Buffer) => {
     parser.parse(buffer).forEach((line: LogLine) => {
       let ln = new LOG_LINE(line);
-      if (lastLine.process === line.process && lastLine.content === line.content) {
+      if (
+        lastLine.process === line.process &&
+        lastLine.content === line.content &&
+        lastLine.nickname === line.nickname) {
         lastDoc.updateOne({$inc: { multiplier: 1 }}).catch((err) => {
           Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
         });
