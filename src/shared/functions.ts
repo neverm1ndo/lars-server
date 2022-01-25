@@ -5,6 +5,7 @@ import { Logger } from './Logger';
 import { WSMessage } from '@interfaces/ws.message';
 import { parser, watcher, processTranslation } from './constants';
 import { LogLine } from '@interfaces/logline';
+import { Document } from 'mongoose';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { readdir, lstatSync, readFile } from 'fs';
 import { join } from 'path';
@@ -15,12 +16,28 @@ import { Processes } from '@enums/processes.enum';
 import { io } from '../index';
 
 export const watch = (): void => {
+  const empty: LogLine = {
+        unix: 0,
+        date: new Date(),
+        process: '<none>',
+        id: 0,
+      };
+  let lastLine: LogLine = empty;
+  let lastDoc: Document<any>;
   watcher.result$.subscribe((buffer: Buffer) => {
     parser.parse(buffer).forEach((line: LogLine) => {
       let ln = new LOG_LINE(line);
-      ln.save().catch((err) => {
-        Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
-      });
+      if (lastLine.process === line.process && lastLine.content === line.content) {
+        lastDoc.updateOne({$inc: { multiplier: 1 }}).catch((err) => {
+          Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
+        });
+      } else {
+        ln.save().catch((err) => {
+          Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
+        });
+        lastDoc = ln;
+      }
+      lastLine = line;
       io.sockets.emit('new-log-line');
       switch (line.process) {
         case Processes.GUARD_BLOCK_ON: io.sockets.emit('alert:guard-block-on', line); break;

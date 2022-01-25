@@ -15,5 +15,6 @@ export const LOG_LINE = model( 'LogLine', new Schema ({
     ss: { type: String },
     org: { type: String },
     c: { type: String }
-  }
+  },
+  multiplier: Number,
 }));
