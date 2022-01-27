@@ -1,4 +1,4 @@
-import { LogLine } from '@interfaces/logline';
+import { LogLine, ContentData } from '@interfaces/logline';
 import { GeoData } from '@interfaces/geodata';
 import iconv from 'iconv-lite';
 import { Logger } from '@shared/Logger';
@@ -30,19 +30,31 @@ export class Parser {
     };
   }
 
-  public parseContent(line: string): string | undefined {
+  public parseContent(line: string): ContentData | undefined {
+    const idRegex = new RegExp(/(?<=\()\d+(?=\))/);
     const contentdataContainerAny = new RegExp(/(?<=')(.*)(?=')/); // Main (some data in quotes)
     const contentdataContainerTime = new RegExp(/\d+\s(минуты?а?)(\sи\s\d+\s(секунды?а?))?/); // Timer content
+    const contentdataContainerAdminAction = new RegExp(/\d+\s(минуты?а?)(\sи\s\d+\s(секунды?а?))?,\s(.*)?\s\(\d+\)\s'(.*)'/); // Admin action
     const contentdataContainerOther = new RegExp(/(?<=\(\d+\)\s).*(?=\s\{)|(?=(\s'(.*)'))/); // Any other
     const contentdataContainerNoQuotes = new RegExp(/(?<=\(\d+\)\s)([A-Za-z0-9/-\s\.\:\;\+_\&\$\#\@\!\[\]]+(?!\{))/); // Without quotes
-    let parsed = line.match(contentdataContainerAny);
-    if (parsed) return parsed[0];
+
+    let parsed = line.match(contentdataContainerAdminAction);
+    if (parsed) {
+      return {
+        message: contentdataContainerAny.test(parsed[0])?parsed[0].match(contentdataContainerAny)![0]: undefined,
+        oid: idRegex.test(parsed[0])?Number(parsed[0].match(idRegex)![0]): undefined,
+        op: idRegex.test(parsed[0])?parsed[0].match(new RegExp(/(?<=,\s).*(?=\s\()/))![0]: undefined,
+        time: contentdataContainerTime.test(parsed[0])?parsed[0].match(contentdataContainerTime)![0]: undefined,
+      }
+    };
+    parsed = line.match(contentdataContainerAny);
+    if (parsed) return { message: parsed[0] };
     parsed = line.match(contentdataContainerTime);
-    if (parsed) return parsed[0];
+    if (parsed) return { message: parsed[0] };
     parsed = line.match(contentdataContainerOther);
-    if (parsed) return parsed[0];
+    if (parsed) return { message: parsed[0] };
     parsed = line.match(contentdataContainerNoQuotes);
-    if (parsed) return parsed[0];
+    if (parsed) return { message: parsed[0] };
     return undefined; // empty content field
   }
 
