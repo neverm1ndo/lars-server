@@ -1,6 +1,7 @@
 import { LogLine } from '@interfaces/logline';
 import { GeoData } from '@interfaces/geodata';
 import iconv from 'iconv-lite';
+import { Logger } from '@shared/Logger';
 
 export class Parser {
   constructor() {}
@@ -68,21 +69,26 @@ export class Parser {
   public parse(textplane: string | Buffer): LogLine[] {
     let parsed: LogLine[] = [];
     const idRegex = new RegExp(/(?<=\()\d+(?=\))/);
-    this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
-      let splits = line.split(' ');
-       if (splits[0] !== '') {
-         let result: LogLine = {
-           unix: +splits[0],
-           date: new Date(+splits[0]*1000),
-           process: splits[2],
-           nickname: splits[3],
-           id: +line.match(idRegex)![0],
-           content: this.parseContent(line),
-           geo: this.parseGeo(line),
-         };
-        parsed.push(result);
-      }
-    });
+    try {
+      this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
+        let splits = line.split(' ');
+        if (splits[0] !== '') {
+          let result: LogLine = {
+            unix: +splits[0],
+            date: new Date(+splits[0]*1000),
+            process: splits[2],
+            nickname: splits[3],
+            id: +line.match(idRegex)![0],
+            content: this.parseContent(line),
+            geo: this.parseGeo(line),
+          };
+          parsed.push(result);
+        }
+      });
+    } catch(err) {
+      Logger.log('error', this.ANSItoUTF8(textplane as Buffer));
+      Logger.log('error', err);
+    }
     return parsed;
   }
 };
