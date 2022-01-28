@@ -48,7 +48,7 @@ app.use('/v2', jwte({
 // }))
 
 // MongoDB connection
-connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true });
+connect(process.env.MONGO!);
 
 // Show routes called in console during development
 if (process.env.NODE_ENV === 'development') {

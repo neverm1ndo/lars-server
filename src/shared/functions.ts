@@ -35,7 +35,7 @@ export const watch = (): void => {
           Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
         });
       } else {
-        ln.save().catch((err) => {
+        ln.save().catch((err: any) => {
           Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
         });
         lastDoc = ln;

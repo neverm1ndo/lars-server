@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
 
-export const LOG_LINE = model( 'LogLine', new Schema ({
+const logShema = new Schema({
   unix: { type: Number, required: true },
   date: { type: Date, required: true },
   process: { type: String, required: true },
@@ -22,4 +22,6 @@ export const LOG_LINE = model( 'LogLine', new Schema ({
     c: { type: String }
   },
   multiplier: Number,
-}));
+})
+
+export const LOG_LINE = model( 'LogLine', logShema);

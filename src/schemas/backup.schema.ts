@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
 
-export const BACKUP = model( 'Backup', new Schema ({
+const backupSchema = new Schema ({
   unix: { type: Number, required: true },
   date: { type: Date, required: true },
   expires: { type: Date, required: true },
@@ -15,4 +15,6 @@ export const BACKUP = model( 'Backup', new Schema ({
     mime: String,
     binary: Boolean
   }
-}));
+})
+
+export const BACKUP = model( 'Backup', backupSchema);
