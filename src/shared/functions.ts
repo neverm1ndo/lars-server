@@ -14,6 +14,7 @@ import { SearchQuery } from '@interfaces/search';
 import { lookup, charset } from 'mime-types';
 import { Processes } from '@enums/processes.enum';
 import { io } from '../index';
+import _ from 'lodash';
 
 export const watch = (): void => {
   const empty: LogLine = {
@@ -29,7 +30,7 @@ export const watch = (): void => {
       let ln = new LOG_LINE(line);
       if (
         lastLine.process === line.process &&
-        lastLine.content === line.content &&
+        _.isEqual(lastLine.content, line.content) &&
         lastLine.nickname === line.nickname) {
         lastDoc.updateOne({$inc: { multiplier: 1 }}).catch((err) => {
           Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
