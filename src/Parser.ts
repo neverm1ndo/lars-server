@@ -35,6 +35,7 @@ export class Parser {
     const contentdataContainerAny = new RegExp(/(?<=')(.*)(?=')/); // Main (some data in quotes)
     const contentdataContainerTime = new RegExp(/\d+\s(мин(ут)?ы?а?)(\sи\s\d+\s(секунды?а?))?/); // Timer content
     const contentdataContainerAdminAction = new RegExp(/\d+\s(мин(ут)?ы?а?)(\sи\s\d+\s(секунды?а?))?,\s(.*)?\s\(\d+\)\s'(.*)'/); // Admin action
+    const contentdataContainerDeath = new RegExp(/(?<=\(\d+\)\s)(.*)\s\(\d+\)\sиз\s'(.*)'/); // Deaths
     const contentdataContainerOther = new RegExp(/(?<=\(\d+\)\s).*(?=\s\{)|(?=(\s'(.*)'))/); // Any other
     const contentdataContainerNoQuotes = new RegExp(/(?<=\(\d+\)\s)([A-Za-z0-9/-\s\.\:\;\+_\&\$\#\@\!\[\]]+(?!\{))/); // Without quotes
 
@@ -47,6 +48,14 @@ export class Parser {
         time: contentdataContainerTime.test(parsed[0])?parsed[0].match(contentdataContainerTime)![0]: undefined,
       }
     };
+    parsed = line.match(contentdataContainerDeath);
+    if (parsed) {
+      return {
+        message: contentdataContainerAny.test(parsed[0])?parsed[0].match(contentdataContainerAny)![0]: undefined,
+        oid: idRegex.test(parsed[0])?Number(parsed[0].match(idRegex)![0]): undefined,
+        op: idRegex.test(parsed[0])?parsed[0].match(new RegExp(/.*(?=\s\()/))![0]: undefined,
+      }
+    }
     parsed = line.match(contentdataContainerAny);
     if (parsed) return { message: parsed[0] };
     parsed = line.match(contentdataContainerTime);
