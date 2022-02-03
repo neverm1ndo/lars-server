@@ -2,6 +2,7 @@ import { LogLine } from '@interfaces/logline';
 import { Processes } from '@enums/processes.enum';
 import { STAT } from '@schemas/stat.schema';
 import dgram from 'dgram';
+import { getTodayDate } from '@shared/functions'
 
 namespace Statsman {
   class Metric {
@@ -76,10 +77,7 @@ namespace Statsman {
        })
    }
     tail(): any {
-      const now: Date = new Date();
-      const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"];
-      const date: Date = new Date(`${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
-      STAT.updateOne({ date: date , label: 'online' }, { $push: { data: { $each: [this.snapshot], $slice: -24 }}}, { upsert: true, setDefaultsOnInsert: true }, (err) => {
+      STAT.updateOne({ date: getTodayDate() , label: 'online' }, { $push: { data: { $each: [this.snapshot], $slice: -24 }}}, { upsert: true, setDefaultsOnInsert: true }, (err) => {
         if (err) return console.error(err);
       });
     }

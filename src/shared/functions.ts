@@ -119,6 +119,12 @@ export const getMimeType = (path:string): string | false => {
   return lookup(path);
 }
 
+export const getTodayDate = (): Date => {
+  const now: Date = new Date();
+  const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"];
+  return new Date(`${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
+}
+
 export const getCharset = (typeString: string): string | false => {
   return charset(typeString);
 }
