@@ -3,7 +3,7 @@ import md5 from 'md5';
 import jwt from 'jsonwebtoken';
 import { Logger } from './Logger';
 import { WSMessage } from '@interfaces/ws.message';
-import { parser, watcher, processTranslation } from './constants';
+import { parser, watcher, processTranslation, statsman } from './constants';
 import { LogLine } from '@interfaces/logline';
 import { Document } from 'mongoose';
 import { LOG_LINE } from '@schemas/logline.schema';
@@ -28,7 +28,7 @@ export const watch = (): void => {
   watcher.result$.subscribe((buffer: Buffer) => {
     parser.parse(buffer).forEach((line: LogLine) => {
       let ln = new LOG_LINE(line);
-      if (
+      if ( // Miltiplier condition
         lastLine.process === line.process &&
         _.isEqual(lastLine.content, line.content) &&
         lastLine.nickname === line.nickname) {
@@ -42,15 +42,25 @@ export const watch = (): void => {
         lastDoc = ln;
       }
       lastLine = line;
-      io.sockets.emit('new-log-line');
-      switch (line.process) {
-        case Processes.GUARD_BLOCK_ON: io.sockets.emit('alert:guard-block-on', line); break;
-        case Processes.DISCONNECT_KICKBAN: io.sockets.emit('alert:kickban', line); break;
-        case Processes.CHAT_REPORT: io.sockets.emit('alert:report', line); break;
-        default: break;
-      }
+      statsman.update(line);
+      broadcastProcessNotification(line);
     })
   }, (err) => { Logger.log('error', err) });
+}
+
+/**
+* Broadcasts notification about specific process
+* @param {LogLine} line LogLine instance
+*/
+export const broadcastProcessNotification = (line: LogLine): void => {
+  io.sockets.emit('new-log-line');
+  switch (line.process) {
+    case Processes.GUARD_BLOCK_ON: io.sockets.emit('alert:guard-block-on', line); break;
+    case Processes.DISCONNECT_KICKBAN: io.sockets.emit('alert:kickban', line); break;
+    case Processes.CHAT_REPORT: io.sockets.emit('alert:report', line); break;
+    case Processes.CONNECTION_CONNECT: io.sockets.emit('alert:report', line); break;
+    default: break;
+  }
 }
 
 export const isDate = (date :string): boolean => {
@@ -67,6 +77,10 @@ export const getRandomInt = () => {
     return Math.floor(Math.random() * 1_000_000_000_000);
 };
 
+/**
+* @deprecated Read all log files and put lines into db
+* Just in case
+*/
 export const firstLaunch = (dir: string): void => {
   readdir(dir, (err: NodeJS.ErrnoException | null, dirs: any[]) => {
     if (err) return err;
@@ -126,15 +140,9 @@ export const verifyToken = (token: string): boolean => {
   return jwt.decode(token, app.get('secret')) ? true : false;
 }
 export const decodeToken = (token: string): User | null => {
-  // const user = jwt.decode(token, app.get('secret'));
   let user;
-  // console.log(user);
-  // return {
-  //   name: user.user,
-  //   id: user.id,
-  //   group_id: user.group_id
-  // };
   jwt.verify(token, app.get('secret'), (err: any, decoded: any) => {
+    if (err) return null;
     user = {
         name: decoded.user,
         id: decoded.id,

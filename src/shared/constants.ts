@@ -8,11 +8,13 @@ import cors from 'cors';
 import { CronJob } from 'cron';
 
 import { Processes } from '@enums/processes.enum';
+import Statsman from '../Statsman';
 
 export const paramMissingError = 'One or more of the required parameters was missing.';
 
 export const parser = new Parser();
 export const watcher = new Watcher();
+export const statsman = new Statsman.OnlineMetric();
 
 const mapStorage = diskStorage({
   destination: function (req: any, file: any, cb) {
@@ -34,7 +36,11 @@ const confStorage = diskStorage({
 export const upmap: Multer =  multer({ storage: mapStorage });
 export const upcfg: Multer =  multer({ storage: confStorage });
 
-export const rmOldBackups = new CronJob('0 0 */1 * * *', () => {
+export const tailOnlineStats = new CronJob('0 0 */1 * * *', () => {
+  statsman.tail();
+});
+
+export const rmOldBackups = new CronJob('0 0 0 */1 * *', () => {
   Backuper.remove().then(() => {
     Logger.log('default', 'CRON', '->' ,'AUTO_CLEAR_OLD_BACKUPS');
   }).catch(err => {
@@ -61,13 +67,6 @@ export const CORSoptions = {
     ],
     credentials: true,
     methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
-    // origin: (origin: any, callback: any) => {
-    //   if (JSON.parse(process.env.CORS_WL!).indexOf(origin) !== -1) {
-    //     callback(null, true)
-    //   } else {
-    //     callback(new Error('Not allowed by CORS'))
-    //   }
-    // },
     origin: '*',
     preflightContinue: false,
   };
