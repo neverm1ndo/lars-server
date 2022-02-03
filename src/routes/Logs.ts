@@ -34,7 +34,7 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
   console.log(req.query)
   if (isDate(req.query.dateTo) && isDate(req.query.dateFrom)) { date = { from: req.query.dateFrom, to: req.query.dateTo }};
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> LINES', lim, page,' [', req.originalUrl, ']\n└ ', JSON.stringify(req.query));
-  LOG_LINE.find({ date: { $gte: new Date(date.from + ' GMT+03:00'), $lte: new Date(date.to + ' GMT+03:00') }}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page },)
+  LOG_LINE.find({ date: { $gte: new Date(date.from + ' GMT+0300'), $lte: new Date(date.to + ' GMT+0300') }}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page },)
   .where('process').nin(filter)
   .exec((err: any, lines: Document[]) => {
     if (err) {
@@ -47,7 +47,6 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
 // REVIEW: same spaghetti code
 router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
-  console.log(req.q)
   if (!req.query.search) {
     return res.redirect(format({ pathname: '/v2/logs/last', query: req.query }));
   }
