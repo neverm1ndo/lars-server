@@ -4,6 +4,7 @@ import { Logger } from '@shared/Logger';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { Document, CallbackError } from 'mongoose';
 import { format } from 'url';
+import { getTodayDate } from '@shared/functions';
 
 
 import { corsOpt } from '@shared/constants';
@@ -12,16 +13,26 @@ import { isDate, parseSearchFilter, parseSearchQuery } from '@shared/functions';
 const router = Router();
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 
+/*
+* REVIEW: remove duplicate code
+*/
+
+// REVIEW: spaghetti code, add middlewares
 router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Default : 100
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
   let filter: string[] = [];
   let lim = 100;
   let page = 0;
+  let date = {
+    from: 'Jan 01 2000 00:00:00',
+    to: `${getTodayDate()} 23:59:59`
+  };
   if (req.query.lim) lim = +req.query.lim;
   if (req.query.page) page = +req.query.page;
   if (req.query.filter) filter = parseSearchFilter(req.query.filter);
+  if (isDate(req.query.dateTo) && isDate(req.query.dateFrom)) { date = { from: req.query.dateFrom, to: req.query.dateTo }};
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> LINES', lim, page,' [', req.originalUrl, ']');
-  LOG_LINE.find({}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page },)
+  LOG_LINE.find({ date: { $gte: new Date(date.from + ' GMT+0300'), $lte: new Date(date.to + ' GMT+0300') }}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page },)
   .where('process').nin(filter)
   .exec((err: any, lines: Document[]) => {
     if (err) {
@@ -31,20 +42,20 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
     res.send(lines);
     });
 });
+// REVIEW: same spaghetti code
 router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.headers.authorization) return res.send(UNAUTHORIZED);
   if (!req.query.search) {
     return res.redirect(format({ pathname: '/v2/logs/last', query: req.query }));
   }
   const query = parseSearchQuery(req.query.search);
-
+  let date = {
+    from: 'Jan 01 2000 00:00:00',
+    to: `${getTodayDate()} 23:59:59`
+  };
   let filter: string[] = [];
   let lim = 40;
   let page = 0;
-  let date = {
-    from: 'Jan 01 2000 00:00:00',
-    to: `Dec 31 ${new Date().getFullYear()} 23:59:59`
-  };
   if (req.query.lim) lim = Number(req.query.lim);
   if (req.query.page) page = Number(req.query.page);
   if (req.query.filter) filter = parseSearchFilter(req.query.filter);
