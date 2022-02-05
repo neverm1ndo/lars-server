@@ -74,9 +74,13 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-rmOldBackups.start();
-tailOnlineStats.start();
+// Crontasks
+if (process.env.NODE_ENV === 'production') {
+  rmOldBackups.start();
+  tailOnlineStats.start();
+};
 
+// Watcher
 watch();
 
 // Export express instance
