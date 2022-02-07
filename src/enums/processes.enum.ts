@@ -39,6 +39,7 @@ export enum Processes {
   TIMEOUT_BACKUP_SAVE = '<time_out/backup/save>',
   TIMEOUT_BACKUP_LOAD = '<time_out/backup/load>',
   CHAT_MAIN = '<chat/main>',
+  CHAT_PM = '<chat/pm>',
   CHAT_CLOSE = '<chat/close>',
   CHAT_TEAM = '<chat/team>',
   CHAT_ADM = '<chat/admin>',
