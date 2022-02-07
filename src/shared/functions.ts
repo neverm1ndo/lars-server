@@ -44,7 +44,7 @@ export const watch = (): void => {
       }
       lastLine = line;
       statsman.update(line);
-      statsman.tail();
+      // statsman.tail();
       broadcastProcessNotification(line);
     })
   }, (err) => { Logger.log('error', err) });

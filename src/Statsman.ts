@@ -44,8 +44,8 @@ namespace Statsman {
       Processes.DISCONNECT_TIMEOUT,
     ]
     update(line: LogLine): void {
-      if (line.process === Processes.CONNECTION_CONNECT) { this.inc(); return; }
-      if (this.disconnectProcesses.includes(line.process)) this.dec();
+      if (line.process === Processes.CONNECTION_CONNECT) { this.inc(); this.tail(); return; }
+      if (this.disconnectProcesses.includes(line.process)) { this.dec(); this.tail()}
     }
     request(ip: string, port: number, opcode: string): Promise<number> {
        return new Promise((resolve, reject) => {
