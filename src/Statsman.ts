@@ -103,7 +103,9 @@ namespace Statsman {
           'pm': [{'$match': {'process': Processes.CHAT_PM}}, {'$count': 'total'}],
           'mutes': [{'$match': {'process': {'$in': [Processes.CHAT_MUTE_HAND, Processes.CHAT_MUTE_AUTO]}}}, {'$count': 'total'}],
           'kicks': [{'$match': {'process': {'$in': [Processes.DISCONNECT_KICK, Processes.DISCONNECT_KICKBAN]}}}, {'$count': 'total'}],
-          'bans': [{'$match': {'process': {'$in': [Processes.DISCONNECT_BAN, Processes.CN_BAN_HAND]}}}, {'$count': 'total'}]
+          'bans': [{'$match': {'process': {'$in': [Processes.DISCONNECT_BAN, Processes.CN_BAN_HAND]}}}, {'$count': 'total'}],
+          'weapByes': [{'$match': {'process': Processes.WEAP_BUY}}, {'$count': 'total'}],
+          'kills': [{$match: {process: Processes.DEATH_KILLED }}, {'$group': {  _id: '$content.message',  'total': { '$sum': 1 }}}],
         }
       }, {
         '$project': {
