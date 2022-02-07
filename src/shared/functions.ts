@@ -25,6 +25,7 @@ export const watch = (): void => {
       };
   let lastLine: LogLine = empty;
   let lastDoc: Document<any>;
+
   watcher.result$.subscribe((buffer: Buffer) => {
     parser.parse(buffer).forEach((line: LogLine) => {
       let ln = new LOG_LINE(line);
@@ -43,6 +44,7 @@ export const watch = (): void => {
       }
       lastLine = line;
       statsman.update(line);
+      statsman.tail();
       broadcastProcessNotification(line);
     })
   }, (err) => { Logger.log('error', err) });
@@ -121,8 +123,9 @@ export const getMimeType = (path:string): string | false => {
 
 export const getTodayDate = (): Date => {
   const now: Date = new Date();
-  const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"];
-  return new Date(`${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
+  // const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Augt", "Sep", "Oct", "Nov", "Dec"];
+  // return new Date(`${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
 export const getCharset = (typeString: string): string | false => {
@@ -174,7 +177,12 @@ export const isWorkGroup = (group: number | string): boolean => {
 export const wsmsg = (msg: WSMessage): string => {
   return JSON.stringify(msg);
 }
-
+// REVIEW: needs to be completely rewritten
+/**
+* Parses serarch query, returns SearchQuery object
+* @param query string search query
+* @returns SearchQuery
+*/
 export const parseSearchQuery = (query: any): SearchQuery => {
   let result: SearchQuery = {};
   let splited: any[] = [];
