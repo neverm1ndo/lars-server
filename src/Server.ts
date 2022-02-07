@@ -77,7 +77,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // Crontasks
 if (process.env.NODE_ENV === 'production') {
   rmOldBackups.start();
-  tailOnlineStats.start();
+  // tailOnlineStats.start(); 
 };
 
 // Watcher
