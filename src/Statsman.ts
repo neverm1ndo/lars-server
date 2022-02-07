@@ -1,14 +1,19 @@
 import { LogLine } from '@interfaces/logline';
 import { Processes } from '@enums/processes.enum';
 import { STAT } from '@schemas/stat.schema';
+import { LOG_LINE } from '@schemas/logline.schema';
 import dgram from 'dgram';
 import { getTodayDate } from '@shared/functions'
+import { Logger } from '@shared/Logger';
 
 namespace Statsman {
   class Metric {
     private value: number = 0;
     get snapshot(): number {
       return this.value;
+    }
+    get nowTime(): Date {
+      return new Date();
     }
     set snapshot(val: number) {
       this.value = val;
@@ -19,7 +24,7 @@ namespace Statsman {
       this.value++;
     };
     dec(): void {
-      this.value--;
+      if (this.value > 0) this.value--;
     }
   }
   export class OnlineMetric extends Metric {
@@ -77,10 +82,39 @@ namespace Statsman {
        })
    }
     tail(): any {
-      STAT.updateOne({ date: getTodayDate() , label: 'online' }, { $push: { data: { $each: [this.snapshot], $slice: -24 }}}, { upsert: true, setDefaultsOnInsert: true }, (err) => {
+      STAT.updateOne({ date: getTodayDate() , label: 'online' }, { $push: { data: this.snapshot, labels: new Date() }}, { upsert: true, setDefaultsOnInsert: true }, (err) => {
         if (err) return console.error(err);
       });
     }
+  }
+  export function getChatStats (from: Date, to: Date) {
+    console.log(from, to);
+    return LOG_LINE.aggregate([
+      {
+        '$match': {
+          'date': {
+            '$gte': from,
+            '$lte': to
+          }
+        }
+      }, {
+        '$facet': {
+          'main': [{'$match': {'process': Processes.CHAT_MAIN }}, {'$count': 'total'}],
+          'pm': [{'$match': {'process': Processes.CHAT_PM}}, {'$count': 'total'}],
+          'mutes': [{'$match': {'process': {'$in': [Processes.CHAT_MUTE_HAND, Processes.CHAT_MUTE_AUTO]}}}, {'$count': 'total'}],
+          'kicks': [{'$match': {'process': {'$in': [Processes.DISCONNECT_KICK, Processes.DISCONNECT_KICKBAN]}}}, {'$count': 'total'}],
+          'bans': [{'$match': {'process': {'$in': [Processes.DISCONNECT_BAN, Processes.CN_BAN_HAND]}}}, {'$count': 'total'}]
+        }
+      }, {
+        '$project': {
+          'main': {'$arrayElemAt': ['$main', 0]},
+          'pm': {'$arrayElemAt': ['$pm', 0]},
+          'mutes': {'$arrayElemAt': ['$mutes', 0]},
+          'kicks': {'$arrayElemAt': ['$kicks', 0]},
+          'bans': {'$arrayElemAt': ['$bans', 0]}
+        }
+      }
+    ])
   }
 }
 
