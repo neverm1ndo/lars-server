@@ -5,6 +5,7 @@ import Workgroup from '@enums/workgroup.enum';
 
 import { corsOpt } from '@shared/constants';
 import { isWorkGroup, getTodayDate } from '@shared/functions';
+import Statsman from '../Statsman';
 
 import { STAT } from '@schemas/stat.schema';
 
@@ -24,6 +25,19 @@ router.get('/online', corsOpt, (req: any, res: any) => { // GET download config 
     if (err) return;
     res.send(stat);
   });
+});
+router.get('/chat', corsOpt, (req: any, res: any) => { // GET download config file
+  if (!req.headers.authorization)  { res.sendStatus(UNAUTHORIZED).end('Empty authorization token'); return ; }
+  if (req.user.group_id !== DEV) { res.send(UNAUTHORIZED).end('Access denied for workgroup: ' + isWorkGroup(req.user.group_id)); return; }
+
+  // if (!req.query.path) { return res.send(CONFLICT); }
+  // Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
+  // if (!req.query.from && !req.query.to) return res.sendStatus(CONFLICT);
+  const now = new Date();
+  Statsman.getChatStats(new Date(now.getFullYear(), now.getMonth()), new Date(now.getFullYear(), now.getMonth() + 1)).exec((err: any, data: any) => {
+    if (err) console.log(err);
+    res.send(data[0]);
+  })
 });
 
 export default router;
