@@ -113,7 +113,8 @@ namespace Statsman {
           'pm': {'$arrayElemAt': ['$pm', 0]},
           'mutes': {'$arrayElemAt': ['$mutes', 0]},
           'kicks': {'$arrayElemAt': ['$kicks', 0]},
-          'bans': {'$arrayElemAt': ['$bans', 0]}
+          'bans': {'$arrayElemAt': ['$bans', 0]},
+          'kills': '$kills'
         }
       }
     ])
