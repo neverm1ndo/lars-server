@@ -36,7 +36,7 @@ const confStorage = diskStorage({
 export const upmap: Multer =  multer({ storage: mapStorage });
 export const upcfg: Multer =  multer({ storage: confStorage });
 
-export const tailOnlineStats = new CronJob('0 */1 * * * *', () => {
+export const tailOnlineStats = new CronJob('0 */10 * * * *', () => {
   statsman.tail();
 });
 
