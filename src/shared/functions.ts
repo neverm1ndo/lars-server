@@ -44,7 +44,6 @@ export const watch = (): void => {
       }
       lastLine = line;
       statsman.update(line);
-      // statsman.tail();
       broadcastProcessNotification(line);
     })
   }, (err) => { Logger.log('error', err) });
@@ -60,7 +59,6 @@ export const broadcastProcessNotification = (line: LogLine): void => {
     case Processes.GUARD_BLOCK_ON: io.sockets.emit('alert:guard-block-on', line); break;
     case Processes.DISCONNECT_KICKBAN: io.sockets.emit('alert:kickban', line); break;
     case Processes.CHAT_REPORT: io.sockets.emit('alert:report', line); break;
-    case Processes.CONNECTION_CONNECT: io.sockets.emit('alert:report', line); break;
     default: break;
   }
 }

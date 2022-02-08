@@ -43,9 +43,12 @@ namespace Statsman {
       Processes.DISCONNECT_KICKBAN,
       Processes.DISCONNECT_TIMEOUT,
     ]
-    update(line: LogLine): void {
-      if (line.process === Processes.CONNECTION_CONNECT) { this.inc(); this.tail(); return; }
-      if (this.disconnectProcesses.includes(line.process)) { this.dec(); this.tail()}
+    update(line: LogLine): Promise<void> {
+      return new Promise((resolve, reject) => {
+        if (line.process === Processes.CONNECTION_CONNECT) { this.inc(); this.tail(); resolve(); }
+        if (this.disconnectProcesses.includes(line.process)) { this.dec(); this.tail(); resolve(); }
+        reject();
+      })
     }
     request(ip: string, port: number, opcode: string): Promise<number> {
        return new Promise((resolve, reject) => {
