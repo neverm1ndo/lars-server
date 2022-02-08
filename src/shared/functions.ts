@@ -43,7 +43,9 @@ export const watch = (): void => {
         lastDoc = ln;
       }
       lastLine = line;
-      statsman.update(line);
+      statsman.update(line).then(() => {
+        io.sockets.emit('server-online', statsman.snapshot);
+      });
       broadcastProcessNotification(line);
     })
   }, (err) => { Logger.log('error', err) });
