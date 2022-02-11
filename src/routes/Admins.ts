@@ -2,18 +2,17 @@ import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import bodyParser from 'body-parser';
-import { cm } from './WS';
+// import { cm } from './WS';
 import Workgroup from '@enums/workgroup.enum';
 
 import { corsOpt, MSQLPool } from '@shared/constants';
 
 const router = Router();
 
-const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
+const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 const { CHALLENGER, DEV, ADMIN, CFR, MAPPER, BACKUPER } = Workgroup;
 
 router.get('/list', corsOpt, (req: any, res: any) => {
-  if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> ADMIN_LIST [', req.originalUrl, ']');
   MSQLPool.promise()
     .query('SELECT phpbb_users.user_id, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id IN (?, ?, ?, ?, ?, ?) AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id', [CHALLENGER, DEV, ADMIN, MAPPER, CFR, BACKUPER])
@@ -34,13 +33,11 @@ router.get('/list', corsOpt, (req: any, res: any) => {
     });
 });
 router.get('/expire-token', corsOpt, (req: any, res: any) => {
-  if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> TOKEN_SESSION_EXPIRATION [', req.originalUrl, ']');
-  cm.closeSession(req.query.username);
+  // cm.closeSession(req.query.username);
   res.status(OK).send(JSON.stringify({ status: 'Token expired' }));
 });
 router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => {
-  if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
   if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
   Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
   MSQLPool.promise()
@@ -55,7 +52,6 @@ router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => 
     });
 });
 router.put('/change-secondary-group', bodyParser.json(), corsOpt, (req: any, res: any) => {
-  if (!req.headers.authorization && req.user.gr !== DEV) return res.sendStatus(UNAUTHORIZED);
   if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
   Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_SECONDARY_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
   MSQLPool.promise()

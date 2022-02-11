@@ -13,6 +13,14 @@ import { isDate, parseSearchFilter, parseSearchQuery } from '@shared/functions';
 const router = Router();
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 
+interface MDBRequest {
+    'geo.ip'?: { $in?: string[] };
+    'geo.as'?: string;
+    'geo.ss'?: string;
+    nickname?: { $in?: string[] },
+    date: { $gte?: Date, $lte?: Date }
+}
+
 /*
 * REVIEW: remove duplicate code
 */
@@ -46,7 +54,6 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
 });
 // REVIEW: same spaghetti code
 router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
-  if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
   if (!req.query.search) {
     return res.redirect(format({ pathname: '/v2/logs/last', query: req.query }));
   }
@@ -64,13 +71,7 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
   if (isDate(req.query.dateTo) && isDate(req.query.dateFrom)) { date = { from: req.query.dateFrom, to: req.query.dateTo }};
     Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SEARCH\n',
                '                            └ ', JSON.stringify(req.query));
-  let mdbq: {
-    'geo.ip'?: { $in?: string[] };
-    'geo.as'?: string;
-    'geo.ss'?: string;
-    nickname?: { $in?: string[] },
-    date: { $gte?: Date, $lte?: Date }
-  } = {
+  let mdbq: MDBRequest = {
     'geo.ip': { $in: query?.ip },
     'geo.as': query?.as,
     'geo.ss': query?.ss,
