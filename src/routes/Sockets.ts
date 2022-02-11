@@ -25,11 +25,7 @@ export const socketAuth = (socket: any, next: any) => {
 }
 
 const sockets = (socket: Socket) => {
-  if (socket.data.group_id == DEV) {
-    socket.join('devs')
-  } else {
-    socket.join('main');
-  }
+  socket.data.group_id === DEV?socket.join('devs'):socket.join('main');
   socket.on('get-room', () => {
     socket.emit('room-name', [...socket.rooms].join(', '))
   })
