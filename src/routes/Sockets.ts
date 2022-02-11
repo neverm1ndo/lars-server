@@ -1,14 +1,11 @@
 import { Logger } from '@shared/Logger';
 import { exec } from 'child_process';
-import { ClientManager } from '@shared/client.manager';
 import Workgroup from '@enums/workgroup.enum';
 import { Socket } from 'socket.io';
 import { verifyToken, decodeToken } from '@shared/functions'
 
 
 const { DEV } = Workgroup;
-
-export const cm = new ClientManager();
 
 export const socketAuth = (socket: any, next: any) => {
   const token = socket.handshake.auth.token;
