@@ -10,7 +10,7 @@ import { STAT } from '@schemas/stat.schema';
 
 const router = Router();
 
-const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
+const { OK, CONFLICT } = StatusCodes;
 
 router.get('/online', corsOpt, (req: any, res: any) => { // GET download config file
   // if (!req.query.path) { return res.send(CONFLICT); }

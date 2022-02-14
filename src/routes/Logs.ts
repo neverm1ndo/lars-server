@@ -4,11 +4,10 @@ import { Logger } from '@shared/Logger';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { Document, CallbackError } from 'mongoose';
 import { format } from 'url';
-import { getTodayDate } from '@shared/functions';
 
 
 import { corsOpt } from '@shared/constants';
-import { isDate, parseSearchFilter, parseSearchQuery } from '@shared/functions';
+import { parseSearchFilter, parseSearchQuery } from '@shared/functions';
 
 const router = Router();
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
@@ -18,7 +17,7 @@ interface MDBRequest {
     'geo.as'?: string;
     'geo.ss'?: string;
     nickname?: { $in?: string[] },
-    date: { $gte?: Date, $lte?: Date }
+    unix: { $gte?: number, $lte?: number }
 }
 
 /*
@@ -32,17 +31,16 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
   let lim = 100;
   let page = 0;
   let date = {
-    from: 'Jan 01 2000, 00:00:00',
-    to: `Dec 31 ${new Date().getFullYear()}, 23:59:59`
+    from: +new Date('Jan 01 2000, 00:00:00'),
+    to: Date.now()
   };
-  console.log(getTodayDate())
   if (req.query.lim) lim = +req.query.lim;
   if (req.query.page) page = +req.query.page;
   if (req.query.filter) filter = parseSearchFilter(req.query.filter);
-  console.log(req.query)
-  if (isDate(req.query.dateTo) && isDate(req.query.dateFrom)) { date = { from: req.query.dateFrom, to: req.query.dateTo }};
+  if (req.query.dateFrom) date.from = +req.query.dateFrom;
+  if (req.query.dateTo) date.to = +req.query.dateTo;
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> LINES', lim, page,' [', req.originalUrl, ']\n└ ', JSON.stringify(req.query));
-  LOG_LINE.find({ date: { $gte: new Date(date.from + ' GMT+0300'), $lte: new Date(date.to + ' GMT+0300') }}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page },)
+  LOG_LINE.find({ unix: { $gte: date.from/1000, $lte: date.to/1000 }}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page },)
   .where('process').nin(filter)
   .exec((err: any, lines: Document[]) => {
     if (err) {
@@ -59,8 +57,8 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
   }
   const query = parseSearchQuery(req.query.search);
   let date = {
-    from: 'Jan 01 2000, 00:00:00',
-    to: `Dec 31 ${new Date().getFullYear()}, 23:59:59`
+    from: +new Date('Jan 01 2000, 00:00:00'),
+    to: Date.now()
   };
   let filter: string[] = [];
   let lim = 40;
@@ -68,7 +66,8 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
   if (req.query.lim) lim = Number(req.query.lim);
   if (req.query.page) page = Number(req.query.page);
   if (req.query.filter) filter = parseSearchFilter(req.query.filter);
-  if (isDate(req.query.dateTo) && isDate(req.query.dateFrom)) { date = { from: req.query.dateFrom, to: req.query.dateTo }};
+  if (req.query.dateFrom) date.from = +req.query.dateFrom;
+  if (req.query.dateTo) date.to = +req.query.dateTo;
     Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SEARCH\n',
                '                            └ ', JSON.stringify(req.query));
   let mdbq: MDBRequest = {
@@ -76,7 +75,7 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
     'geo.as': query?.as,
     'geo.ss': query?.ss,
     nickname: { $in: query?.nickname },
-    date: { $gte: new Date(date.from), $lte: new Date(date.to) }
+    unix: { $gte: date.from/1000, $lte: date.to/1000 }
   }
 
   if (!mdbq['geo.ip']?.$in) { delete mdbq['geo.ip'] };
