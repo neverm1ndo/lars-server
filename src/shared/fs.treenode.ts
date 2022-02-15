@@ -43,7 +43,12 @@ export class TreeNode {
               stack.push(childNode);
             }
           }
-        })
+        });
+        currentNode.items = currentNode.items.sort((a, b) => {
+          if (a.type == 'dir' && b.type == 'file') return -1;
+          if (a.type == 'file' && b.type == 'dir') return 1;
+          return 0;
+        });
       }
     }
     return root;
