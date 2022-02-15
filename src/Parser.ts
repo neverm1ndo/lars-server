@@ -37,7 +37,7 @@ export class Parser {
     const contentdataContainerAdminAction = new RegExp(/\d+\s(мин(ут)?ы?а?)(\sи\s\d+\s(секунды?а?))?,\s(.*)?\s\(\d+\)\s'(.*)'/); // Admin action
     const contentdataContainerDeath = new RegExp(/(?<=\(\d+\)\s)(.*)\s\(\d+\)\sиз\s'(.*)'/); // Deaths
     const contentdataContainerOther = new RegExp(/(?<=\(\d+\)\s).*(?=\s\{)|(?=(\s'(.*)'))/); // Any other
-    const contentdataContainerNoQuotes = new RegExp(/(?<=\(\d+\)\s)([A-Za-z0-9/-\s\.\:\;\+_\&\$\#\@\!\[\]]+(?=(\s\{|\n)))/); // Without quotes
+    const contentdataContainerNoQuotes = new RegExp(/(?<=\(\d+\)\s)([A-Za-z0-9/-\s\.\:\;\+_\&\$\#\@\!\[\]]+(?!\{))/); // Without quotes
 
     let parsed = line.match(contentdataContainerAdminAction);
     if (parsed) {
@@ -57,13 +57,13 @@ export class Parser {
       }
     }
     parsed = line.match(contentdataContainerAny);
-    if (parsed) return { message: parsed[0] };
+    if (parsed) return { message: parsed[0].trimEnd() };
     parsed = line.match(contentdataContainerTime);
-    if (parsed) return { message: parsed[0] };
+    if (parsed) return { message: parsed[0].trimEnd() };
     parsed = line.match(contentdataContainerOther);
-    if (parsed) return { message: parsed[0] };
+    if (parsed) return { message: parsed[0].trimEnd() };
     parsed = line.match(contentdataContainerNoQuotes);
-    if (parsed) return { message: parsed[0] };
+    if (parsed) return { message: parsed[0].trimEnd() };
     return undefined; // empty content field
   }
 
