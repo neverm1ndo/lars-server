@@ -30,11 +30,13 @@ namespace Statsman {
   export class OnlineMetric extends Metric {
     constructor() {
       super();
-      this.request('185.104.113.34', 7777, 'i').then((players: number) => {
-        this.snapshot = players;
-      }).catch((err) => {
-        console.error(err);
-      });
+      if (process.env.NODE_ENV === 'production') {
+        this.request('185.104.113.34', 7777, 'i').then((players: number) => {
+          this.snapshot = players;
+        }).catch((err) => {
+          console.error(err);
+        });
+      }
     }
     disconnectProcesses: string[] = [
       Processes.DISCONNECT_BAN,
