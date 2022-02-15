@@ -45,6 +45,8 @@ export const watch = (): void => {
       lastLine = line;
       statsman.update(line).then(() => {
         io.sockets.emit('server-online', statsman.snapshot);
+      }).catch((err) => {
+        Logger.log('error', err.message);
       });
       broadcastProcessNotification(line);
     })
