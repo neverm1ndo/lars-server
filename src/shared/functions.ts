@@ -194,6 +194,7 @@ export const parseSearchQuery = (query: any): SearchQuery => {
    if ((splited.length > 1) || (splited[0].includes(':'))) {
      result.nickname = [];
      result.ip = [];
+     result.cn = '';
      for (let i = 0; i < splited.length; i++) {
        if (splited[i].includes(':')) {
          let q = {
@@ -205,6 +206,10 @@ export const parseSearchQuery = (query: any): SearchQuery => {
          }
          if (q.type === 'ip') {
            result.ip.push(q.val);
+         }
+         if (q.type === 'cn') {
+           result.cn = q.val;
+           result.process = Processes.CN_RES_SUCCESS;
          }
          if ((q.type === 'serals') || (q.type === 'srl')) {
            result.as = q.val.split('*')[0];

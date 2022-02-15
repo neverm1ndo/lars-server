@@ -17,6 +17,8 @@ interface MDBRequest {
     'geo.as'?: string;
     'geo.ss'?: string;
     nickname?: { $in?: string[] },
+    'content.message'?: string;
+    process?: string;
     unix: { $gte?: number, $lte?: number }
 }
 
@@ -75,12 +77,15 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
     'geo.as': query?.as,
     'geo.ss': query?.ss,
     nickname: { $in: query?.nickname },
+    process: query?.process,
+    'content.message': query?.cn,
     unix: { $gte: date.from/1000, $lte: date.to/1000 }
   }
 
   if (!mdbq['geo.ip']?.$in) { delete mdbq['geo.ip'] };
   if (!mdbq['geo.as']) { delete mdbq['geo.as'] };
   if (!mdbq['geo.ss']) { delete mdbq['geo.ss'] };
+  if (!mdbq['content.message']) { delete mdbq['content.message'] };
   if (!mdbq['nickname']?.$in) { delete mdbq['nickname'] };
 
   LOG_LINE.find(mdbq,

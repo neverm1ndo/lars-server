@@ -3,7 +3,8 @@ export interface SearchQuery {
   ip?: string[];
   dateFrom?: string,
   dateTo?: string
-  process?: string[];
+  process?: string;
   as?: string;
   ss?: string;
+  cn?: string;
 }
