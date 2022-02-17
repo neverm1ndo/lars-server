@@ -2,7 +2,8 @@ import { Logger } from '@shared/Logger';
 import { exec } from 'child_process';
 import Workgroup from '@enums/workgroup.enum';
 import { Socket } from 'socket.io';
-import { verifyToken, decodeToken } from '@shared/functions'
+import { verifyToken, decodeToken } from '@shared/functions';
+import { statsman } from '@shared/constants';
 
 
 const { DEV } = Workgroup;
@@ -47,10 +48,18 @@ const sockets = (socket: Socket) => {
         if (err) { socket.emit('error', err.message ); return; }
         socket.broadcast.to('devs').emit('server-status', 'rebooting')
         socket.broadcast.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.group_id });
-        socket.emit('server-status', 'rebooting')
+        socket.emit('server-status', 'rebooting');
+        statsman.snapshot = 0;
         setTimeout(() => {
           socket.broadcast.to('devs').emit('server-rebooted', stdout);
           socket.emit('server-rebooted', stdout);
+          if (process.env.NODE_ENV === 'production') {
+            statsman.request('185.104.113.34', 7777, 'i').then((players: number) => {
+              statsman.snapshot = players;
+            }).catch((err) => {
+              console.error(err);
+            });
+          }
           Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
         }, 8000);
       });

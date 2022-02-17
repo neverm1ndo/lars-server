@@ -66,7 +66,7 @@ export const broadcastProcessNotification = (line: LogLine): void => {
 }
 
 export const isDate = (date :string): boolean => {
-  return (Date.parse(date) != NaN) && (date !== '') && date !== undefined;
+  return isNaN(Date.parse(date)) && (date !== '') && date !== undefined;
 } ;
 
 export const pErr = (err: Error) => {
