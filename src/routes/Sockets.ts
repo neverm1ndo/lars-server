@@ -72,6 +72,7 @@ const sockets = (socket: Socket) => {
         socket.broadcast.to('devs').emit('server-stoped', stdout);
         socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.group_id });
         socket.emit('server-stoped', stdout);
+        statsman.snapshot = 0;
         Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
       });
   });
