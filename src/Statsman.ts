@@ -87,7 +87,7 @@ namespace Statsman {
        })
    }
     tail(): any {
-      STAT.updateOne({ date: getTodayDate() , label: 'online' }, { $push: { data: this.snapshot, labels: new Date() }}, { upsert: true, setDefaultsOnInsert: true }, (err) => {
+      STAT.updateOne({ date: new Date() , label: 'online' }, { $push: { data: this.snapshot, labels: new Date() }}, { upsert: true, setDefaultsOnInsert: true }, (err) => {
         if (err) return console.error(err);
       });
     }
