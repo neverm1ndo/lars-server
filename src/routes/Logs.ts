@@ -80,17 +80,17 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
     process: query?.process,
     'content.message': query?.cn,
     unix: { $gte: date.from, $lte: date.to }
-  }
+  };
 
-
+  /**
+  * FIXME: TEST IT!
+  */
   if (!mdbq['geo.ip']?.$in) { delete mdbq['geo.ip'] };
   if (!mdbq['geo.as']) { delete mdbq['geo.as'] };
   if (!mdbq['geo.ss']) { delete mdbq['geo.ss'] };
   if (!mdbq['process']) { delete mdbq['process'] };
   if (!mdbq['content.message']) { delete mdbq['content.message'] };
   if (!mdbq['nickname']?.$in) { delete mdbq['nickname'] };
-
-  console.log(mdbq);
 
   LOG_LINE.find(mdbq,
   [],
@@ -102,7 +102,7 @@ router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickna
       return res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
     }
     res.send(lines);
-  })
+  });
 });
 
 export default router;

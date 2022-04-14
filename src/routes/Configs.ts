@@ -17,8 +17,8 @@ import { getMimeType } from '@shared/functions';
 const router = Router();
 
 const parser = new Parser();
-const { OK, UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT, NOT_FOUND } = StatusCodes;
-const { DEV, CFR } = Workgroup;
+const { OK, INTERNAL_SERVER_ERROR, CONFLICT, NOT_FOUND } = StatusCodes;
+const { DEV } = Workgroup;
 
 router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files(configs) and directories tree
       Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CONFIG_FILES_TREE [', req.originalUrl, ']');
@@ -53,7 +53,7 @@ router.get('/config-files-tree', corsOpt, (req: any, res: any) => { // GET Files
           res.send({size: stats.size, lastm: stats.mtime, mime: getMimeType(req.query.path)});
         }).catch((err: NodeJS.ErrnoException) => {
           res.status(NOT_FOUND).send({ message: err.message });
-        })
+        });
     });
     router.post('/save-config', corsOpt, json({ limit: '5mb' }), (req: any, res: any) => { // POST Write map file
       Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');

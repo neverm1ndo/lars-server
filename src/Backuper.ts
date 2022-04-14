@@ -64,7 +64,7 @@ export default class Backuper {
         }).forEach((file, index) => {
           return unlink(join(process.env.BACKUPS_PATH!, file), (err) => {
             if (!!err) return rej(err);
-            if (index == files.length - 1) res();
+            if (index == files.length - 1) return res();
           });
         })
       })

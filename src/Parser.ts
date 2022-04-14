@@ -4,13 +4,25 @@ import iconv from 'iconv-lite';
 import { Logger } from '@shared/Logger';
 
 export class Parser {
+
+  private regexp = {
+    idRegex : new RegExp(/(?<=\()\d+(?=\))/),
+    contentdataContainerAny : new RegExp(/(?<=')(.*)(?=')/), // Main (some data in quotes)
+    contentdataContainerTime : new RegExp(/\d+\s(мин(ут)?ы?а?)(\sи\s\d+\s(секунды?а?))?/), // Timer content
+    contentdataContainerAdminAction : new RegExp(/\d+\s(мин(ут)?ы?а?)(\sи\s\d+\s(секунды?а?))?,\s(.*)?\s\(\d+\)\s'(.*)'/), // Admin action
+    contentdataContainerDeath : new RegExp(/(?<=\(\d+\)\s)(.*)\s\(\d+\)\sиз\s'(.*)'/), // Deaths
+    contentdataContainerOther : new RegExp(/(?<=\(\d+\)\s).*(?=\s\{)|(?=(\s'(.*)'))/), // Any other
+    contentdataContainerNoQuotes : new RegExp(/(?<=\(\d+\)\s)([A-Za-z0-9/-\s\.\:\;\+_\&\$\#\@\!\[\]]+(?!\{))/), // Without quotes
+  };
+
   constructor() {}
 
-  parseGeoThing(unparsed: string, name: string): string {
+  private parseGeoThing(unparsed: string, name: string): string {
     let geodata = new RegExp(`(?<=${name}:)(.[^,|}]*)`);
     return unparsed.match(geodata)![0];
   }
-  parseCountry(unparsed: string): string {
+
+  private parseCountry(unparsed: string): string {
     let countrydata = new RegExp(/([^\{])(.*(?=,\scc))/);
     return unparsed.match(countrydata)![0];
   }
@@ -19,50 +31,43 @@ export class Parser {
     let geodataContainer = new RegExp(/{(.*)}/, 'g');
     let unparsedgeo = line.match(geodataContainer);
     if (!unparsedgeo) return undefined; // empty geodata field
+    const geo = unparsedgeo[0];
     return {
-      country: this.parseCountry(unparsedgeo[0]),
-      cc: this.parseGeoThing(unparsedgeo[0], 'cc'),
-      ip: this.parseGeoThing(unparsedgeo[0], 'ip'),
-      as: +this.parseGeoThing(unparsedgeo[0], 'as'),
-      ss: this.parseGeoThing(unparsedgeo[0], 'ss'),
-      org: this.parseGeoThing(unparsedgeo[0], 'org'),
-      c: this.parseGeoThing(unparsedgeo[0], 'cli')
+      country: this.parseCountry(geo),
+      cc: this.parseGeoThing(geo, 'cc'),
+      ip: this.parseGeoThing(geo, 'ip'),
+      as: +this.parseGeoThing(geo, 'as'),
+      ss: this.parseGeoThing(geo, 'ss'),
+      org: this.parseGeoThing(geo, 'org'),
+      c: this.parseGeoThing(geo, 'cli')
     };
   }
 
   public parseContent(line: string): ContentData | undefined {
-    const idRegex = new RegExp(/(?<=\()\d+(?=\))/);
-    const contentdataContainerAny = new RegExp(/(?<=')(.*)(?=')/); // Main (some data in quotes)
-    const contentdataContainerTime = new RegExp(/\d+\s(мин(ут)?ы?а?)(\sи\s\d+\s(секунды?а?))?/); // Timer content
-    const contentdataContainerAdminAction = new RegExp(/\d+\s(мин(ут)?ы?а?)(\sи\s\d+\s(секунды?а?))?,\s(.*)?\s\(\d+\)\s'(.*)'/); // Admin action
-    const contentdataContainerDeath = new RegExp(/(?<=\(\d+\)\s)(.*)\s\(\d+\)\sиз\s'(.*)'/); // Deaths
-    const contentdataContainerOther = new RegExp(/(?<=\(\d+\)\s).*(?=\s\{)|(?=(\s'(.*)'))/); // Any other
-    const contentdataContainerNoQuotes = new RegExp(/(?<=\(\d+\)\s)([A-Za-z0-9/-\s\.\:\;\+_\&\$\#\@\!\[\]]+(?!\{))/); // Without quotes
-
-    let parsed = line.match(contentdataContainerAdminAction);
+    let parsed = line.match(this.regexp.contentdataContainerAdminAction);
     if (parsed) {
       return {
-        message: contentdataContainerAny.test(parsed[0])?parsed[0].match(contentdataContainerAny)![0]: undefined,
-        oid: idRegex.test(parsed[0])?Number(parsed[0].match(idRegex)![0]): undefined,
-        op: idRegex.test(parsed[0])?parsed[0].match(new RegExp(/(?<=,\s).*(?=\s\()/))![0]: undefined,
-        time: contentdataContainerTime.test(parsed[0])?parsed[0].match(contentdataContainerTime)![0]: undefined,
+        message: this.regexp.contentdataContainerAny.test(parsed[0])?parsed[0].match(this.regexp.contentdataContainerAny)![0]: undefined,
+        oid: this.regexp.idRegex.test(parsed[0])?Number(parsed[0].match(this.regexp.idRegex)![0]): undefined,
+        op: this.regexp.idRegex.test(parsed[0])?parsed[0].match(new RegExp(/(?<=,\s).*(?=\s\()/))![0]: undefined,
+        time: this.regexp.contentdataContainerTime.test(parsed[0])?parsed[0].match(this.regexp.contentdataContainerTime)![0]: undefined,
       }
     };
-    parsed = line.match(contentdataContainerDeath);
+    parsed = line.match(this.regexp.contentdataContainerDeath);
     if (parsed) {
       return {
-        message: contentdataContainerAny.test(parsed[0])?parsed[0].match(contentdataContainerAny)![0]: undefined,
-        oid: idRegex.test(parsed[0])?Number(parsed[0].match(idRegex)![0]): undefined,
-        op: idRegex.test(parsed[0])?parsed[0].match(new RegExp(/.*(?=\s\()/))![0]: undefined,
+        message: this.regexp.contentdataContainerAny.test(parsed[0])?parsed[0].match(this.regexp.contentdataContainerAny)![0]: undefined,
+        oid: this.regexp.idRegex.test(parsed[0])?Number(parsed[0].match(this.regexp.idRegex)![0]): undefined,
+        op: this.regexp.idRegex.test(parsed[0])?parsed[0].match(new RegExp(/.*(?=\s\()/))![0]: undefined,
       }
     }
-    parsed = line.match(contentdataContainerAny);
+    parsed = line.match(this.regexp.contentdataContainerAny);
     if (parsed) return { message: parsed[0].trimEnd() };
-    parsed = line.match(contentdataContainerTime);
+    parsed = line.match(this.regexp.contentdataContainerTime);
     if (parsed) return { message: parsed[0].trimEnd() };
-    parsed = line.match(contentdataContainerOther);
+    parsed = line.match(this.regexp.contentdataContainerOther);
     if (parsed) return { message: parsed[0].trimEnd() };
-    parsed = line.match(contentdataContainerNoQuotes);
+    parsed = line.match(this.regexp.contentdataContainerNoQuotes);
     if (parsed) return { message: parsed[0].trimEnd() };
     return undefined; // empty content field
   }
@@ -89,7 +94,6 @@ export class Parser {
 
   public parse(textplane: string | Buffer): LogLine[] {
     let parsed: LogLine[] = [];
-    const idRegex = new RegExp(/(?<=\()\d+(?=\))/);
     try {
       this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
         let splits = line.split(' ');
@@ -99,7 +103,7 @@ export class Parser {
             date: new Date(+splits[0]*1000),
             process: splits[2],
             nickname: splits[3],
-            id: +line.match(idRegex)![0],
+            id: +line.match(this.regexp.idRegex)![0],
             content: this.parseContent(line),
             geo: this.parseGeo(line),
           };

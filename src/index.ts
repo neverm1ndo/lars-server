@@ -22,17 +22,15 @@ const httpsOptions: HttpsOptions = {
   rejectUnauthorized: false
 };
 
-if (options.env !== 'development') {
-  httpsOptions.ca = readFileSync(process.env.SSL_CA!, 'utf8');
-}
+if (options.env !== 'development') httpsOptions.ca = readFileSync(process.env.SSL_CA!, 'utf8');
 
 const server = https.createServer(httpsOptions , app);
 
 export const io = new Server(server, { cors: socketCORS });
-io.use(socketAuth);
-io.on('connection', (socket: Socket) => {
-  sockets(socket);
-})
+             io.use(socketAuth);
+             io.on('connection', (socket: Socket) => {
+               sockets(socket);
+             });
 
 server.listen(process.env.HTTPS_PORT, () => { console.log('HTTPS LARS NODE listening on port', process.env.HTTPS_PORT) })
 app.listen(process.env.HTTP_PORT, () => { console.log('HTTP LARS NODE listening on port', process.env.HTTP_PORT)})

@@ -18,7 +18,7 @@ router.get('/backups-list', corsOpt, (req: any, res: any) => { // GET all live b
   BACKUP.find({}).sort({ unix: - 1 }).exec((err: CallbackError, data: Document[]) => {
     if (err) { return res.send(INTERNAL_SERVER_ERROR); }
     res.send(data);
-  })
+  });
 });
 router.get('/backup-file', corsOpt, (req: any, res: any) => { // GET backup file
   if (!req.query.name || !req.query.unix ) { res.sendStatus(CONFLICT).end('Bad request: required parameters missed'); return;}
@@ -27,7 +27,7 @@ router.get('/backup-file', corsOpt, (req: any, res: any) => { // GET backup file
     res.status(OK).send(data);
   }).catch(err => {
     res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
-  })
+  });
 });
 router.get('/restore-backup', corsOpt, (req: any, res: Response) => { // GET restore file
   if (!req.query.path || !req.query.unix) { res.sendStatus(CONFLICT).end('Bad request: required parameters missed'); return;}
@@ -36,7 +36,7 @@ router.get('/restore-backup', corsOpt, (req: any, res: Response) => { // GET res
     res.status(OK).send([]);
   }).catch((err) => {
     res.status(INTERNAL_SERVER_ERROR).send({message: err.message});
-  })
+  });
 })
 
 export default router;

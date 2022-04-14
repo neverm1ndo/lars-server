@@ -2,7 +2,6 @@ import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import bodyParser from 'body-parser';
-// import { cm } from './WS';
 import Workgroup from '@enums/workgroup.enum';
 
 import { corsOpt, MSQLPool } from '@shared/constants';
