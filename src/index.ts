@@ -3,7 +3,7 @@ import app from '@server';
 import https from 'https';
 import { readFileSync } from 'fs';
 import sockets, { socketAuth } from './routes/Sockets';
-import options from './pre-start/index'
+// import options from './pre-start/index';
 import { Server, Socket } from 'socket.io';
 import { socketCORS } from '@shared/constants';
 
@@ -22,7 +22,7 @@ const httpsOptions: HttpsOptions = {
   rejectUnauthorized: false
 };
 
-if (options.env !== 'development') httpsOptions.ca = readFileSync(process.env.SSL_CA!, 'utf8');
+// if (options.env !== 'development') httpsOptions.ca = readFileSync(process.env.SSL_CA!, 'utf8');
 
 const server = https.createServer(httpsOptions , app);
 
