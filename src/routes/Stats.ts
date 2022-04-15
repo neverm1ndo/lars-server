@@ -14,7 +14,7 @@ const router = Router();
 router.get('/online', corsOpt, (req: any, res: any) => { // GET download config file
   // if (!req.query.path) { return res.send(CONFLICT); }
   // Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
-  STAT.findOne({ date: new Date() }, (err: any, stat: any) => {
+  STAT.findOne({ date: new Date().setHours(0, 0, 0, 0) }, (err: any, stat: any) => {
     if (err) return;
     res.send(stat);
   });
