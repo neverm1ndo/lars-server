@@ -7,20 +7,18 @@ import { Document, CallbackError } from 'mongoose';
 
 import Backuper from '@backuper';
 
-import { corsOpt } from '@shared/constants';
-
 const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 
 const router = Router();
 
-router.get('/backups-list', corsOpt, (req: any, res: any) => { // GET all live backups list
+router.get('/backups-list', (req: any, res: any) => { // GET all live backups list
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> BACKUPS_LIST', '[', req.originalUrl, ']');
   BACKUP.find({}).sort({ unix: - 1 }).exec((err: CallbackError, data: Document[]) => {
     if (err) { return res.send(INTERNAL_SERVER_ERROR); }
     res.send(data);
   });
 });
-router.get('/backup-file', corsOpt, (req: any, res: any) => { // GET backup file
+router.get('/backup-file', (req: any, res: any) => { // GET backup file
   if (!req.query.name || !req.query.unix ) { res.sendStatus(CONFLICT).end('Bad request: required parameters missed'); return;}
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> BACKUP_FILE', '[', req.originalUrl, ']');
   Backuper.getBackupFile(req.query.name, req.query.unix).then((data) => {
@@ -29,7 +27,7 @@ router.get('/backup-file', corsOpt, (req: any, res: any) => { // GET backup file
     res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
   });
 });
-router.get('/restore-backup', corsOpt, (req: any, res: Response) => { // GET restore file
+router.get('/restore-backup', (req: any, res: Response) => { // GET restore file
   if (!req.query.path || !req.query.unix) { res.sendStatus(CONFLICT).end('Bad request: required parameters missed'); return;}
   Backuper.restore(req.query.path,  Number(req.query.unix)).then(() => {
     Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> RESTORED_BACKUP', req.query.path, '[', req.originalUrl, ']');

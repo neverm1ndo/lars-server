@@ -5,12 +5,10 @@ import { LOG_LINE } from '@schemas/logline.schema';
 import { Document, CallbackError } from 'mongoose';
 import { format } from 'url';
 
-
-import { corsOpt } from '@shared/constants';
 import { parseSearchFilter, parseSearchQuery } from '@shared/functions';
 
 const router = Router();
-const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
+const { UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 interface MDBRequest {
     'geo.ip'?: { $in?: string[] };
@@ -27,7 +25,7 @@ interface MDBRequest {
 */
 
 // REVIEW: spaghetti code, add middlewares
-router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Default : 100
+router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
   if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
   let filter: string[] = [];
   let lim = 100;
@@ -53,7 +51,7 @@ router.get('/last', corsOpt, (req: any, res: any) => { // GET last lines. Defaul
     });
 });
 // REVIEW: same spaghetti code
-router.get('/search', corsOpt, (req: any, res: any) => { // GET Search by nickname, ip, serals
+router.get('/search', (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.query.search) {
     return res.redirect(format({ pathname: '/v2/logs/last', query: req.query }));
   }

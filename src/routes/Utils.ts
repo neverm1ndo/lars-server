@@ -6,15 +6,13 @@ import { unlink } from 'fs-extra';
 import Backuper from '@backuper';
 import { mkdir } from 'fs-extra';
 
-import { corsOpt } from '@shared/constants';
-
 import { io } from '../index';
 
 const router = Router();
 
 const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 
-router.delete('/delete-file', corsOpt, json(), (req: any, res: any) => { // DELETE Removes config file
+router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Removes config file
   if (!req.query.path) { return res.send(CONFLICT); }
   Logger.log('default', 'DELETE │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
   Backuper.backup(req.query.path, req.user, 'delete').then(() => {
@@ -24,7 +22,7 @@ router.delete('/delete-file', corsOpt, json(), (req: any, res: any) => { // DELE
       });
     })
   }).then(() => {
-      res.send({status: 'deleted'});
+      res.send({ status: 'deleted' });
   }).catch((err) => {
       res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
   }).catch((err) => {
