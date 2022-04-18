@@ -4,6 +4,7 @@ import { Logger } from '@shared/Logger';
 import { json } from 'body-parser';
 import { unlink } from 'fs-extra';
 import Backuper from '@backuper';
+import { mkdir } from 'fs-extra';
 
 import { corsOpt } from '@shared/constants';
 
@@ -36,6 +37,23 @@ router.get('/download-file', (req: any, res: any) => { // GET download config fi
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
   res.sendFile(req.query.path);
 });
+
+router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
+  const newDirName: string = 'New Folder';
+  if (!req.body.path) return res.send(CONFLICT);
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
+  new Promise<void>((res, rej) => {
+    mkdir(req.body.name || newDirName, req.body.path, (err) => {
+      return (!!err ? rej(err) : res());
+    });
+  }).then(() => {
+    res.send({ status: OK });
+  }).catch(err => {
+    console.error(err)
+    res.send(err);
+  });
+});
+
 router.get('/update-emitter', (req: any, res: any) => { // GET download config file
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> UPDATE_MESSAGE_EMIT');
   io.sockets.emit('update:soft');

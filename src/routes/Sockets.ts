@@ -29,7 +29,7 @@ const sockets = (socket: Socket) => {
   })
   socket.on('get-status', () => {
     if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
-    exec('sudo bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
+    exec('bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
       if (err) { socket.emit('server-error', err.message ); return; }
       Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> GET_SVR_SA_STAT',  'live:' + stdout);
       socket.emit('server-status', JSON.parse(stdout)?'live':'stoped');
@@ -54,7 +54,7 @@ const sockets = (socket: Socket) => {
           socket.broadcast.to('devs').emit('server-rebooted', stdout);
           socket.emit('server-rebooted', stdout);
           if (process.env.NODE_ENV === 'production') {
-            statsman.request('185.104.113.34', 7777, 'i').then((players: number) => {
+            statsman.request('svr.gta-liberty.ru', 7777, 'i').then((players: number) => {
               statsman.snapshot = players;
             }).catch((err) => {
               console.error(err);
@@ -67,7 +67,7 @@ const sockets = (socket: Socket) => {
   socket.on('stop-server', () => {
     if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
     Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOP_SVR_SA');
-      exec('sudo bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
+      exec('bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
         if (err) { socket.emit('server-error', err.message); return; }
         socket.broadcast.to('devs').emit('server-stoped', stdout);
         socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.group_id });
@@ -81,7 +81,7 @@ const sockets = (socket: Socket) => {
     Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> LAUNCH_SVR_SA');
     socket.broadcast.to('devs').emit( 'server-status', 'loading' );
     socket.emit( 'server-status', 'loading' );
-    exec(`bash /home/nmnd/starter.sh`, (err: any) => {
+    exec(`/home/nmnd/starter.sh`, (err: any) => {
       if (err) { socket.emit( 'server-error', err.message ); return; }
       setTimeout(() => {
         socket.broadcast.to('devs').emit('server-launched');

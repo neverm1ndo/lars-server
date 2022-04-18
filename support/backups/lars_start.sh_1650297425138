@@ -1,6 +1,6 @@
 #!/bin/bash
 ## LLS launch script
-cd /home/nmnd/lars-server
+cd /home/nmnd/libertylogs
 RED="\e[31m"
 NC="\e[0m"
 GREEN="\e[32m"
