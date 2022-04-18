@@ -1,7 +1,7 @@
 import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
-import bodyParser from 'body-parser';
+import { json } from 'express';
 import Workgroup from '@enums/workgroup.enum';
 
 import { corsOpt, MSQLPool } from '@shared/constants';
@@ -36,7 +36,7 @@ router.get('/expire-token', corsOpt, (req: any, res: any) => {
   // cm.closeSession(req.query.username);
   res.status(OK).send(JSON.stringify({ status: 'Token expired' }));
 });
-router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => {
+router.put('/change-group', json(), corsOpt, (req: any, res: any) => {
   if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
   Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
   MSQLPool.promise()
@@ -50,7 +50,7 @@ router.put('/change-group', bodyParser.json(), corsOpt, (req: any, res: any) => 
       Logger.log('error', err);
     });
 });
-router.put('/change-secondary-group', bodyParser.json(), corsOpt, (req: any, res: any) => {
+router.put('/change-secondary-group', json(), corsOpt, (req: any, res: any) => {
   if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
   Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CHANGE_SECONDARY_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
   MSQLPool.promise()

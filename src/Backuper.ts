@@ -10,15 +10,15 @@ export type BackupAction = 'delete' | 'change';
 export default class Backuper {
   constructor() {}
   static backup(path: string, user: any, action: BackupAction): Promise<any> {
-    const pathsplit = path.split(new RegExp(/(\/|\\)/g));
+    const pathsplit = path.split(/(\/|\\)/g);
     const filename = pathsplit[pathsplit.length - 1].split('.')[0];
-    const ext = pathsplit[pathsplit.length - 1].replace(new RegExp(/(.*)\./), '');
+    const ext = pathsplit[pathsplit.length - 1].replace(/(.*)\./, '');
     const unix = Date.now();
     const copyFile: Promise<void> = new Promise((res, rej) => {
       return copy(path, join(process.env.BACKUPS_PATH!, `${pathsplit[pathsplit.length - 1]}_${unix}`), (err) => {
           return (!!err ? rej(err) : res());
       });
-    })
+    });
     const isBinary = ((ext: string): boolean => {
       const mime = getMimeType(ext);
       switch (mime) {
@@ -44,7 +44,7 @@ export default class Backuper {
         binary: isBinary
       }
     });
-    return Promise.all([copyFile, backup.save()])
+    return Promise.all([copyFile, backup.save()]);
   }
   static restore(path: string, unix: number): Promise<void> {
     const pathsplit = path.split(new RegExp(/(\/|\\)/g));
@@ -52,7 +52,7 @@ export default class Backuper {
       return copy(join(process.env.BACKUPS_PATH!, `${pathsplit[pathsplit.length - 1]}_${unix}`), path, (err) => {
           return (!!err ? rej(err) : res());
       });
-    })
+    });
   }
   static remove(): Promise<any> {
     const unlinkFiles: Promise<void> = new Promise((res, rej) => {
@@ -66,9 +66,9 @@ export default class Backuper {
             if (!!err) return rej(err);
             if (index == files.length - 1) return res();
           });
-        })
-      })
-    })
+        });
+      });
+    });
     const rmBackupNote = BACKUP.deleteMany({expires: { $lte: new Date() }}, [], (err: any) => {
       if (err) return;
     });
@@ -79,7 +79,7 @@ export default class Backuper {
       readFile(join(process.env.BACKUPS_PATH!, `${name}_${unix}`), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
         if (err) { rej(err); return; }
         res(parser.ANSItoUTF8(buf))
-      })
-    })
+      });
+    });
   }
 }

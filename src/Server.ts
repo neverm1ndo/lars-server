@@ -23,7 +23,7 @@ const { BAD_REQUEST } = StatusCodes;
 
 const useCors = cors();
 
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.options('*', useCors);
 app.set('secret', process.env.ACCESS_TOKEN_SECRET);
@@ -77,7 +77,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // Crontasks
 if (process.env.NODE_ENV === 'production') {
   rmOldBackups.start();
-  tailOnlineStats.start(); 
+  tailOnlineStats.start();
 };
 
 // Watcher

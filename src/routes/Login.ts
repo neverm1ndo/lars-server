@@ -1,7 +1,6 @@
 import StatusCodes from 'http-status-codes';
-import { Response, Router } from 'express';
+import { Response, Router, json } from 'express';
 import { Logger } from '@shared/Logger';
-import bodyParser from 'body-parser';
 
 import { corsOpt, MSQLPool } from '@shared/constants';
 import { checkPassword, generateToken, verifyToken, isWorkGroup, decodeToken } from '@shared/functions';
@@ -11,7 +10,7 @@ const { OK, UNAUTHORIZED, CONFLICT, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 
 
-router.post('/', corsOpt, bodyParser.json(), (req: any, res: any): void => {
+router.post('/', corsOpt, json(), (req: any, res: any): void => {
   if (!req.body.email) { res.status(CONFLICT).send(`E-mail form is empty`); return;}
   if (!req.body.password) { res.status(CONFLICT).send(`Password form is empty`); return;}
   Logger.log('default', 'Trying to authorize', req.body.email);
