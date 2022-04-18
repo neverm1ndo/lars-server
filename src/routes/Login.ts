@@ -4,11 +4,12 @@ import { Logger } from '@shared/Logger';
 
 import { MSQLPool } from '@shared/constants';
 import { checkPassword, generateToken, verifyToken, isWorkGroup, decodeToken } from '@shared/functions';
+import { corsOpt } from '@shared/constants';
 
 const router = Router();
 const { OK, UNAUTHORIZED, CONFLICT, INTERNAL_SERVER_ERROR } = StatusCodes;
 
-router.post('/', json(), (req: any, res: any): void => {
+router.post('/', corsOpt, json(), (req: any, res: any): void => {
   Logger.log('default', 'LOGIN', req.connection.remoteAddress, req.headers['Referer'], req.headers['User-Agent']);
   if (!req.body.email) { res.status(CONFLICT).send(`E-mail form is empty`); return; }
   if (!req.body.password) { res.status(CONFLICT).send(`Password form is empty`); return; }
@@ -38,7 +39,7 @@ router.post('/', json(), (req: any, res: any): void => {
       Logger.log('error', 'LOGIN', err);
     });
 });
-router.get('/user', (req: any, res: any): void => {
+router.get('/user', corsOpt, (req: any, res: any): void => {
   if (!verifyToken(req.headers.authorization.split(' ')[1])) return res.status(UNAUTHORIZED).send('Unauthorized access');
   MSQLPool.promise()
     .query("SELECT username, user_id, user_avatar, group_id FROM phpbb_users WHERE username = ?", [req.query.name])
