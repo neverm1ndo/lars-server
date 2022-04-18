@@ -8,11 +8,10 @@ import { checkPassword, generateToken, verifyToken, isWorkGroup, decodeToken } f
 const router = Router();
 const { OK, UNAUTHORIZED, CONFLICT, INTERNAL_SERVER_ERROR } = StatusCodes;
 
-
-
 router.post('/', json(), (req: any, res: any): void => {
-  if (!req.body.email) { res.status(CONFLICT).send(`E-mail form is empty`); return;}
-  if (!req.body.password) { res.status(CONFLICT).send(`Password form is empty`); return;}
+  Logger.log('default', 'LOGIN', req.connection.remoteAddress, req.headers['Referer'], req.headers['User-Agent']);
+  if (!req.body.email) { res.status(CONFLICT).send(`E-mail form is empty`); return; }
+  if (!req.body.password) { res.status(CONFLICT).send(`Password form is empty`); return; }
   Logger.log('default', 'Trying to authorize', req.body.email);
   MSQLPool.promise()
     .query("SELECT username, user_id, user_type, user_avatar, user_password, group_id FROM phpbb_users WHERE user_email = ?", [req.body.email])
@@ -36,7 +35,7 @@ router.post('/', json(), (req: any, res: any): void => {
     .catch((err: any): void => {
       res.status(INTERNAL_SERVER_ERROR).send(err);
       Logger.log('error', `[${req.connection.remoteAddress}]`, INTERNAL_SERVER_ERROR, 'Failed authorization ->', req.body.email)
-      Logger.log('error', err);
+      Logger.log('error', 'LOGIN', err);
     });
 });
 router.get('/user', (req: any, res: any): void => {
@@ -54,7 +53,7 @@ router.get('/user', (req: any, res: any): void => {
     })
     .catch((err: any): void => {
       res.status(INTERNAL_SERVER_ERROR).send(err);
-      Logger.log('error', err);
+      Logger.log('error', 'GET_USER', err);
     });
 });
 
