@@ -84,7 +84,7 @@ namespace Statsman {
                    resolve(message.readUInt16LE(1))
                }
            });
-       })
+       });
    }
     tail(): any {
       STAT.updateOne({ date: new Date().setHours(0, 0, 0, 0) , label: 'online' }, { $push: { data: this.snapshot, labels: new Date() }}, { upsert: true, setDefaultsOnInsert: true }, (err) => {

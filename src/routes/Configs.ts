@@ -59,7 +59,7 @@ router.post('/save-config', corsOpt, json({ limit: '5mb' }), (req: any, res: any
       else { res.status(OK).send(JSON.stringify({ res: `Config ${req.body.file.path} successfully saved` }))};
     });
   }).catch((err) => {
-    Logger.log('error', err.message);
+    Logger.log('error', 'SAVE_CONF_FILE', err.message);
     res.status(INTERNAL_SERVER_ERROR).send('Backuper error: ' + err.message);
   });
 });

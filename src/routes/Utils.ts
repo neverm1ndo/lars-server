@@ -28,7 +28,7 @@ router.delete('/delete-file', corsOpt, json(), (req: any, res: any) => { // DELE
   }).catch((err) => {
       res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
   }).catch((err) => {
-    Logger.log('error', err.message);
+    Logger.log('error', 'DELETE_FILE', err.message);
     res.status(INTERNAL_SERVER_ERROR).end('Backuper error: ' + err.message);
   });
 });

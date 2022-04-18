@@ -6,6 +6,10 @@
  import fs from 'fs';
  import path from 'path';
 
+
+/**
+* Not the best implementation
+*/
  export class Logger {
    constructor() {}
    public static convert(str: number): string {

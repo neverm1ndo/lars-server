@@ -44,8 +44,8 @@ export const rmOldBackups = new CronJob('0 0 0 */1 * *', () => {
   Backuper.remove().then(() => {
     Logger.log('default', 'CRON', '->' ,'AUTO_CLEAR_OLD_BACKUPS');
   }).catch(err => {
-    Logger.log('error', err.message);
-  })
+    Logger.log('error', 'CRON_RM_BACKUPS', err.message);
+  });
 }, null, true, 'Europe/Moscow')
 
 
