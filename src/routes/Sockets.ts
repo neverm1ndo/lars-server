@@ -15,9 +15,9 @@ export const socketAuth = (socket: any, next: any) => {
     next(err);
   } else {
     const user = decodeToken(token);
-    socket.data.username = user?.name;
-    socket.data.group_id = user?.group_id;
     socket.data.id = user?.id;
+    socket.data.username = user?.username;
+    socket.data.main_group = user?.main_group;
     next();
   }
 }
@@ -26,7 +26,7 @@ const sockets = (socket: Socket) => {
   socket.data.group_id === DEV?socket.join('devs'):socket.join('main');
   socket.on('get-room', () => {
     socket.emit('room-name', [...socket.rooms].join(', '))
-  })
+  });
   socket.on('get-status', () => {
     if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
     exec('bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {

@@ -50,9 +50,9 @@ router.get('/user', corsOpt, (req: any, res: any): void => {
     .then(([rows]: any[]): void => {
       let user = rows[0];
       res.status(OK).send(JSON.stringify({
-        name: user.username,
+        username: user.username,
         id: user.user_id,
-        gr: user.group_id,
+        main_group: user.group_id,
         avatar: user.user_avatar?'https://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar : 'https://www.gta-liberty.ru/styles/prosilver_ex/theme/images/no_avatar.gif',
       }));
     })
@@ -65,24 +65,18 @@ router.get('/user', corsOpt, (req: any, res: any): void => {
 router.get('/check-token', (req: any, res: Response) => { // GET Checks token validation
   if (!req.headers.authorization) return res.status(UNAUTHORIZED).send('Authorization token is empty');
   const token: string = req.headers.authorization.split(' ')[1];
-  if (verifyToken(token)) {
-    const user = decodeToken(token);
-    Logger.log('default', `[${req.connection.remoteAddress}]`, 'Token validation ->', user?.name);
-    MSQLPool.promise()
-      .query("SELECT group_id FROM phpbb_users WHERE user_id = ?", [user?.id])
-      .then(([rows]: any[]): void => {
-        if (rows[0].group_id == user?.group_id) {
-          Logger.log('default', `[${req.connection.remoteAddress}]`, 'Successfull token validation ->', user?.name);
-          res.status(OK).send('Access token is valid')
-        } else {
-          throw 'Invalid access token';
-        }
-      }).catch((err: string) => {
-        res.status(INTERNAL_SERVER_ERROR).send(err);
-      });
-  } else {
-    return res.status(UNAUTHORIZED).send('Invalid access token');
-  }
+  if (!verifyToken(token)) return res.status(UNAUTHORIZED).send('Invalid access token');
+  const user = decodeToken(token);
+  Logger.log('default', 'TOKEN_VALIDATION', `[${req.connection.remoteAddress}]`, user?.username);
+  MSQLPool.promise()
+    .query("SELECT group_id FROM phpbb_users WHERE user_id = ?", [user?.id])
+    .then(([rows]: any[]): void => {
+      if (rows[0].group_id != user?.main_group) throw 'Invalid access token';
+      Logger.log('default', 'TOKEN_VALIDATION_SUCCESS' , `[${req.connection.remoteAddress}]`, user?.username);
+      res.status(OK).send('Access token is valid');
+    }).catch((err: string) => {
+      res.status(INTERNAL_SERVER_ERROR).send(err);
+    });
 })
 
 export default router;

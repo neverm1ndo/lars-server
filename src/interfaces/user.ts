@@ -1,5 +1,6 @@
 export interface User {
-  name: string;
   id: number;
-  group_id: number;
+  username: string;
+  main_group: number;
+  secondary_group: number;
 }

@@ -6,8 +6,6 @@ import helmet from 'helmet';
 import { connect } from 'mongoose';
 import { join } from 'path';
 import { rmOldBackups, tailOnlineStats } from '@shared/constants'
-// import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
-// import passport from 'passport';
 
 import express, { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
@@ -19,33 +17,29 @@ import { watch } from '@shared/functions';
 
 const app = express();
 
-const { BAD_REQUEST } = StatusCodes;
+const { BAD_REQUEST, NOT_FOUND } = StatusCodes;
 
 const useCors = cors();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.options('*', useCors);
+
 app.set('secret', process.env.ACCESS_TOKEN_SECRET);
+
 app.use('/v2', jwte({
   secret: app.get('secret'),
   algorithms: ['HS256'],
   credentialsRequired: false,
   getToken: (req: any) => {
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-        return req.headers.authorization.split(' ')[1];
+      return req.headers.authorization.split(' ')[1];
     } else if (req.query && req.query.token) {
       return req.query.token;
     }
     return null;
   }
 }));
-
-// passport
-
-// passport.use(new JwtStrategy({}, function (jwt_payload, done) {
-//
-// }))
 
 // MongoDB connection
 connect(process.env.MONGO!);
@@ -64,16 +58,20 @@ if (process.env.NODE_ENV === 'production') {
 app.use('/v2', BaseRouter);
 app.use('/.well-known/acme-challenge', express.static(join(__dirname, '.well-known/acme-challenge')));
 
+// 404
+app.get('*', (req: Request, res: Response) => {
+  res.sendStatus(NOT_FOUND);
+});
 
 // Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     Logger.log('error', 'SERVER', err);
-    Logger.log('ORIGINAL_URL', req.originalUrl);
-    Logger.log('PROTOCOL', req.protocol);
-    Logger.log('XHR', req.xhr);
+    Logger.log('error', 'ORIGINAL_URL', req.originalUrl);
+    Logger.log('error', 'PROTOCOL', req.protocol);
+    Logger.log('error', 'XHR', req.xhr);
     return res.status(BAD_REQUEST).json({
-        error: 'ERR: ' + err.message,
+      error: 'ERR: ' + err.message,
     });
 });
 

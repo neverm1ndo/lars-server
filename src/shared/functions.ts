@@ -152,11 +152,12 @@ export const decodeToken = (token: string): User | null => {
   jwt.verify(token, app.get('secret'), (err: any, decoded: any) => {
     if (err) return null;
     user = {
-        name: decoded.user,
-        id: decoded.id,
-        group_id: decoded.group_id
-      }
-  })
+      id: decoded.id,
+      username: decoded.username,
+      main_group: decoded.main_group,
+      secondary_group: decoded.secondary_group,
+    };
+  });
   if (!user) return null;
   return user;
 

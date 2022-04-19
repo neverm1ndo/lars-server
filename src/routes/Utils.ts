@@ -20,11 +20,11 @@ router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Remove
       return unlink(req.query.path, (err: NodeJS.ErrnoException | null) => {
         return (!!err ? rej(err) : res());
       });
-    })
+    });
   }).then(() => {
-      res.send({ status: 'deleted' });
+    res.send({ status: 'deleted' });
   }).catch((err) => {
-      res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
+    res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
   }).catch((err) => {
     Logger.log('error', 'DELETE_FILE', err.message);
     res.status(INTERNAL_SERVER_ERROR).end('Backuper error: ' + err.message);
