@@ -96,7 +96,7 @@ router.get('/search', (req: any, res: any) => { // GET Search by nickname, ip, s
   .where('process').nin(filter)
   .exec((err: CallbackError, lines: Document[]) => {
     if (err) {
-      Logger.log('error', err);
+      Logger.log('error', 'SEARCH', err);
       return res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
     }
     res.send(lines);

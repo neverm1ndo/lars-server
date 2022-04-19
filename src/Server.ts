@@ -69,8 +69,9 @@ app.use('/.well-known/acme-challenge', express.static(join(__dirname, '.well-kno
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     Logger.log('error', 'SERVER', err);
-    console.error(req.body);
-    console.error(err);
+    Logger.log('ORIGINAL_URL', req.originalUrl);
+    Logger.log('PROTOCOL', req.protocol);
+    Logger.log('XHR', req.xhr);
     return res.status(BAD_REQUEST).json({
         error: 'ERR: ' + err.message,
     });
