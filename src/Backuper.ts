@@ -33,8 +33,8 @@ export default class Backuper {
       expires: new Date(unix + 604800000),
       action,
       user: {
-        nickname: user.user,
-        group_id: user.group_id,
+        nickname: user.username,
+        group_id: user.main_group,
         avatar: user.avatar
       },
       file: {

@@ -28,7 +28,7 @@ const sockets = (socket: Socket) => {
     socket.emit('room-name', [...socket.rooms].join(', '))
   });
   socket.on('get-status', () => {
-    if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
+    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
     exec('bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
       if (err) { socket.emit('server-error', err.message ); return; }
       Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> GET_SVR_SA_STAT',  'live:' + stdout);
@@ -36,7 +36,7 @@ const sockets = (socket: Socket) => {
     });
   });
   socket.on('reboot-server', () => {
-    if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
+    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
       let cmd: string;
       switch (process.platform) {
         case 'win32' : cmd = 'taskkill /IM samp03svr.exe'; break;
@@ -65,7 +65,7 @@ const sockets = (socket: Socket) => {
       });
   });
   socket.on('stop-server', () => {
-    if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
+    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
     Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOP_SVR_SA');
       exec('bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
         if (err) { socket.emit('server-error', err.message); return; }
@@ -77,7 +77,7 @@ const sockets = (socket: Socket) => {
       });
   });
   socket.on('launch-server', () => {
-    if (socket.data.group_id !== DEV) { socket.emit('error', 'Access denied'); return; }
+    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
     Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> LAUNCH_SVR_SA');
     socket.broadcast.to('devs').emit( 'server-status', 'loading' );
     socket.emit( 'server-status', 'loading' );

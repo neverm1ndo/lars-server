@@ -14,7 +14,7 @@ const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 
 router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Removes config file
   if (!req.query.path) { return res.send(CONFLICT); }
-  Logger.log('default', 'DELETE │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
+  Logger.log('default', 'DELETE │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
   Backuper.backup(req.query.path, req.user, 'delete').then(() => {
     return new Promise<void>((res, rej) => {
       return unlink(req.query.path, (err: NodeJS.ErrnoException | null) => {
@@ -32,14 +32,14 @@ router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Remove
 });
 router.get('/download-file', (req: any, res: any) => { // GET download config file
   if (!req.query.path) { return res.send(CONFLICT); }
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
   res.sendFile(req.query.path);
 });
 
 router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
   const newDirName: string = 'New Folder';
   if (!req.body.path) return res.send(CONFLICT);
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
     mkdir(req.body.name || newDirName, req.body.path, (err) => {
       return (!!err ? rej(err) : res());
@@ -53,7 +53,7 @@ router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
 });
 
 router.get('/update-emitter', (req: any, res: any) => { // GET download config file
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> UPDATE_MESSAGE_EMIT');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> UPDATE_MESSAGE_EMIT');
   io.sockets.emit('update:soft');
   res.sendStatus(OK);
 });

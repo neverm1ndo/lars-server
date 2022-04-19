@@ -39,7 +39,7 @@ router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
   if (req.query.filter) filter = parseSearchFilter(req.query.filter);
   if (req.query.dateFrom) date.from = +req.query.dateFrom/1000;
   if (req.query.dateTo) date.to = +req.query.dateTo/1000;
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user, `role: ${req.user.group_id}`, '-> LINES', lim, page,' [', req.originalUrl, ']\n└ ', JSON.stringify(req.query));
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> LINES', lim, page,' [', req.originalUrl, ']\n└ ', JSON.stringify(req.query));
   LOG_LINE.find({ unix: { $gte: date.from, $lte: date.to }}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page },)
   .where('process').nin(filter)
   .exec((err: any, lines: Document[]) => {
@@ -68,7 +68,7 @@ router.get('/search', (req: any, res: any) => { // GET Search by nickname, ip, s
   if (req.query.filter) filter = parseSearchFilter(req.query.filter);
   if (req.query.dateFrom) date.from = +req.query.dateFrom/1000;
   if (req.query.dateTo) date.to = +req.query.dateTo/1000;
-    Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SEARCH\n',
+    Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SEARCH\n',
                '                            └ ', JSON.stringify(req.query));
   let mdbq: MDBRequest = {
     'geo.ip': { $in: query?.ip },

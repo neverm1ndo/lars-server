@@ -21,17 +21,17 @@ const { OK, INTERNAL_SERVER_ERROR, CONFLICT, NOT_FOUND } = StatusCodes;
 const { DEV } = Workgroup;
 
 router.get('/config-files-tree', (req: any, res: any) => { // GET Files(configs) and directories tree
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CONFIG_FILES_TREE [', req.originalUrl, ']');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CONFIG_FILES_TREE [', req.originalUrl, ']');
   let root: TreeNode;
 
-  if (req.user.group_id == DEV) root = TreeNode.buildTree(process.env.CFG_DEV_PATH!, 'svr_sa');
+  if (req.user.main_group == DEV) root = TreeNode.buildTree(process.env.CFG_DEV_PATH!, 'svr_sa');
   else root = TreeNode.buildTree(process.env.CFG_DEFAULT_PATH!, 'configs');
 
   if (!root) res.status(INTERNAL_SERVER_ERROR).send({ message: 'Cant read file tree' });
   res.send(JSON.stringify(root));
 });
 router.get('/config-file', (req: any, res: any) => { // GET single config file
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
   if (!req.query.path) return res.status(CONFLICT);
   promises.stat(req.query.path).then(() => {
     readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
@@ -43,7 +43,7 @@ router.get('/config-file', (req: any, res: any) => { // GET single config file
   });
 });
 router.get('/file-info', (req: any, res: any) => { // GET stat of file
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> FILE_INFO', req.query.path, '[', req.originalUrl, ']');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> FILE_INFO', req.query.path, '[', req.originalUrl, ']');
   if (!req.query.path) { return res.status(CONFLICT).send({ message: 'Empty path param'})}
   promises.stat(req.query.path).then((stats: Stats) => {
     res.send({size: stats.size, lastm: stats.mtime, mime: getMimeType(req.query.path)});
@@ -52,7 +52,7 @@ router.get('/file-info', (req: any, res: any) => { // GET stat of file
   });
 });
 router.post('/save-config', json({ limit: '5mb' }), (req: any, res: any) => { // POST Write map file
-  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
+  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
   Backuper.backup(req.body.file.path, req.user, 'change').then(() => {
     writeFile(req.body.file.path, parser.UTF8toANSI(req.body.file.data), (err: NodeJS.ErrnoException | null) => {
       if (err) { res.status(INTERNAL_SERVER_ERROR).send(err) }
@@ -64,7 +64,7 @@ router.post('/save-config', json({ limit: '5mb' }), (req: any, res: any) => { //
   });
 });
 router.post('/upload-cfg', upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
-  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.user,`role: ${req.user.group_id}`, '-> UPLOAD_FILE', '[', req.originalUrl, ']');
+  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> UPLOAD_FILE', '[', req.originalUrl, ']');
   res.sendStatus(OK);
 });
 
