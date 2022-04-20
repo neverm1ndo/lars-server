@@ -23,7 +23,7 @@ export const socketAuth = (socket: any, next: any) => {
 }
 
 const sockets = (socket: Socket) => {
-  socket.data.group_id === DEV?socket.join('devs'):socket.join('main');
+  socket.data.main_group === DEV?socket.join('devs'):socket.join('main');
   socket.on('get-room', () => {
     socket.emit('room-name', [...socket.rooms].join(', '))
   });
@@ -47,7 +47,7 @@ const sockets = (socket: Socket) => {
       exec(cmd, (err: any, stdout: any) => {
         if (err) { socket.emit('error', err.message ); return; }
         socket.broadcast.to('devs').emit('server-status', 'rebooting')
-        socket.broadcast.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.group_id });
+        socket.broadcast.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.main_group });
         socket.emit('server-status', 'rebooting');
         statsman.snapshot = 0;
         setTimeout(() => {
@@ -70,7 +70,7 @@ const sockets = (socket: Socket) => {
       exec('bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
         if (err) { socket.emit('server-error', err.message); return; }
         socket.broadcast.to('devs').emit('server-stoped', stdout);
-        socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.group_id });
+        socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.main_group });
         socket.emit('server-stoped', stdout);
         statsman.snapshot = 0;
         Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
