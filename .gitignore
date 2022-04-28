@@ -15,4 +15,5 @@ diary/*
 *.text_rc
 *.d
 *.greenlockrc
+support/*
 src/.well-known/*
