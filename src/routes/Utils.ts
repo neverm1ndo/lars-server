@@ -42,7 +42,7 @@ router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
   if (req.body.path == '/') return res.send(CONFLICT);
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> MKDIR', req.body.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
-    mkdir(req.body.path, (err) => {
+    mkdir(path.normalize(req.body.path), (err) => {
       return (!!err ? rej(err) : res());
     });
   }).then(() => {
@@ -57,7 +57,7 @@ router.delete('/rmdir', (req: any, res: any) => { // POST make new dir
   if (!req.query.path) return res.send(CONFLICT);
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RMDIR', req.query.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
-    rmdir(req.query.path, (err) => {
+    rmdir(path.normalize(req.query.path), (err) => {
       return (!!err ? rej(err) : res());
     });
   }).then(() => {
