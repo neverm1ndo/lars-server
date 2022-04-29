@@ -57,7 +57,7 @@ router.delete('/rmdir', (req: any, res: any) => { // POST make new dir
   if (!req.query.path) return res.send(CONFLICT);
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RMDIR', req.query.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
-    rmdir(decodeURI(req.body.path), (err) => {
+    rmdir(decodeURI(req.query.path), (err) => {
       return (!!err ? rej(err) : res());
     });
   }).then(() => {
