@@ -55,9 +55,11 @@ router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
 
 router.delete('/rmdir', (req: any, res: any) => { // POST make new dir
   if (!req.query.path) return res.send(CONFLICT);
+  const dirPath: string = decodeURI(req.query.path);
+  if ([process.env.CFG_DEV_PATH, process.env.CFG_DEFAULT_PATH, process.env.MAPS_PATH].includes(dirPath)) return res.send(CONFLICT);
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RMDIR', req.query.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
-    rmdir(decodeURI(req.query.path), (err) => {
+    rmdir(dirPath, (err) => {
       return (!!err ? rej(err) : res());
     });
   }).then(() => {
