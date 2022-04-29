@@ -4,7 +4,8 @@ import { Logger } from '@shared/Logger';
 import { json } from 'body-parser';
 import { unlink } from 'fs-extra';
 import Backuper from '@backuper';
-import { mkdir } from 'fs-extra';
+import { mkdir, rmdir } from 'fs-extra';
+import path from 'path';
 
 import { io } from '../index';
 
@@ -37,18 +38,33 @@ router.get('/download-file', (req: any, res: any) => { // GET download config fi
 });
 
 router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
-  const newDirName: string = 'New Folder';
   if (!req.body.path) return res.send(CONFLICT);
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
+  if (req.body.path == '/') return res.send(CONFLICT);
+  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> MKDIR', req.body.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
-    mkdir(req.body.name || newDirName, req.body.path, (err) => {
+    mkdir(req.body.path, (err) => {
       return (!!err ? rej(err) : res());
     });
   }).then(() => {
     res.send({ status: OK });
   }).catch(err => {
     console.error(err)
-    res.send(err);
+    res.status(INTERNAL_SERVER_ERROR).send(err);
+  });
+});
+
+router.delete('/rmdir', (req: any, res: any) => { // POST make new dir
+  if (!req.query.path) return res.send(CONFLICT);
+  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RMDIR', req.query.path, '[', req.originalUrl, ']');
+  new Promise<void>((res, rej) => {
+    rmdir(req.query.path, (err) => {
+      return (!!err ? rej(err) : res());
+    });
+  }).then(() => {
+    res.send({ status: OK });
+  }).catch(err => {
+    console.error(err)
+    res.status(INTERNAL_SERVER_ERROR).send(err);
   });
 });
 
