@@ -42,11 +42,17 @@ router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
   if (req.body.path == '/') return res.send(CONFLICT);
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> MKDIR', req.body.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
-    mkdir(path.normalize(req.body.path), (err) => {
+    mkdir(path.format({
+      root: '/ignored',
+      dir: req.body.path
+    }), (err) => {
       return (!!err ? rej(err) : res());
     });
   }).then(() => {
-    res.send({ status: OK });
+    res.send({ status: OK, path: path.format({
+      root: '/ignored',
+      dir: req.body.path
+    })});
   }).catch(err => {
     console.error(err)
     res.status(INTERNAL_SERVER_ERROR).send(err);
