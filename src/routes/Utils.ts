@@ -42,17 +42,11 @@ router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
   if (req.body.path == '/') return res.send(CONFLICT);
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> MKDIR', req.body.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
-    mkdir(path.format({
-      root: '/ignored',
-      dir: req.body.path
-    }), (err) => {
+    mkdir(decodeURI(req.body.path), (err) => {
       return (!!err ? rej(err) : res());
     });
   }).then(() => {
-    res.send({ status: OK, path: path.format({
-      root: '/ignored',
-      dir: req.body.path
-    })});
+    res.send({ status: OK, path: decodeURI(req.body.path)});
   }).catch(err => {
     console.error(err)
     res.status(INTERNAL_SERVER_ERROR).send(err);
@@ -63,7 +57,7 @@ router.delete('/rmdir', (req: any, res: any) => { // POST make new dir
   if (!req.query.path) return res.send(CONFLICT);
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RMDIR', req.query.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
-    rmdir(path.normalize(req.query.path), (err) => {
+    rmdir(decodeURI(req.body.path), (err) => {
       return (!!err ? rej(err) : res());
     });
   }).then(() => {
