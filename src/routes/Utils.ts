@@ -4,8 +4,7 @@ import { Logger } from '@shared/Logger';
 import { json } from 'body-parser';
 import { unlink } from 'fs-extra';
 import Backuper from '@backuper';
-import { mkdir, rmdir } from 'fs-extra';
-import path from 'path';
+import { mkdir, rmdir, move } from 'fs-extra';
 
 import { io } from '../index';
 
@@ -53,13 +52,31 @@ router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
   });
 });
 
-router.delete('/rmdir', (req: any, res: any) => { // POST make new dir
+router.delete('/rmdir', (req: any, res: any) => { // DELETE delete dir
   if (!req.query.path) return res.send(CONFLICT);
   const dirPath: string = decodeURI(req.query.path);
   if ([process.env.CFG_DEV_PATH, process.env.CFG_DEFAULT_PATH, process.env.MAPS_PATH].includes(dirPath)) return res.send(CONFLICT);
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RMDIR', req.query.path, '[', req.originalUrl, ']');
   new Promise<void>((res, rej) => {
     rmdir(dirPath, (err) => {
+      return (!!err ? rej(err) : res());
+    });
+  }).then(() => {
+    res.send({ status: OK });
+  }).catch(err => {
+    console.error(err)
+    res.status(INTERNAL_SERVER_ERROR).send(err);
+  });
+});
+
+router.patch('/mvdir', json() ,(req: any, res: any) => { // PATCH move dir
+  if (!req.body.path && !req.body.dest) return res.send(CONFLICT);
+  const dirPath: string = decodeURI(req.body.path);
+  const dirDestPath: string = decodeURI(req.body.dest);
+  if ([process.env.CFG_DEV_PATH, process.env.CFG_DEFAULT_PATH, process.env.MAPS_PATH].includes(dirPath)) return res.send(CONFLICT);
+  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RMDIR', req.body.path, req.body.dest, '[', req.originalUrl, ']');
+  new Promise<void>((res, rej) => {
+    move(dirPath, dirDestPath, (err) => {
       return (!!err ? rej(err) : res());
     });
   }).then(() => {
