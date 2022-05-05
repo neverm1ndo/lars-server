@@ -15,7 +15,7 @@ router.post('/', corsOpt, json(), (req: any, res: any): void => {
   if (!req.body.password) { res.status(CONFLICT).send(`Password form is empty`); return; }
   Logger.log('default', 'AUTH_TRY', req.connection.remoteAddress , req.body.email);
   MSQLPool.promise()
-    .query("SELECT phpbb_users.user_id, phpbb_users.user_password, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.user_email = ?", [req.body.email])
+    .query("SELECT phpbb_users.user_id, phpbb_users.user_password, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.user_email = ? LIMIT 1", [req.body.email])
     .then(([rows]: any[]): void => {
       let user = rows[0];
       if (!checkPassword(req.body.password, user.user_password) && !isWorkGroup(user.main_group)) {
@@ -47,7 +47,7 @@ router.post('/', corsOpt, json(), (req: any, res: any): void => {
 router.get('/user', corsOpt, (req: any, res: any): void => {
   if (!verifyToken(req.headers.authorization.split(' ')[1])) return res.status(UNAUTHORIZED).send('Unauthorized access');
   MSQLPool.promise()
-    .query("SELECT username, user_id, user_avatar, group_id FROM phpbb_users WHERE username = ?", [req.query.name])
+    .query("SELECT username, user_id, user_avatar, group_id FROM phpbb_users WHERE username = ? LIMIT 1", [req.query.name])
     .then(([rows]: any[]): void => {
       let user = rows[0];
       res.status(OK).send(JSON.stringify({
