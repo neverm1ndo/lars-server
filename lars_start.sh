@@ -13,7 +13,6 @@ check () {
 	else
 		return 0
 	fi
-
 }
 launch() {
 	if check ; then

@@ -13,16 +13,16 @@ router.post('/', corsOpt, json(), (req: any, res: any): void => {
   Logger.log('default', 'LOGIN', req.connection.remoteAddress);
   if (!req.body.email) { res.status(CONFLICT).send(`E-mail form is empty`); return; }
   if (!req.body.password) { res.status(CONFLICT).send(`Password form is empty`); return; }
-  Logger.log('default', 'Trying to authorize', req.body.email);
+  Logger.log('default', 'AUTH_TRY', req.connection.remoteAddress , req.body.email);
   MSQLPool.promise()
     .query("SELECT phpbb_users.user_id, phpbb_users.user_password, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.user_email = ?", [req.body.email])
     .then(([rows]: any[]): void => {
       let user = rows[0];
       if (!checkPassword(req.body.password, user.user_password) && !isWorkGroup(user.main_group)) {
-        Logger.log('default', `[${req.connection.remoteAddress}]`, `Authorization from ${user.username}: WORKGROUP ${isWorkGroup(user.main_group)}->`, req.body.email);
+        Logger.log('default', `[${req.connection.remoteAddress}]`, `AUTH ${user.username} -> WORKGROUP ${isWorkGroup(user.main_group)} ->`, req.body.email);
         res.status(UNAUTHORIZED).send(`In Workgroup: ${isWorkGroup(user.main_group)}`);
       }
-      Logger.log('default', `[${req.connection.remoteAddress}]`, 'Successfull authorization ->', req.body.email);
+      Logger.log('default', `[${req.connection.remoteAddress}]`, 'AUTH_SUCCESS', req.body.email, user.username);
       res.status(OK).send(JSON.stringify({
         username: user.username,
         id: user.user_id,
@@ -39,7 +39,7 @@ router.post('/', corsOpt, json(), (req: any, res: any): void => {
     })
     .catch((err: any): void => {
       res.status(INTERNAL_SERVER_ERROR).send(err);
-      Logger.log('error', `[${req.connection.remoteAddress}]`, INTERNAL_SERVER_ERROR, 'Failed authorization ->', req.body.email)
+      Logger.log('error', `[${req.connection.remoteAddress}]`, INTERNAL_SERVER_ERROR, 'AUTH_FAIL ->', req.body.email)
       Logger.log('error', 'LOGIN', err);
       console.log(err);
     });

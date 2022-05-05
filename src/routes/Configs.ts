@@ -44,13 +44,14 @@ router.get('/config-file', (req: any, res: any) => { // GET single config file
 });
 router.get('/file-info', (req: any, res: any) => { // GET stat of file
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> FILE_INFO', req.query.path, '[', req.originalUrl, ']');
-  if (!req.query.path) { return res.status(CONFLICT).send({ message: 'Empty path param'})}
+  if (!req.query.path) { return res.status(CONFLICT).send({ message: 'Empty path param'})};
   promises.stat(req.query.path).then((stats: Stats) => {
     res.send({size: stats.size, lastm: stats.mtime, mime: getMimeType(req.query.path)});
   }).catch((err: NodeJS.ErrnoException) => {
     res.status(NOT_FOUND).send({ message: err.message });
   });
 });
+
 router.post('/save-config', json({ limit: '5mb' }), (req: any, res: any) => { // POST Write map file
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
   Backuper.backup(req.body.file.path, req.user, 'change').then(() => {
