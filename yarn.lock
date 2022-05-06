@@ -284,10 +284,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/multer@^1.4.5":
-  "integrity" "sha512-9b/0a8JyrR0r2nQhL73JR86obWL7cogfX12augvlrvcpciCo/hkvEsgu80Z4S2g2DHGVXHr8pUIi1VhqFJ8Ufw=="
-  "resolved" "https://registry.npmjs.org/@types/multer/-/multer-1.4.5.tgz"
-  "version" "1.4.5"
+"@types/multer@^1.4.7":
+  "integrity" "sha512-/SNsDidUFCvqqcWDwxv2feww/yqhNeTRL5CVoL3jU4Goc4kKEL10T7Eye65ZqPNi4HRx8sAEX59pV1aEH7drNA=="
+  "resolved" "https://registry.npmjs.org/@types/multer/-/multer-1.4.7.tgz"
+  "version" "1.4.7"
   dependencies:
     "@types/express" "*"
 

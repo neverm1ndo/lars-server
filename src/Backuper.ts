@@ -1,5 +1,5 @@
 import { copy, unlink, readdir } from 'fs-extra';
-import { readFile } from 'fs';
+import { readFile, stat, Stats } from 'fs';
 import { join } from 'path'
 import { BACKUP } from '@schemas/backup.schema';
 import { getMimeType } from '@shared/functions';
@@ -9,13 +9,16 @@ export type BackupAction = 'delete' | 'change';
 
 export default class Backuper {
   constructor() {}
-  static backup(path: string, user: any, action: BackupAction): Promise<any> {
+  static async backup(path: string, user: any, action: BackupAction): Promise<any> {
     const pathsplit = path.split(/(\/|\\)/g);
     const filename = pathsplit[pathsplit.length - 1].split('.')[0];
     const ext = pathsplit[pathsplit.length - 1].replace(/(.*)\./, '');
     const unix = Date.now();
     const copyFile: Promise<void> = new Promise((res, rej) => {
-      return copy(path, join(process.env.BACKUPS_PATH!, `${pathsplit[pathsplit.length - 1]}_${unix}`), (err) => {
+      stat(path, (err: NodeJS.ErrnoException | null, stats: Stats) => {
+        if (err && !stats) return rej(err);
+      });
+      copy(path, join(process.env.BACKUPS_PATH!, `${pathsplit[pathsplit.length - 1]}_${unix}`), (err) => {
           return (!!err ? rej(err) : res());
       });
     });
@@ -44,7 +47,11 @@ export default class Backuper {
         binary: isBinary
       }
     });
-    return Promise.all([copyFile, backup.save()]);
+    return await copyFile.then(() => {
+      backup.save();
+    }).catch((err) => {
+      console.error(err);
+    });
   }
   static restore(path: string, unix: number): Promise<void> {
     const pathsplit = path.split(new RegExp(/(\/|\\)/g));

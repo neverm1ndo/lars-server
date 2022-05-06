@@ -6,6 +6,7 @@ import { Logger } from './Logger';
 import multer, { Multer, diskStorage} from 'multer';
 import cors from 'cors';
 import { CronJob } from 'cron';
+import experimentalStorage from '@shared/experimental.confstorage';
 
 import { Processes } from '@enums/processes.enum';
 import Statsman from '../Statsman';
@@ -16,25 +17,37 @@ export const parser = new Parser();
 export const watcher = new Watcher();
 export const statsman = new Statsman.OnlineMetric();
 
+const experimentalConfigFileStorage = experimentalStorage({
+  destination: function (req: any, _file: any, cb: any) {
+    cb(null, req.body.path?req.body.path:process.env.CFG_DEFAULT_PATH!)
+  },
+  filename: function (_req: any, file: any, cb: any) {
+    cb(null, file.originalname)
+  }
+});
+
 const mapStorage = diskStorage({
-  destination: function (req: any, file: any, cb) {
+  destination: function (req: any, _file: any, cb) {
     cb(null, req.body.path?req.body.path:process.env.MAPS_PATH!)
   },
   filename: function (req: any, file: any, cb) {
+    console.log(file)
     cb(null, file.originalname)
   }
 });
 
 const confStorage = diskStorage({
-  destination: function (req: any, file: any, cb) {
+  destination: function (req: any, _file: any, cb) {
     cb(null, req.body.path?req.body.path:process.env.CFG_DEFAULT_PATH!)
   },
-  filename: function (req: any, file: any, cb) {
+  filename: function (_req: any, file: any, cb) {
     cb(null, file.originalname)
   }
 });
+
 export const upmap: Multer =  multer({ storage: mapStorage });
-export const upcfg: Multer =  multer({ storage: confStorage });
+export const upcfg: Multer =  multer({ storage: experimentalConfigFileStorage });
+export const upfile: Multer =  multer({ storage: confStorage });
 
 export const tailOnlineStats = new CronJob('0 */30 * * * *', () => {
   statsman.tail();

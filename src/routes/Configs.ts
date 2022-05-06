@@ -10,7 +10,7 @@ import Workgroup from '@enums/workgroup.enum';
 
 import Backuper from '@backuper';
 
-import { upcfg } from '@shared/constants';
+import { upcfg, upfile } from '@shared/constants';
 import { getMimeType } from '@shared/functions';
 
 
@@ -30,6 +30,7 @@ router.get('/config-files-tree', (req: any, res: any) => { // GET Files(configs)
   if (!root) res.status(INTERNAL_SERVER_ERROR).send({ message: 'Cant read file tree' });
   res.send(JSON.stringify(root));
 });
+
 router.get('/config-file', (req: any, res: any) => { // GET single config file
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
   if (!req.query.path) return res.status(CONFLICT);
@@ -42,6 +43,7 @@ router.get('/config-file', (req: any, res: any) => { // GET single config file
     res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
   });
 });
+
 router.get('/file-info', (req: any, res: any) => { // GET stat of file
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> FILE_INFO', req.query.path, '[', req.originalUrl, ']');
   if (!req.query.path) { return res.status(CONFLICT).send({ message: 'Empty path param'})};
@@ -52,19 +54,12 @@ router.get('/file-info', (req: any, res: any) => { // GET stat of file
   });
 });
 
-router.post('/save-config', json({ limit: '5mb' }), (req: any, res: any) => { // POST Write map file
-  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SAVE_CONF_FILE', req.body.file.path, '[', req.originalUrl, ']');
-  Backuper.backup(req.body.file.path, req.user, 'change').then(() => {
-    writeFile(req.body.file.path, parser.UTF8toANSI(req.body.file.data), (err: NodeJS.ErrnoException | null) => {
-      if (err) { res.status(INTERNAL_SERVER_ERROR).send(err) }
-      else { res.status(OK).send(JSON.stringify({ res: `Config ${req.body.file.path} successfully saved` }))};
-    });
-  }).catch((err) => {
-    Logger.log('error', 'SAVE_CONF_FILE', err.message);
-    res.status(INTERNAL_SERVER_ERROR).send('Backuper error: ' + err.message);
-  });
+router.post('/save-config', upcfg.fields([{ name: 'file', maxCount: 1 }]), (req: any, res: any) => {
+  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SAVE_CONF_FILE', '[', req.originalUrl, ']');
+  res.sendStatus(OK);
 });
-router.post('/upload-cfg', upcfg.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
+
+router.post('/upload-file', upfile.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
   Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> UPLOAD_FILE', '[', req.originalUrl, ']');
   res.sendStatus(OK);
 });
