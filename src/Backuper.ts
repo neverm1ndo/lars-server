@@ -48,8 +48,10 @@ export default class Backuper {
       }
     });
     return await copyFile.then(() => {
+      console.log('BACKUPER_CREATE_BACKUP', path);
       backup.save();
     }).catch((err) => {
+      if (err.syscall == 'stat') return console.log('BACKUPER_SKIP_NEW_FILE', path);
       console.error(err);
     });
   }
@@ -76,7 +78,7 @@ export default class Backuper {
         });
       });
     });
-    const rmBackupNote = BACKUP.deleteMany({expires: { $lte: new Date() }}, [], (err: any) => {
+    const rmBackupNote = BACKUP.deleteMany({ expires: { $lte: new Date() }}, [], (err: any) => {
       if (err) return;
     });
     return Promise.all([unlinkFiles, rmBackupNote]);
