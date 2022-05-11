@@ -64,7 +64,7 @@ router.delete('/rmdir', (req: any, res: any) => { // DELETE delete dir
   }).then(() => {
     res.send({ status: OK });
   }).catch(err => {
-    console.error(err)
+    console.error(err);
     res.status(INTERNAL_SERVER_ERROR).send(err);
   });
 });
@@ -82,7 +82,7 @@ router.patch('/mvdir', json() ,(req: any, res: any) => { // PATCH move dir
   }).then(() => {
     res.send({ status: OK });
   }).catch(err => {
-    console.error(err)
+    console.error(err);
     res.status(INTERNAL_SERVER_ERROR).send(err);
   });
 });
