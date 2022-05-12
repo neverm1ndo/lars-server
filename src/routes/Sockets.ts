@@ -68,7 +68,7 @@ const sockets = (socket: Socket) => {
   socket.on('launch-server', () => {
     if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCH_SVR_SA');
-    socket.broadcast.to('devs').emit( 'server-status', 'loading' );
+    socket.broadcast.to('devs').emit( 'server-status', 4);
     socket.emit( 'server-status', 'loading' );
     samp.launch().then(() => {
       socket.broadcast.to('devs').emit('server-launched');
