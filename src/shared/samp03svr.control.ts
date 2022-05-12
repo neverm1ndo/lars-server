@@ -9,7 +9,7 @@ export class SampServerControl {
     return new Promise((resolve, reject) => {
       execFile('/home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
         if (err) reject();
-        resolve(JSON.parse(stdout));
+        resolve(stdout.includes(true));
       });
     })
   }
