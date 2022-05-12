@@ -1,4 +1,4 @@
-import { execFile, exec } from 'child_process';
+import { exec } from 'child_process';
 import { statsman } from '@shared/constants';
 
 export class SampServerControl {
@@ -28,13 +28,6 @@ export class SampServerControl {
         statsman.snapshot = 0;
         setTimeout(() => {
           if (process.env.NODE_ENV !== 'production') return resolve();
-          // statsman.request('svr.gta-liberty.ru', 7777, 'i').then((players: number) => {
-          //   statsman.snapshot = players;
-          //   resolve(stdout);
-          // }).catch((err) => {
-          //   console.error(err);
-          //   reject(err);
-          // });
           resolve(stdout);
         }, 8000);
       });
