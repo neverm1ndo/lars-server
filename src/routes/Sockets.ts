@@ -43,10 +43,9 @@ const sockets = (socket: Socket) => {
       socket.broadcast.to('devs').emit('server-status', 2);
       socket.emit('server-status', 2);
       socket.broadcast.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.main_group });
-      samp.reboot().then((stdout) => {
-        socket.emit('server-rebooted', stdout);
-        socket.broadcast.to('devs').emit('server-rebooted', stdout);
-        socket.emit('server-rebooted', stdout);
+      samp.reboot().then((_stdout) => {
+        socket.emit('server-status', 3);
+        socket.broadcast.to('devs').emit('server-status', 3);
         Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
       }).catch((err) => {
         socket.emit('server-error', err);
