@@ -44,9 +44,7 @@ export class SampServerControl {
     return new Promise((resolve, reject) => {
       exec(`bash /home/nmnd/starter.sh`, (err: any) => {
         if (err) reject(err);
-        setTimeout(() => {
-          resolve();
-        }, 10000);
+        resolve();
       });
     })
   }
