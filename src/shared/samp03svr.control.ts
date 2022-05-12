@@ -41,7 +41,7 @@ export class SampServerControl {
   }
   public launch(): Promise<void> {
     return new Promise((resolve, reject) => {
-      exec(`nohup bash /home/svr_sa/start.sh &`, (err: any) => {
+      exec(`bash /home/nmnd/starter.sh`, (err: any) => {
         if (err) reject(err);
         setTimeout(() => {
           resolve();
