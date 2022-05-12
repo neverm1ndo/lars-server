@@ -33,7 +33,7 @@ const sockets = (socket: Socket) => {
     samp.status.then((status: boolean) => {
       socket.emit('server-status', status?3:1);
     }).catch((err) => {
-      socket.emit('server-error', err.message);
+      socket.emit('server-error', err);
     });
   });
 
@@ -47,7 +47,7 @@ const sockets = (socket: Socket) => {
         socket.emit('server-rebooted', stdout);
         Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
       }).catch((err) => {
-        socket.emit('server-error', err.message);
+        socket.emit('server-error', err);
       });
   });
 
@@ -59,7 +59,7 @@ const sockets = (socket: Socket) => {
       socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.main_group });
       Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
     }).catch((err) => {
-      socket.emit('server-error', err.message);
+      socket.emit('server-error', err);
     });
   });
 
@@ -73,7 +73,7 @@ const sockets = (socket: Socket) => {
       socket.emit('server-launched');
       Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCHED_SVR_SA');
     }).catch((err) => {
-      socket.emit('server-error', err.message);
+      socket.emit('server-error', err);
     })
   });
 

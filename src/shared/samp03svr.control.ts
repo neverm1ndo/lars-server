@@ -8,7 +8,7 @@ export class SampServerControl {
   get status(): Promise<any> {
     return new Promise((resolve, reject) => {
       execFile('/home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
-        if (err) reject();
+        if (err) reject(err);
         resolve(stdout.includes(true));
       });
     })
