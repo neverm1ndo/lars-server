@@ -70,9 +70,9 @@ const sockets = (socket: Socket) => {
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCH_SVR_SA');
     socket.broadcast.to('devs').emit('server-status', 4);
     socket.emit('server-status', 4);
-    samp.launch().then(() => {
-      socket.broadcast.to('devs').emit('server-launched');
-      socket.emit('server-launched');
+    samp.launch().then((stdout) => {
+      socket.broadcast.to('devs').emit('server-launched', stdout);
+      socket.emit('server-launched', stdout);
       Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCHED_SVR_SA');
     }).catch((err) => {
       socket.emit('server-error', err);
