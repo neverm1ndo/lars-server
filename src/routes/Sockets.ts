@@ -43,6 +43,7 @@ const sockets = (socket: Socket) => {
       socket.broadcast.to('devs').emit('server-status', 'rebooting')
       socket.broadcast.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.main_group });
       samp.reboot().then((stdout) => {
+        socket.emit('server-rebooted', stdout);
         socket.broadcast.to('devs').emit('server-rebooted', stdout);
         socket.emit('server-rebooted', stdout);
         Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
@@ -55,6 +56,7 @@ const sockets = (socket: Socket) => {
     if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOP_SVR_SA');
     samp.stop().then((stdout) => {
+      socket.emit('server-stoped', stdout);
       socket.broadcast.to('devs').emit('server-stoped', stdout);
       socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.main_group });
       Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
