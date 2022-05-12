@@ -7,7 +7,7 @@ export class SampServerControl {
 
   get status(): Promise<any> {
     return new Promise((resolve, reject) => {
-      execFile('/home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
+      exec('bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
         if (err) reject(err);
         resolve(stdout.includes(true));
       });
@@ -19,7 +19,7 @@ export class SampServerControl {
       let cmd: string;
       switch (process.platform) {
         case 'win32' : cmd = 'taskkill /IM samp03svr.exe'; break;
-        case 'linux' : cmd = 'sudo pkill samp03svr'; break;
+        case 'linux' : cmd = 'pkill samp03svr'; break;
         default: return reject('Platform is not supported');
       };
 
@@ -41,7 +41,7 @@ export class SampServerControl {
   }
   public launch(): Promise<void> {
     return new Promise((resolve, reject) => {
-      execFile(`/home/nmnd/starter.sh`, (err: any) => {
+      exec(`nohup bash /home/svr_sa/start.sh &`, (err: any) => {
         if (err) reject(err);
         setTimeout(() => {
           resolve();
@@ -51,7 +51,7 @@ export class SampServerControl {
   }
   public stop() {
     return new Promise((resolve, reject) => {
-      execFile('/home/nmnd/killer.sh', (err: any, stdout: any) => {
+      exec('bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
         if (err) reject(err);
         statsman.snapshot = 0;
         resolve(stdout);
