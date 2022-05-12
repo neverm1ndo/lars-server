@@ -1,9 +1,8 @@
 import { Logger } from '@shared/Logger';
-import { exec } from 'child_process';
 import Workgroup from '@enums/workgroup.enum';
 import { Socket } from 'socket.io';
 import { verifyToken, decodeToken } from '@shared/functions';
-import { statsman } from '@shared/constants';
+import { samp } from '@shared/constants';
 
 
 const { DEV } = Workgroup;
@@ -24,83 +23,73 @@ export const socketAuth = (socket: any, next: any) => {
 
 const sockets = (socket: Socket) => {
   socket.data.main_group === DEV?socket.join('devs'):socket.join('main');
+
   socket.on('get-room', () => {
     socket.emit('room-name', [...socket.rooms].join(', '))
   });
+
   socket.on('get-status', () => {
     if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
-    exec('bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
-      if (err) { socket.emit('server-error', err.message ); return; }
-      Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> GET_SVR_SA_STAT',  'live:' + stdout);
-      socket.emit('server-status', JSON.parse(stdout)?'live':'stoped');
+    samp.status.then((status: boolean) => {
+      socket.emit('server-status', status?3:1);
+    }).catch((err) => {
+      socket.emit('server-error', err.message);
     });
   });
+
   socket.on('reboot-server', () => {
     if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
-      let cmd: string;
-      switch (process.platform) {
-        case 'win32' : cmd = 'taskkill /IM samp03svr.exe'; break;
-        case 'linux' : cmd = 'sudo pkill samp03svr'; break;
-        default: socket.emit('error', 'LARS Server не поддерживает платформу ' + process.platform ); return;
-      }
-      Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> REBOOT_SVR_SA');
-      exec(cmd, (err: any, stdout: any) => {
-        if (err) { socket.emit('error', err.message ); return; }
-        socket.broadcast.to('devs').emit('server-status', 'rebooting')
-        socket.broadcast.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.main_group });
-        socket.emit('server-status', 'rebooting');
-        statsman.snapshot = 0;
-        setTimeout(() => {
-          socket.broadcast.to('devs').emit('server-rebooted', stdout);
-          socket.emit('server-rebooted', stdout);
-          if (process.env.NODE_ENV === 'production') {
-            statsman.request('svr.gta-liberty.ru', 7777, 'i').then((players: number) => {
-              statsman.snapshot = players;
-            }).catch((err) => {
-              console.error(err);
-            });
-          }
-          Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
-        }, 8000);
+      Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOT_SVR_SA');
+      socket.broadcast.to('devs').emit('server-status', 'rebooting')
+      socket.broadcast.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.main_group });
+      samp.reboot().then((stdout) => {
+        socket.broadcast.to('devs').emit('server-rebooted', stdout);
+        socket.emit('server-rebooted', stdout);
+        Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
+      }).catch((err) => {
+        socket.emit('server-error', err.message);
       });
   });
+
   socket.on('stop-server', () => {
     if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
-    Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOP_SVR_SA');
-      exec('bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
-        if (err) { socket.emit('server-error', err.message); return; }
-        socket.broadcast.to('devs').emit('server-stoped', stdout);
-        socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.main_group });
-        socket.emit('server-stoped', stdout);
-        statsman.snapshot = 0;
-        Logger.log('default', 'WS │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
-      });
-  });
-  socket.on('launch-server', () => {
-    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
-    Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> LAUNCH_SVR_SA');
-    socket.broadcast.to('devs').emit( 'server-status', 'loading' );
-    socket.emit( 'server-status', 'loading' );
-    exec(`/home/nmnd/starter.sh`, (err: any) => {
-      if (err) { socket.emit( 'server-error', err.message ); return; }
-      setTimeout(() => {
-        socket.broadcast.to('devs').emit('server-launched');
-        socket.emit('server-launched');
-        Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> LAUNCHED_SVR_SA');
-      }, 10000);
+    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOP_SVR_SA');
+    samp.stop().then((stdout) => {
+      socket.broadcast.to('devs').emit('server-stoped', stdout);
+      socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.main_group });
+      Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
+    }).catch((err) => {
+      socket.emit('server-error', err.message);
     });
   });
+
+  socket.on('launch-server', () => {
+    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
+    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCH_SVR_SA');
+    socket.broadcast.to('devs').emit( 'server-status', 'loading' );
+    socket.emit( 'server-status', 'loading' );
+    samp.launch().then(() => {
+      socket.broadcast.to('devs').emit('server-launched');
+      socket.emit('server-launched');
+      Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCHED_SVR_SA');
+    }).catch((err) => {
+      socket.emit('server-error', err.message);
+    })
+  });
+
   socket.on('user-action', (action) => {
-    Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> WS_USER_ACTION', action);
+    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> SOCKET_USER_ACTION', action);
     socket.data.activity = action;
-    socket.emit('user-activity', { user: socket.data.username, action})
-    socket.broadcast.to('devs').emit('user-activity', { user: socket.data.username, action})
+    socket.emit('user-activity', { user: socket.data.username, action});
+    socket.broadcast.to('devs').emit('user-activity', { user: socket.data.username, action});
   });
+
   socket.on('update', () => {
-    socket.emit('update:soft')
+    socket.emit('update:soft');
   });
+
   socket.on('disconnect', (reason) => {
-    Logger.log('default', 'WS │', socket.handshake.address, socket.data.username, '-> DISCONNECT', reason);
+    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> DISCONNECT', reason);
     socket.broadcast.to('devs').emit('user-activity', 'offline', reason);
   });
 }

@@ -7,6 +7,7 @@ import multer, { Multer, diskStorage} from 'multer';
 import cors from 'cors';
 import { CronJob } from 'cron';
 import experimentalStorage from '@shared/experimental.confstorage';
+import { SampServerControl } from '@shared/samp03svr.control';
 
 import { Processes } from '@enums/processes.enum';
 import Statsman from '../Statsman';
@@ -16,6 +17,7 @@ export const paramMissingError = 'One or more of the required parameters was mis
 export const parser = new Parser();
 export const watcher = new Watcher();
 export const statsman = new Statsman.OnlineMetric();
+export const samp = new SampServerControl();
 
 const experimentalConfigFileStorage = experimentalStorage({
   destination: function (req: any, _file: any, cb: any) {
