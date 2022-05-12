@@ -33,12 +33,14 @@ export class SampServerControl {
       });
     });
   }
-  public launch(): Promise<string> {
+  public launch(): Promise<void> {
     return new Promise((resolve, reject) => {
-      exec(`bash /home/nmnd/starter.sh`, (err: any, stdout: string) => {
+      exec(`bash /home/nmnd/starter.sh`, (err: any, _stdout: string) => {
         if (err) reject(err);
-        resolve(stdout);
       });
+      setTimeout(() => {
+        resolve();
+      }, 8000);
     })
   }
   public stop() {
