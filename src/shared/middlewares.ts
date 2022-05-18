@@ -18,24 +18,24 @@ export const rejectUnauthorized = function (req: Request, res: Response, next: N
 
 export const backuperGuard = function (req: any, res: Response, next: NextFunction) {
   if (!req.user) return res.sendStatus(UNAUTHORIZED);
-  if (req.user.main_group !== DEV && req.user.secondary_group !== BACKUPER) { res.sendStatus(UNAUTHORIZED).end('Access denied for your workgroup: ' + isWorkGroup(req.user.main_group)); return; }
+  if (req.user.main_group !== DEV && req.user.secondary_group !== BACKUPER) { res.status(UNAUTHORIZED).send('Access denied for your workgroup: ' + isWorkGroup(req.user.main_group)); return; }
   next();
 };
 
 export const devGuard = function(req: any, res: Response, next: NextFunction) {
   if (!req.user) return res.sendStatus(UNAUTHORIZED);
-  if (req.user.main_group !== DEV) { res.sendStatus(UNAUTHORIZED).end('Access denied for your workgroup: ' + isWorkGroup(req.user.main_group)); return; }
+  if (req.user.main_group !== DEV) { res.status(UNAUTHORIZED).send('Access denied for your workgroup: ' + isWorkGroup(req.user.main_group)); return; }
   next();
 };
 
 export const mapGuard = function (req: any, res: Response, next: NextFunction) {
   if (!req.user) return res.sendStatus(UNAUTHORIZED);
-  if (req.user.main_group !== DEV && req.user.secondary_group !== MAPPER) { res.sendStatus(UNAUTHORIZED).end('Access denied for your workgroup: ' + isWorkGroup(req.user.main_group)); return; }
+  if (req.user.main_group !== DEV && req.user.secondary_group !== MAPPER) { res.status(UNAUTHORIZED).send('Access denied for your workgroup: ' + isWorkGroup(req.user.main_group)); return; }
   next();
 };
 
 export const cfrGuard = function (req: any, res: Response, next: NextFunction) {
   if (!req.user) return res.sendStatus(UNAUTHORIZED);
-  if (req.user.main_group !== DEV && req.user.secondary_group !== CFR) { res.sendStatus(UNAUTHORIZED).end('Access denied for your workgroup: ' + isWorkGroup(req.user.main_group)); return; }
+  if (req.user.main_group !== DEV && req.user.secondary_group !== CFR) { res.status(UNAUTHORIZED).send('Access denied for your workgroup: ' + isWorkGroup(req.user.main_group)); return; }
   next();
 };
