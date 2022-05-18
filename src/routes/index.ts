@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import LoginRouter from './Login';
+import BansRouter from './Bans';
 import LogsRouter from './Logs';
 import MapsRouter from './Maps';
 import ConfigsRouter from './Configs';
@@ -15,10 +16,11 @@ const router = Router();
 
 // Add sub-routes
 router.use('/login', LoginRouter);
+router.use('/bans', BansRouter, corsOpt, rejectUnauthorized);
 router.use('/logs', corsOpt, rejectUnauthorized, LogsRouter);
 router.use('/maps', corsOpt, rejectUnauthorized, mapGuard, MapsRouter);
 router.use('/configs', corsOpt, rejectUnauthorized, cfrGuard, ConfigsRouter);
-router.use('/admins', corsOpt, rejectUnauthorized, devGuard , AdminsRouter);
+router.use('/admins', corsOpt, rejectUnauthorized, AdminsRouter);
 router.use('/backups', corsOpt, rejectUnauthorized, backuperGuard, BackupsRouter);
 router.use('/stats', corsOpt, rejectUnauthorized, StatsRouter);
 router.use('/utils', corsOpt, rejectUnauthorized, devGuard, UtilsRouter);

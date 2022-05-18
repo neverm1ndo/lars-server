@@ -4,11 +4,13 @@ import { Logger } from '@shared/Logger';
 import { json } from 'express';
 import Workgroup from '@enums/workgroup.enum';
 
+import { devGuard } from '@shared/middlewares';
+
 import { corsOpt, MSQLPool } from '@shared/constants';
 
 const router = Router();
 
-const { OK, INTERNAL_SERVER_ERROR, CONFLICT, UNAUTHORIZED } = StatusCodes;
+const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 const { CHALLENGER, DEV, ADMIN, CFR, MAPPER, BACKUPER } = Workgroup;
 
 router.get('/list', (req: any, res: any) => {
@@ -31,12 +33,12 @@ router.get('/list', (req: any, res: any) => {
       Logger.log('error', err);
     });
 });
-router.get('/expire-token', (req: any, res: any) => {
+router.get('/expire-token', devGuard, (req: any, res: any) => {
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> TOKEN_SESSION_EXPIRATION [', req.originalUrl, ']');
   // cm.closeSession(req.query.username);
   res.status(OK).send(JSON.stringify({ status: 'Token expired' }));
 });
-router.put('/change-group', json(), corsOpt, (req: any, res: any) => {
+router.put('/change-group', devGuard, json(), corsOpt, (req: any, res: any) => {
   if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
   Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
   MSQLPool.promise()
@@ -50,7 +52,7 @@ router.put('/change-group', json(), corsOpt, (req: any, res: any) => {
       Logger.log('error', err);
     });
 });
-router.put('/change-secondary-group', json(), (req: any, res: any) => {
+router.put('/change-secondary-group', devGuard, json(), (req: any, res: any) => {
   if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
   Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CHANGE_SECONDARY_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
   MSQLPool.promise()
