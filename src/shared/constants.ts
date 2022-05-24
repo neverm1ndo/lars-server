@@ -56,7 +56,7 @@ export const tailOnlineStats = new CronJob('0 */30 * * * *', () => {
 });
 
 export const rmOldBackups = new CronJob('0 0 0 */1 * *', () => {
-  Backuper.remove().then(() => {
+  Backuper.removeExpired().then(() => {
     Logger.log('default', 'CRON', '->' ,'AUTO_CLEAR_OLD_BACKUPS');
   }).catch(err => {
     Logger.log('error', 'CRON_RM_BACKUPS', err.message);
