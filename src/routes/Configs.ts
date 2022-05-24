@@ -3,12 +3,8 @@ import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import { Parser } from '@parser';
 import { TreeNode } from '@shared/fs.treenode';
-import { writeFile, readFile, Stats } from 'fs';
-import { promises } from 'fs';
-import { json } from 'express';
+import { readFile, Stats, promises } from 'fs';
 import Workgroup from '@enums/workgroup.enum';
-
-import Backuper from '@backuper';
 
 import { upcfg, upfile } from '@shared/constants';
 import { getMimeType } from '@shared/functions';

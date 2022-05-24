@@ -1,25 +1,27 @@
 import { copy, unlink, readdir } from 'fs-extra';
 import { readFile, stat, Stats } from 'fs';
-import { join } from 'path'
+import { join, basename, extname } from 'path';
 import { BACKUP } from '@schemas/backup.schema';
 import { getMimeType } from '@shared/functions';
 import { parser } from '@shared/constants';
 
-export type BackupAction = 'delete' | 'change';
+export enum BackupAction {
+  DELETE,
+  CHANGE,
+}
 
 export default class Backuper {
   constructor() {}
   static async backup(path: string, user: any, action: BackupAction): Promise<any> {
-    const pathsplit = path.split(/(\/|\\)/g);
-    const filename = pathsplit[pathsplit.length - 1].split('.')[0];
-    const ext = pathsplit[pathsplit.length - 1].replace(/(.*)\./, '');
+    const ext = extname(path).replace(/(.*)\./, '');
+    const filename = basename(path, ext);
     const unix = Date.now();
     const copyFile: Promise<void> = new Promise((res, rej) => {
       stat(path, (err: NodeJS.ErrnoException | null, stats: Stats) => {
         if (err && !stats) return rej(err);
       });
-      copy(path, join(process.env.BACKUPS_PATH!, `${pathsplit[pathsplit.length - 1]}_${unix}`), (err) => {
-          return (!!err ? rej(err) : res());
+      copy(path, join(process.env.BACKUPS_PATH!, `${filename}.${ext}_${unix}`), (err) => {
+        return (!!err ? rej(err) : res());
       });
     });
     const isBinary = ((ext: string): boolean => {
@@ -42,9 +44,9 @@ export default class Backuper {
       },
       file: {
         path,
-        name: pathsplit[pathsplit.length - 1],
-        mime: getMimeType(filename+'.'+ext),
-        binary: isBinary
+        name: filename,
+        mime: getMimeType(`${filename}.${ext}`),
+        binary: isBinary,
       }
     });
     return await copyFile.then(() => {
@@ -63,7 +65,7 @@ export default class Backuper {
       });
     });
   }
-  static remove(): Promise<any> {
+  static removeExpired(): Promise<any> {
     const unlinkFiles: Promise<void> = new Promise((res, rej) => {
       readdir(process.env.BACKUPS_PATH!, (err: NodeJS.ErrnoException, files: string[]) => {
         if (err) rej(err);
@@ -83,6 +85,13 @@ export default class Backuper {
     });
     return Promise.all([unlinkFiles, rmBackupNote]);
   }
+
+  static remove(_filename: string) {
+    /**
+    * TODO: implement remove backup
+    */
+  }
+
   static getBackupFile(name: string, unix: number) {
     return new Promise((res, rej) => {
       readFile(join(process.env.BACKUPS_PATH!, `${name}_${unix}`), (err: NodeJS.ErrnoException | null, buf: Buffer) => {

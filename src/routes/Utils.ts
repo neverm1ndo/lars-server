@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import { json } from 'body-parser';
 import { unlink } from 'fs-extra';
-import Backuper from '@backuper';
+import Backuper, { BackupAction } from '@backuper';
 import { mkdir, rmdir, move } from 'fs-extra';
 
 import { io } from '../index';
@@ -15,7 +15,7 @@ const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Removes config file
   if (!req.query.path) { return res.send(CONFLICT); }
   Logger.log('default', 'DELETE │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
-  Backuper.backup(req.query.path, req.user, 'delete').then(() => {
+  Backuper.backup(req.query.path, req.user, BackupAction.DELETE).then(() => {
     return new Promise<void>((res, rej) => {
       return unlink(req.query.path, (err: NodeJS.ErrnoException | null) => {
         return (!!err ? rej(err) : res());

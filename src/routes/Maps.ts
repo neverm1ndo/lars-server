@@ -20,7 +20,7 @@ router.get('/map-file', (req: any, res: any) => { // GET Files(maps) tree
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> MAP [', req.originalUrl, ']');
   res.set('Content-Type', 'text/xml');
   readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, data: any) => {
-    if (err) {  res.status(INTERNAL_SERVER_ERROR).send(err) }
+    if (err) { res.status(INTERNAL_SERVER_ERROR).send(err) }
     else {
       res.send(data);
     };

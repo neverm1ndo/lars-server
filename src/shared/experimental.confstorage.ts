@@ -3,7 +3,7 @@ import type { Request } from 'express';
 import { pipeline, Transform } from 'stream';
 import { parser } from '@shared/constants';
 import { join } from 'path';
-import Backuper from '@backuper';
+import Backuper, { BackupAction } from '@backuper';
 
 import fs from 'fs';
 import multer from "multer";
@@ -26,7 +26,7 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
     this._getDestination(req, file, function (err: any, path: any) {
       if (err) return callback(err);
       const filepath: string = join(path, file.originalname);
-      Backuper.backup(filepath, req.user, 'change').then(() => {
+      Backuper.backup(filepath, req.user, BackupAction.CHANGE).then(() => {
         const writeStream = fs.createWriteStream(filepath);
         const transformEncoding = new Transform({
           transform: (chunk: Buffer, _encoding: BufferEncoding, callback) => {
