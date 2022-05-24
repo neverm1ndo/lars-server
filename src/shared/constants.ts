@@ -32,7 +32,7 @@ const mapStorage = diskStorage({
   destination: function (req: any, _file: any, cb) {
     cb(null, req.body.path?req.body.path:process.env.MAPS_PATH!)
   },
-  filename: function (req: any, file: any, cb) {
+  filename: function (_req: any, file: any, cb) {
     console.log(file)
     cb(null, file.originalname)
   }
