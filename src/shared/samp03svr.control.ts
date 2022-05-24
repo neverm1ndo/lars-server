@@ -7,11 +7,11 @@ export class SampServerControl {
 
   get status(): Promise<any> {
     return new Promise((resolve, reject) => {
-      exec('bash /home/nmnd/get.server.state.sh', (err: any, stdout: any) => {
+      exec(process.env.GET_SERVER_STATE!, (err: any, stdout: any) => {
         if (err) reject(err);
         resolve(stdout.includes(true));
       });
-    })
+    });
   }
 
   public reboot(): Promise<void> {
@@ -33,19 +33,21 @@ export class SampServerControl {
       });
     });
   }
+
   public launch(): Promise<void> {
     return new Promise((resolve, reject) => {
-      exec(`bash /home/nmnd/starter.sh`, (err: any, _stdout: string) => {
+      exec(process.env.SERVER_STARTER!, (err: any, _stdout: string) => {
         if (err) reject(err);
       });
       setTimeout(() => {
         resolve();
       }, 8000);
-    })
+    });
   }
+
   public stop() {
     return new Promise((resolve, reject) => {
-      exec('bash /home/nmnd/killer.sh', (err: any, stdout: any) => {
+      exec(process.env.SERVER_KILLER!, (err: any, stdout: any) => {
         if (err) reject(err);
         statsman.snapshot = 0;
         resolve(stdout);
