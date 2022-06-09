@@ -12,7 +12,7 @@ dotenv.config({ path:path.resolve(process.cwd(), 'server/.env') });
 
 export class Watcher {
   private lines: number = 0;
-  private current: string = '';
+  private _current: string = '';
   public lastFile$: Observable<string> = new Observable((subscriber) => {
               fs.readdir(path.join(__dirname, `./log/${new Date().getFullYear()}/09`), (err: any, files: string[]) => {
               if (err) {
@@ -43,7 +43,7 @@ export class Watcher {
       const delim = Buffer.from('\n');
       const splited = bufferSplit(buffer, delim);
       this.lines = splited.length;
-      this.current = logpath;
+      this._current = logpath;
     });
   }
 
@@ -52,9 +52,9 @@ export class Watcher {
     this.result$ = new Observable<Buffer>((subscriber) => {
       if (this.watcher) {
         this.watcher.on('change', ( filepath: string ) => {
-          if (this.current!==filepath) {
+          if (this._current !== filepath) {
             this.lines = 0;
-            this.current = filepath;
+            this._current = filepath;
           }
           fs.readFile(path.resolve(process.cwd(), filepath), (err, buffer: Buffer) => {
             if (err) {
