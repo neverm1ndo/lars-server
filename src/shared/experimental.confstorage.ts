@@ -2,14 +2,24 @@ import type { Request } from 'express';
 
 import { pipeline, Transform } from 'stream';
 import { parser } from '@shared/constants';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import Backuper, { BackupAction } from '@backuper';
 
 import fs from 'fs';
+import { access } from 'fs/promises';
 import multer from "multer";
+
+import Workgroup from '@enums/workgroup.enum';
+
+const { CFR } = Workgroup;
 
 const getDestination = (_req: Request, _file: Express.Multer.File, callback: any) => {
   callback(null, process.env.CFG_DEFAULT_PATH);
+};
+
+const isOutOfPermittedArea = (dirpath: string, user: any): boolean => {
+  if (user.secondary_group === CFR && dirpath !== process.env.CFG_DEFAULT_PATH) return true;
+  return false;
 };
 
 class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
@@ -26,8 +36,11 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
     this._getDestination(req, file, function (err: any, path: any) {
       if (err) return callback(err);
       const filepath: string = join(path, file.originalname);
-      Backuper.backup(filepath, req.user, BackupAction.CHANGE)
+      access(dirname(filepath))
+      .then(() => Backuper.backup(filepath, req.user, BackupAction.CHANGE))
       .then(() => {
+        console.log(req.user, dirname(filepath), process.env.CFG_DEFAULT_PATH);
+        if (isOutOfPermittedArea(dirname(filepath), req.user)) callback(new Error('File is out of permitted area'));
         const writeStream = fs.createWriteStream(filepath);
         const transformEncoding = new Transform({
           transform: (chunk: Buffer, _encoding: BufferEncoding, callback) => {
@@ -39,8 +52,12 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
         });
         outStream.on('error', callback);
         outStream.on('finish', () => callback(null, { path, size: writeStream.bytesWritten }));
-      }).catch((err) => {
-        callback(err);
+      })
+      .catch((err) => {
+        callback(err); // Backuper error
+      })
+      .catch((err) => {
+        callback(err); // Access error
       });
     });
   }
