@@ -6,7 +6,7 @@ import Workgroup from '@enums/workgroup.enum';
 
 import { devGuard } from '@shared/middlewares';
 
-import { corsOpt, MSQLPool } from '@shared/constants';
+import { corsOpt, MSQLPool, noAvatarImageUrl } from '@shared/constants';
 
 const router = Router();
 
@@ -17,13 +17,9 @@ router.get('/list', (req: any, res: any) => {
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> ADMIN_LIST [', req.originalUrl, ']');
   MSQLPool.promise()
     .query('SELECT phpbb_users.user_id, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id IN (?, ?, ?, ?, ?, ?) AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id', [CHALLENGER, DEV, ADMIN, MAPPER, CFR, BACKUPER])
-    .then(([rows]: any[]): void => {
-      for (let i = 0; i < rows.length; i++) {
-        if (!rows[i].user_avatar) {
-          rows[i].user_avatar = 'https://www.gta-liberty.ru/styles/prosilver_ex/theme/images/no_avatar.gif';
-        } else {
-          rows[i].user_avatar = 'https://www.gta-liberty.ru/images/avatars/upload/' + rows[i].user_avatar;
-        }
+    .then(([rows]: any[]): void => {   
+      for (let user of rows) {
+        user.user_avatar = user.user_avatar?'https://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar: noAvatarImageUrl;
       }
       res.send(JSON.stringify(rows));
     })

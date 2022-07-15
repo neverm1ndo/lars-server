@@ -2,7 +2,7 @@ import StatusCodes from 'http-status-codes';
 import { Response, Router, json } from 'express';
 import { Logger } from '@shared/Logger';
 
-import { MSQLPool } from '@shared/constants';
+import { MSQLPool, noAvatarImageUrl } from '@shared/constants';
 import { checkPassword, generateToken, verifyToken, isWorkGroup, decodeToken } from '@shared/functions';
 import { corsOpt } from '@shared/constants';
 
@@ -17,7 +17,7 @@ router.post('/', corsOpt, json(), (req: any, res: any): void => {
   MSQLPool.promise()
     .query("SELECT phpbb_users.user_id, phpbb_users.user_password, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.user_email = ? LIMIT 1", [req.body.email])
     .then(([rows]: any[]): void => {
-      let user = rows[0];
+      const user = rows[0];
       if (!checkPassword(req.body.password, user.user_password) && !isWorkGroup(user.main_group)) {
         Logger.log('default', `[${req.connection.remoteAddress}]`, `AUTH ${user.username} -> WORKGROUP ${isWorkGroup(user.main_group)} ->`, req.body.email);
         res.status(UNAUTHORIZED).send(`In Workgroup: ${isWorkGroup(user.main_group)}`);
@@ -28,7 +28,7 @@ router.post('/', corsOpt, json(), (req: any, res: any): void => {
         id: user.user_id,
         main_group: user.main_group,
         secondary_group: user.secondary_group,
-        avatar: 'https://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar,
+        avatar: user.user_avatar?'https://www.gta-liberty.ru/images/avatars/upload/' + user.user_avatar : noAvatarImageUrl,
         token: generateToken({
           id: user.user_id,
           username: user.username,

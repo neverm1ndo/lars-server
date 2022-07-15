@@ -13,6 +13,8 @@ import { Processes } from '@enums/processes.enum';
 import Statsman from '../Statsman';
 
 export const paramMissingError = 'One or more of the required parameters was missing.';
+export const noAvatarImageUrl: string = 'https://www.gta-liberty.ru/styles/prosilver_ex/theme/images/no_avatar.gif';
+
 
 export const parser = new Parser();
 export const watcher = new Watcher();
