@@ -6,7 +6,6 @@ import { join } from 'path';
 import Backuper, { BackupAction } from '@backuper';
 
 import fs from 'fs';
-import { access } from 'fs/promises';
 import multer from "multer";
 
 const getDestination = (_req: Request, _file: Express.Multer.File, callback: any) => {
@@ -27,24 +26,20 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
     this._getDestination(req, file, function (err: any, path: any) {
       if (err) return callback(err);
       const filepath: string = join(path, file.originalname);
-      access(filepath)
-      .then(() => Backuper.backup(filepath, req.user, BackupAction.CHANGE))
-        .then(() => {
-          const writeStream = fs.createWriteStream(filepath);
-          const transformEncoding = new Transform({
-            transform: (chunk: Buffer, _encoding: BufferEncoding, callback) => {
-              callback(null, parser.UTF8toANSI(chunk));
-            }
-          });
-          const outStream = pipeline(file.stream, transformEncoding, writeStream, (err: NodeJS.ErrnoException | null) => {
-            callback(err);
-          });
-          outStream.on('error', callback);
-          outStream.on('finish', () => callback(null, { path, size: writeStream.bytesWritten }));
-        }).catch((err) => {
+      Backuper.backup(filepath, req.user, BackupAction.CHANGE)
+      .then(() => {
+        const writeStream = fs.createWriteStream(filepath);
+        const transformEncoding = new Transform({
+          transform: (chunk: Buffer, _encoding: BufferEncoding, callback) => {
+            callback(null, parser.UTF8toANSI(chunk));
+          }
+        });
+        const outStream = pipeline(file.stream, transformEncoding, writeStream, (err: NodeJS.ErrnoException | null) => {
           callback(err);
-        })
-      .catch((err) => {
+        });
+        outStream.on('error', callback);
+        outStream.on('finish', () => callback(null, { path, size: writeStream.bytesWritten }));
+      }).catch((err) => {
         callback(err);
       });
     });
