@@ -27,7 +27,7 @@ router.get('/', (req: Request, res: Response) => {
   if (req.query.p) page = +req.query.p;
   if (req.query.lim) limit = +req.query.lim;
   MSQLPool.promise()
-          .query('SELECT * FROM lars_bans ORDER BY banned_from LIMIT ? OFFSET ?', [limit, page])
+          .query('SELECT * FROM lars_bans ORDER BY banned_from DESC LIMIT ? OFFSET ?', [limit, page])
           .then(([rows]): void => {
             res.send(rows as Ban[]);
           })
@@ -44,7 +44,7 @@ router.get('/cn/:serial', (req: Request, res: Response) => {
   if (req.query.p) page = +req.query.p;
   if (req.query.lim) limit = +req.query.lim;
   MSQLPool.promise()
-          .query('SELECT * FROM lars_bans WHERE serial_cn = ? ORDER BY banned_from LIMIT ? OFFSET ?', [req.params.serial, limit, page])
+          .query('SELECT * FROM lars_bans WHERE serial_cn = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?', [req.params.serial, limit, page])
           .then(([rows]): void => {
             res.send(rows as Ban[]);
           })
@@ -61,7 +61,7 @@ router.get('/ip/:ip', (req: Request, res: Response) => {
   if (req.query.p) page = +req.query.p;
   if (req.query.lim) limit = +req.query.lim;
   MSQLPool.promise()
-          .query('SELECT * FROM lars_bans WHERE ip = ? ORDER BY banned_from LIMIT ? OFFSET ?', [req.params.ip, limit, page])
+          .query('SELECT * FROM lars_bans WHERE ip = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?', [req.params.ip, limit, page])
           .then(([rows]): void => {
             res.send(rows as Ban[]);
           })
@@ -78,7 +78,7 @@ router.get('/serials', (req: Request, res: Response) => {
   if (req.query.p) page = +req.query.p;
   if (req.query.lim) limit = +req.query.lim;
   MSQLPool.promise()
-          .query('SELECT * FROM lars_bans WHERE serial_as = ? AND serial_ss = ? ORDER BY banned_from LIMIT ? OFFSET ?', [req.query.as, req.query.ss, limit, page])
+          .query('SELECT * FROM lars_bans WHERE serial_as = ? AND serial_ss = ? ORDER BY DESC banned_from LIMIT ? OFFSET ?', [req.query.as, req.query.ss, limit, page])
           .then(([rows]): void => {
             res.send(rows as Ban[]);
           })
@@ -95,7 +95,7 @@ router.get('/admin/:id', (req: Request, res: Response) => {
   if (req.query.p) page = +req.query.p;
   if (req.query.lim) limit = +req.query.lim;
   MSQLPool.promise()
-          .query('SELECT * FROM lars_bans WHERE admin_id = ? ORDER BY banned_from LIMIT ? OFFSET ?', [req.params.id, limit, page])
+          .query('SELECT * FROM lars_bans WHERE admin_id = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?', [req.params.id, limit, page])
           .then(([rows]): void => {
             res.send(rows as Ban[]);
           })
