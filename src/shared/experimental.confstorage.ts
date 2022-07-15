@@ -39,7 +39,6 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
       access(dirname(filepath))
       .then(() => Backuper.backup(filepath, req.user, BackupAction.CHANGE))
       .then(() => {
-        console.log(req.user, dirname(filepath), process.env.CFG_DEFAULT_PATH);
         if (isOutOfPermittedArea(dirname(filepath), req.user)) callback(new Error('File is out of permitted area'));
         const writeStream = fs.createWriteStream(filepath);
         const transformEncoding = new Transform({
