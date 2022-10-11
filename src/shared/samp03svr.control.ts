@@ -14,8 +14,8 @@ export class SampServerControl {
     });
   }
 
-  public reboot(): Promise<void> {
-    return new Promise((resolve, reject) => {
+  public reboot(): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
       let cmd: string;
       switch (process.platform) {
         case 'win32' : cmd = 'taskkill /IM samp03svr.exe'; break;
@@ -27,8 +27,8 @@ export class SampServerControl {
         if (err) reject(err);
         statsman.snapshot = 0;
         setTimeout(() => {
-          if (process.env.NODE_ENV !== 'production') return resolve();
-          resolve(stdout);
+          if (process.env.NODE_ENV !== 'production') return resolve(stdout.trim() === 'true');
+          resolve(stdout.trim() === 'true');
         }, 8000);
       });
     });

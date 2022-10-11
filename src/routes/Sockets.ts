@@ -76,7 +76,8 @@ const sockets = (socket: Socket) => {
           Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
         })
         .catch((err) => {
-          socket.emit('server-error', err);
+          Logger.log('error', err.message);
+          socket.broadcast.to('devs').emit('server-error', err);
         });
   });
 
@@ -94,7 +95,8 @@ const sockets = (socket: Socket) => {
           Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
         })
         .catch((err) => {
-          io.sockets.emit('server-error', err);
+          Logger.log('error', err.message);
+          socket.broadcast.to('devs').emit('server-error', err);
         });
   });
 
@@ -111,7 +113,8 @@ const sockets = (socket: Socket) => {
           Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCHED_SVR_SA');
         })
         .catch((err) => {
-          io.sockets.emit('server-error', err);
+          Logger.log('error', err.message);
+          socket.broadcast.to('devs').emit('server-error', err);
         });
   });
 
