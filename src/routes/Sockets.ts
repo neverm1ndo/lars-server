@@ -1,7 +1,7 @@
 import { Logger } from '@shared/Logger';
 import Workgroup from '@enums/workgroup.enum';
 import { Socket } from 'socket.io';
-import { io } from 'src';
+import { io } from '../index';
 import { verifyToken, decodeToken } from '@shared/functions';
 import { samp } from '@shared/constants';
 
