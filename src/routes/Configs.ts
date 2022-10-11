@@ -19,35 +19,52 @@ const { DEV } = Workgroup;
 router.get('/config-files-tree', (req: any, res: any) => { // GET Files(configs) and directories tree
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CONFIG_FILES_TREE [', req.originalUrl, ']');
   let root: TreeNode;
-
+  
   if (req.user.main_group == DEV) root = TreeNode.buildTree(process.env.CFG_DEV_PATH!, 'svr_sa');
   else root = TreeNode.buildTree(process.env.CFG_DEFAULT_PATH!, 'configs');
 
   if (!root) res.status(INTERNAL_SERVER_ERROR).send({ message: 'Cant read file tree' });
-  res.send(JSON.stringify(root));
+  
+  res.send(root);
 });
 
 router.get('/config-file', (req: any, res: any) => { // GET single config file
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CONFIG_FILE', req.query.path, '[', req.originalUrl, ']');
   if (!req.query.path) return res.status(CONFLICT);
-  promises.stat(req.query.path).then(() => {
-    readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
-      if (err) { res.status(NOT_FOUND).send(err); }
-      else { res.send(parser.ANSItoUTF8(buf)); };
-    });
-  }).catch((err: NodeJS.ErrnoException) => {
-    res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
-  });
+  promises.stat(req.query.path)
+          .then(() => {
+            readFile(decodeURI(req.query.path), (err: NodeJS.ErrnoException | null, buffer: Buffer) => {
+              if (err) { 
+                return res.status(NOT_FOUND)
+                          .send(err); 
+              }
+              res.send(parser.ANSItoUTF8(buffer));
+            });
+          })
+          .catch((err: NodeJS.ErrnoException) => {
+            res.status(INTERNAL_SERVER_ERROR)
+               .send({ message: err.message });
+          });
 });
 
 router.get('/file-info', (req: any, res: any) => { // GET stat of file
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> FILE_INFO', req.query.path, '[', req.originalUrl, ']');
-  if (!req.query.path) { return res.status(CONFLICT).send({ message: 'Empty path param'})};
-  promises.stat(req.query.path).then((stats: Stats) => {
-    res.send({size: stats.size, lastm: stats.mtime, mime: getMimeType(req.query.path)});
-  }).catch((err: NodeJS.ErrnoException) => {
-    res.status(NOT_FOUND).send({ message: err.message });
-  });
+  if (!req.query.path) { 
+    return res.status(CONFLICT)
+              .send({ message: 'Empty path param'})
+  };
+  promises.stat(req.query.path)
+          .then((stats: Stats) => {
+            res.send({ 
+              size: stats.size, 
+              lastm: stats.mtime, 
+              mime: getMimeType(req.query.path)
+            });
+          })
+          .catch((err: NodeJS.ErrnoException) => {
+            res.status(NOT_FOUND)
+               .send({ message: err.message });
+          });
 });
 
 router.post('/save-config', upcfg.fields([{ name: 'file', maxCount: 1 }]), (req: any, res: any) => {

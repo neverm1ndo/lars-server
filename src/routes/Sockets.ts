@@ -45,7 +45,8 @@ const sockets = (socket: Socket) => {
     }
     samp.status.then((status: boolean) => {
                   socket.emit('server-status', status ? 3 : 1);
-                }).catch((err) => {
+                })
+                .catch((err) => {
                   socket.emit('server-error', err);
                 });
   });
@@ -55,8 +56,11 @@ const sockets = (socket: Socket) => {
     
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOT_SVR_SA');
     
-    io.emit('server-status', 2);
-    io.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.main_group });
+    io.sockets.emit('server-status', 2);
+    io.sockets.emit('alert:server-rebooting', { 
+      username: socket.data.username, 
+      group_id: socket.data.main_group 
+    });
     
     samp.reboot()
         .then(() => {
@@ -72,13 +76,18 @@ const sockets = (socket: Socket) => {
     if (!isDev(socket)) return;
     
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOP_SVR_SA');
-    samp.stop().then((stdout) => {
-      io.emit('server-stoped', stdout);
-      socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.main_group });
-      Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
-    }).catch((err) => {
-      io.emit('server-error', err);
-    });
+    samp.stop()
+        .then((stdout) => {
+          io.sockets.emit('server-stoped', stdout);
+          socket.broadcast.emit('alert:server-stoped', { 
+            username: socket.data.username, 
+            group_id: socket.data.main_group 
+          });
+          Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
+        })
+        .catch((err) => {
+          io.sockets.emit('server-error', err);
+        });
   });
 
   socket.on('launch-server', () => {
@@ -90,11 +99,11 @@ const sockets = (socket: Socket) => {
     
     samp.launch()
         .then((stdout) => {
-          io.emit('server-launched', stdout);
+          io.sockets.emit('server-launched', stdout);
           Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCHED_SVR_SA');
         })
         .catch((err) => {
-          io.emit('server-error', err);
+          io.sockets.emit('server-error', err);
         });
   });
 
@@ -102,7 +111,10 @@ const sockets = (socket: Socket) => {
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> SOCKET_USER_ACTION', action);
     
     socket.data.activity = action;
-    io.emit('user-activity', { user: socket.data.username, action});
+    io.sockets.emit('user-activity', { 
+      user: socket.data.username, 
+      action
+    });
   });
 
   socket.on('update', () => {
@@ -114,4 +126,5 @@ const sockets = (socket: Socket) => {
     socket.broadcast.to('devs').emit('user-activity', 'offline', reason);
   });
 }
+
 export default sockets;

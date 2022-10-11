@@ -11,13 +11,20 @@ const router = Router();
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 interface MDBRequest {
-    'geo.ip'?: { $in?: string[] };
+    'geo.ip'?: { 
+      $in?: string[] 
+    };
     'geo.as'?: string;
     'geo.ss'?: string;
-    nickname?: { $in?: string[] },
+    nickname?: { 
+      $in?: string[] 
+    },
     'content.message'?: string;
     process?: string;
-    unix: { $gte?: number, $lte?: number }
+    unix: { 
+      $gte?: number, 
+      $lte?: number 
+    }
 }
 
 /*
