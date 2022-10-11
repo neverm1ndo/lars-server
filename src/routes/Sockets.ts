@@ -8,6 +8,13 @@ import { samp } from '@shared/constants';
 
 const { DEV } = Workgroup;
 
+enum ServerStatus {
+  OFFLINE = 1,
+  REBOOTING,
+  LIVE,
+  LAUNCHING,
+}
+
 const isDev = (socket: Socket): boolean => {
   if (socket.data.main_group !== DEV) { 
     socket.emit('error', 'Access denied'); 
@@ -44,9 +51,10 @@ const sockets = (socket: Socket) => {
       return; 
     }
     samp.status.then((status: boolean) => {
-                  socket.emit('server-status', status ? 3 : 1);
+                  socket.emit('server-status', status ? ServerStatus.LIVE : ServerStatus.OFFLINE);
                 })
                 .catch((err) => {
+                  Logger.log('error', err.message);
                   socket.emit('server-error', err);
                 });
   });
@@ -56,7 +64,7 @@ const sockets = (socket: Socket) => {
     
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOT_SVR_SA');
     
-    io.sockets.emit('server-status', 2);
+    io.sockets.emit('server-status', ServerStatus.REBOOTING);
     io.sockets.emit('alert:server-rebooting', { 
       username: socket.data.username, 
       group_id: socket.data.main_group 
@@ -95,7 +103,7 @@ const sockets = (socket: Socket) => {
     
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCH_SVR_SA');
 
-    io.emit('server-status', 4);
+    io.emit('server-status', ServerStatus.LAUNCHING);
     
     samp.launch()
         .then((stdout) => {
