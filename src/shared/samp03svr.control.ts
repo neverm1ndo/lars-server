@@ -9,7 +9,7 @@ export class SampServerControl {
     return new Promise((resolve, reject) => {
       exec(process.env.GET_SERVER_STATE!, (err: any, stdout: any) => {
         if (err) reject(err);
-        resolve(stdout === 'true');
+        resolve(stdout.trim() === 'true');
       });
     });
   }
