@@ -73,6 +73,7 @@ const sockets = (socket: Socket) => {
     samp.reboot()
         .then(() => {
           socket.broadcast.to('devs').emit('server-rebooted');
+          io.sockets.emit('server-status', ServerStatus.LIVE);
           Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
         })
         .catch((err) => {
@@ -88,6 +89,7 @@ const sockets = (socket: Socket) => {
     samp.stop()
         .then((stdout) => {
           io.sockets.emit('server-stoped', stdout);
+          io.sockets.emit('server-status', ServerStatus.OFFLINE);
           socket.broadcast.emit('alert:server-stoped', { 
             username: socket.data.username, 
             group_id: socket.data.main_group 
