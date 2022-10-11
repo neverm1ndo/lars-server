@@ -1,11 +1,20 @@
 import { Logger } from '@shared/Logger';
 import Workgroup from '@enums/workgroup.enum';
 import { Socket } from 'socket.io';
+import { io } from 'src';
 import { verifyToken, decodeToken } from '@shared/functions';
 import { samp } from '@shared/constants';
 
 
 const { DEV } = Workgroup;
+
+const isDev = (socket: Socket): boolean => {
+  if (socket.data.main_group !== DEV) { 
+    socket.emit('error', 'Access denied'); 
+    return false; 
+  }
+  return true;
+}
 
 export const socketAuth = (socket: any, next: any) => {
   const token = socket.handshake.auth.token;
@@ -13,77 +22,87 @@ export const socketAuth = (socket: any, next: any) => {
     const err = new Error("not authorized");
     next(err);
   } else {
-    const user = decodeToken(token);
-    socket.data.id = user?.id;
-    socket.data.username = user?.username;
-    socket.data.main_group = user?.main_group;
+    const { id, username, main_group } = decodeToken(token)!;
+    socket.data.id = id;
+    socket.data.username = username;
+    socket.data.main_group = main_group;
     next();
   }
 }
 
 const sockets = (socket: Socket) => {
-  socket.data.main_group === DEV?socket.join('devs'):socket.join('main');
-
+  socket.data.main_group === DEV ? socket.join('devs')
+                                 : socket.join('main');
+  
   socket.on('get-room', () => {
     socket.emit('room-name', [...socket.rooms].join(', '))
   });
 
   socket.on('get-status', () => {
-    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
+    if (socket.data.main_group !== DEV) { 
+      socket.emit('error', 'Access denied'); 
+      return; 
+    }
     samp.status.then((status: boolean) => {
-      socket.emit('server-status', status?3:1);
-    }).catch((err) => {
-      socket.emit('server-error', err);
-    });
+                  socket.emit('server-status', status ? 3 : 1);
+                }).catch((err) => {
+                  socket.emit('server-error', err);
+                });
   });
 
   socket.on('reboot-server', () => {
-    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
-      Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOT_SVR_SA');
-      socket.broadcast.to('devs').emit('server-status', 2);
-      socket.emit('server-status', 2);
-      socket.broadcast.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.main_group });
-      samp.reboot().then(() => {
-        socket.emit('server-rebooted');
-        socket.broadcast.to('devs').emit('server-rebooted');
-        Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
-      }).catch((err) => {
-        socket.emit('server-error', err);
-      });
+    if (!isDev(socket)) return;
+    
+    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOT_SVR_SA');
+    
+    io.emit('server-status', 2);
+    io.emit('alert:server-rebooting', { username: socket.data.username, group_id: socket.data.main_group });
+    
+    samp.reboot()
+        .then(() => {
+          socket.broadcast.to('devs').emit('server-rebooted');
+          Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> REBOOTED_SVR_SA');
+        })
+        .catch((err) => {
+          socket.emit('server-error', err);
+        });
   });
 
   socket.on('stop-server', () => {
-    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
+    if (!isDev(socket)) return;
+    
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOP_SVR_SA');
     samp.stop().then((stdout) => {
-      socket.emit('server-stoped', stdout);
-      socket.broadcast.to('devs').emit('server-stoped', stdout);
+      io.emit('server-stoped', stdout);
       socket.broadcast.emit('alert:server-stoped', { username: socket.data.username, group_id: socket.data.main_group });
       Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username,'-> STOPED_SVR_SA');
     }).catch((err) => {
-      socket.emit('server-error', err);
+      io.emit('server-error', err);
     });
   });
 
   socket.on('launch-server', () => {
-    if (socket.data.main_group !== DEV) { socket.emit('error', 'Access denied'); return; }
+    if (!isDev(socket)) return;
+    
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCH_SVR_SA');
-    socket.broadcast.to('devs').emit('server-status', 4);
-    socket.emit('server-status', 4);
-    samp.launch().then((stdout) => {
-      socket.broadcast.to('devs').emit('server-launched', stdout);
-      socket.emit('server-launched', stdout);
-      Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCHED_SVR_SA');
-    }).catch((err) => {
-      socket.emit('server-error', err);
-    })
+
+    io.emit('server-status', 4);
+    
+    samp.launch()
+        .then((stdout) => {
+          io.emit('server-launched', stdout);
+          Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> LAUNCHED_SVR_SA');
+        })
+        .catch((err) => {
+          io.emit('server-error', err);
+        });
   });
 
   socket.on('user-action', (action) => {
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.data.username, '-> SOCKET_USER_ACTION', action);
+    
     socket.data.activity = action;
-    socket.emit('user-activity', { user: socket.data.username, action});
-    socket.broadcast.to('devs').emit('user-activity', { user: socket.data.username, action});
+    io.emit('user-activity', { user: socket.data.username, action});
   });
 
   socket.on('update', () => {
