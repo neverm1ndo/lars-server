@@ -31,11 +31,6 @@ router.get('/list', (req: any, res: any) => {
           });
 });
 
-router.get('/expire-token', devGuard, (req: any, res: any) => {
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> TOKEN_SESSION_EXPIRATION [', req.originalUrl, ']');
-  res.sendStatus(MOVED_PERMANENTLY);
-});
-
 router.put('/change-group', devGuard, json(), corsOpt, (req: any, res: any) => {
   if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
   Logger.log('default', 'PUT │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
@@ -70,8 +65,8 @@ router.put('/change-secondary-group', devGuard, json(), (req: any, res: any) => 
             res.status(INTERNAL_SERVER_ERROR)
                .send(err);
             
-              Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.username, `Failed to change ${req.body.username} admin status to ${req.body.group}`)
-              Logger.log('error', err);
+            Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.username, `Failed to change ${req.body.username} admin status to ${req.body.group}`)
+            Logger.log('error', err);
           });
 });
 

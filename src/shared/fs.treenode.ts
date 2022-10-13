@@ -31,19 +31,18 @@ export class TreeNode {
       const currentNode = stack.pop();
       if (currentNode) {
         const children = readdirSync(currentNode.path);
-        children
-        .filter((child: string) => !this.isExcludedDirPath(currentNode.path) && !exclusions.includes(child))
-        .forEach((child: string) => {
-          const childPath = join(currentNode.path, child);
-          const childNode = new TreeNode(childPath, child);
-          if (!this.isExcludedDirPath(childNode.path)) {
-            currentNode.items.push(childNode);
-            if (statSync(childNode.path).isDirectory()) {
-              childNode.type = 'dir';
-              stack.push(childNode);
-            }
-          }
-        });
+        children.filter((child: string) => !this.isExcludedDirPath(currentNode.path) && !exclusions.includes(child))
+                .forEach((child: string) => {
+                  const childPath = join(currentNode.path, child);
+                  const childNode = new TreeNode(childPath, child);
+                  if (!this.isExcludedDirPath(childNode.path)) {
+                    currentNode.items.push(childNode);
+                    if (statSync(childNode.path).isDirectory()) {
+                      childNode.type = 'dir';
+                      stack.push(childNode);
+                    }
+                  }
+                });
         currentNode.items = currentNode.items.sort((a, b) => {
           if (a.type == 'dir' && b.type == 'file') return -1;
           if (a.type == 'file' && b.type == 'dir') return 1;

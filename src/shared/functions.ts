@@ -37,16 +37,19 @@ export const watch = (): void => {
           Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
         });
       } else {
-        ln.save().catch((err: any) => {
-          Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
-        });
+        ln.save()
+          .catch((err: any) => {
+            Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
+          });
         lastDoc = ln;
       }
       lastLine = line;
-      statsman.update(line).then(() => {
-        io.sockets.emit('server-online', statsman.snapshot);
-      }).catch(() => {});
-      broadcastProcessNotification(line);
+      statsman.update(line)
+              .then(() => {
+                io.sockets.emit('server-online', statsman.snapshot);
+              })
+              .catch(() => {});
+              broadcastProcessNotification(line);
     })
   }, (err) => { Logger.log('error', err) });
 }
@@ -58,9 +61,15 @@ export const watch = (): void => {
 export const broadcastProcessNotification = (line: LogLine): void => {
   io.sockets.emit('new-log-line');
   switch (line.process) {
-    case Processes.GUARD_BLOCK_ON: io.sockets.emit('alert:guard-block-on', line); break;
-    case Processes.DISCONNECT_KICKBAN: io.sockets.emit('alert:kickban', line); break;
-    case Processes.CHAT_REPORT: io.sockets.emit('alert:report', line); break;
+    case Processes.GUARD_BLOCK_ON: 
+      io.sockets.emit('alert:guard-block-on', line); 
+      break;
+    case Processes.DISCONNECT_KICKBAN: 
+      io.sockets.emit('alert:kickban', line); 
+      break;
+    case Processes.CHAT_REPORT: 
+      io.sockets.emit('alert:report', line); 
+      break;
     default: break;
   }
 }
@@ -137,16 +146,18 @@ export const checkPassword = (pass: string, hash: string): boolean => {
     let password = md5(salt + pass);
     if (password === realPassword) {
       return true;
-    } else {
-      return false;
-    }
+    } 
+    return false;
   }
-export const generateToken = (userInfo: any): string => {
+
+  export const generateToken = (userInfo: any): string => {
   return jwt.sign(userInfo, app.get('secret'), { algorithm: 'HS256'});
 }
+
 export const verifyToken = (token: string): boolean => {
   return jwt.decode(token, app.get('secret')) ? true : false;
 }
+
 export const decodeToken = (token: string): User | null => {
   let user;
   jwt.verify(token, app.get('secret'), (err: any, decoded: any) => {
@@ -160,15 +171,17 @@ export const decodeToken = (token: string): User | null => {
   });
   if (!user) return null;
   return user;
-
 }
+
 export const getProcessFromTranslation = <T, K extends keyof T>(processes: T, translations: K[]): Array<T[K]> => {
   return translations.map((t) => processes[t]);
 }
+
 export const parseSearchFilter = (filt: string): Array<Processes> => {
   const splited: Array<keyof typeof processTranslation> = filt.split(',').filter((f): boolean => processTranslation.hasOwnProperty(f)) as Array<keyof typeof processTranslation>;
   return getProcessFromTranslation(processTranslation, splited);
 }
+
 export const isWorkGroup = (group: number | string): boolean => {
   group = group.toString();
   return group.includes('9') || group.includes('10') || group.includes('11') || group.includes('12') || group.includes('13');
@@ -228,8 +241,10 @@ export const parseSearchQuery = (query: any): SearchQuery => {
    } else {
      result.nickname = [splited[0]];
    }
-  Object.keys(result).forEach((key: string) => {
+
+   Object.keys(result).forEach((key: string) => {
     if (result[key as keyof SearchQuery]?.length === 0) delete result[key as keyof SearchQuery];
   });
+
   return result;
 }

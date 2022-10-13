@@ -93,7 +93,6 @@ namespace Statsman {
     }
   }
   export function getChatStats (from: Date, to: Date) {
-    console.log(from, to);
     return LOG_LINE.aggregate([
       {
         '$match': {

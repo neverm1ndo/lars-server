@@ -12,7 +12,7 @@ const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 
 const router = Router();
 
-router.get('/backups-list', (req: any, res: any) => { // GET all live backups list
+router.get('/backups-list', (req: any, res: any) => {
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUPS_LIST', '[', req.originalUrl, ']');
   BACKUP.find({})
         .sort({ unix: - 1 })
@@ -22,7 +22,7 @@ router.get('/backups-list', (req: any, res: any) => { // GET all live backups li
         });
 });
 
-router.get('/backup-file', (req: any, res: any) => { // GET backup file
+router.get('/backup-file', (req: any, res: any) => {
   if (!req.query.name || !req.query.unix ) { 
     res.sendStatus(CONFLICT)
        .end('Bad request: required parameters missed'); 
@@ -40,7 +40,7 @@ router.get('/backup-file', (req: any, res: any) => { // GET backup file
           });
 });
 
-router.get('/restore-backup', (req: any, res: Response) => { // GET restore file
+router.get('/restore-backup', (req: any, res: Response) => {
   if (!req.query.path || !req.query.unix) { 
     res.sendStatus(CONFLICT)
        .end('Bad request: required parameters missed'); 
@@ -58,7 +58,7 @@ router.get('/restore-backup', (req: any, res: Response) => { // GET restore file
           });
 });
 
-router.delete('/backup', (req: any, res: Response) => { // GET restore file
+router.delete('/backup', (req: any, res: Response) => {
   if (!req.query.path || !req.query.unix) { 
     res.sendStatus(CONFLICT)
        .end('Bad request: required parameters missed'); 
@@ -74,7 +74,6 @@ router.delete('/backup', (req: any, res: Response) => { // GET restore file
             res.status(INTERNAL_SERVER_ERROR)
                .send({ message });
           });
-          // Backuper.remove()
 });
 
 router.get('/size', (_req: any, res: Response) => { // GET restore file

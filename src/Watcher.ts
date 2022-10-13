@@ -36,8 +36,10 @@ export class Watcher {
 
   getLogFIle() {
     const date = new Date();
-    let logpath = path.join(process.env.LOGS_PATH!, this.convert(date.getMonth() + 1), date.getFullYear()+this.convert(date.getMonth()+1)+this.convert(date.getDate())+'.log')
+    let logpath = path.join(process.env.LOGS_PATH!, this.convert(date.getMonth() + 1), `${date.getFullYear()}${this.convert(date.getMonth()+1)}${this.convert(date.getDate())}.log`);
+    
     if (process.env.NODE_ENV === 'development') logpath = path.join(process.env.LOGS_PATH!, '20200931.log')
+    
     fs.readFile(logpath, (err: NodeJS.ErrnoException | null, buffer: Buffer) => {
       if (err) { Logger.log('error', err) }
       const delim = Buffer.from('\n');
@@ -50,31 +52,31 @@ export class Watcher {
   constructor() {
     this.getLogFIle();
     this.result$ = new Observable<Buffer>((subscriber) => {
-      if (this.watcher) {
-        this.watcher.on('change', ( filepath: string ) => {
-          if (this._current !== filepath) {
-            this.lines = 0;
-            this._current = filepath;
-          }
-          fs.readFile(path.resolve(process.cwd(), filepath), (err, buffer: Buffer) => {
-            if (err) {
-              Logger.log('error', err)
+      if (!this.watcher) return;
+      this.watcher.on('change', ( filepath: string ) => {
+        if (this._current !== filepath) {
+          this.lines = 0;
+          this._current = filepath;
+        }
+        fs.readFile(path.resolve(process.cwd(), filepath), (err, buffer: Buffer) => {
+          if (err) {
+            Logger.log('error', err);
+            return;
+          } else {
+            const delim = Buffer.from('\n');
+            const splited = bufferSplit(buffer, delim);
+            const newLines = splited.length - 1 - this.lines;
+            if (splited.length > 2) {
+              _.takeRight(splited, newLines + 2).forEach((line: Buffer) => {
+                subscriber.next(line);
+              })
             } else {
-              const delim = Buffer.from('\n');
-              const splited = bufferSplit(buffer, delim);
-              const newLines = splited.length - 1 - this.lines;
-              if (splited.length > 2) {
-                _.takeRight(splited, newLines + 2).forEach((line: Buffer) => {
-                  subscriber.next(line);
-                })
-              } else {
-                subscriber.next(splited[0]);
-              }
-              this.lines = splited.length;
+              subscriber.next(splited[0]);
             }
-          });
+            this.lines = splited.length;
+          }
         });
-      }
+      });
     });
   }
 }

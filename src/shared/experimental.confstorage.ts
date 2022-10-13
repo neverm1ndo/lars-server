@@ -37,35 +37,35 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
       if (err) return callback(err);
       const filepath: string = join(path, file.originalname);
       access(dirname(filepath))
-      .then(() => Backuper.backup(filepath, req.user, BackupAction.CHANGE))
-      .then(() => {
-        if (isOutOfPermittedArea(dirname(filepath), req.user)) callback(new Error('File is out of permitted area'));
-        const writeStream = fs.createWriteStream(filepath);
-        const transformEncoding = new Transform({
-          transform: (chunk: Buffer, _encoding: BufferEncoding, callback) => {
-            callback(null, parser.UTF8toANSI(chunk));
-          }
-        });
-        const outStream = pipeline(file.stream, transformEncoding, writeStream, (err: NodeJS.ErrnoException | null) => {
-          callback(err);
-        });
-        outStream.on('error', callback);
-        outStream.on('finish', () => callback(null, { path, size: writeStream.bytesWritten }));
-      })
-      .catch((err) => {
-        callback(err); // Backuper error
-      })
-      .catch((err) => {
-        callback(err); // Access error
-      });
+            .then(() => Backuper.backup(filepath, req.user, BackupAction.CHANGE))
+            .then(() => {
+              if (isOutOfPermittedArea(dirname(filepath), req.user)) callback(new Error('File is out of permitted area'));
+              const writeStream = fs.createWriteStream(filepath);
+              const transformEncoding = new Transform({
+                transform: (chunk: Buffer, _encoding: BufferEncoding, callback) => {
+                  callback(null, parser.UTF8toANSI(chunk));
+                }
+              });
+              const outStream = pipeline(file.stream, transformEncoding, writeStream, (err: NodeJS.ErrnoException | null) => {
+                callback(err);
+              });
+              outStream.on('error', callback);
+              outStream.on('finish', () => callback(null, { path, size: writeStream.bytesWritten }));
+            })
+            .catch((err) => {
+              callback(err); // Backuper error
+            })
+            .catch((err) => {
+              callback(err); // Access error
+            });
     });
   }
 
   _removeFile(_req: Request,
             file: Express.Multer.File,
             callback: (error: Error | null) => void): void {
-    fs.unlink(file.path, callback);
-  }
+              fs.unlink(file.path, callback);
+            }
 }
 
 export default function (options: any) {
