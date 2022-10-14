@@ -27,14 +27,14 @@ router.post('/', corsOpt, json(), (req: any, res: any): void => {
   MSQLPool.promise()
           .query("SELECT phpbb_users.user_id, phpbb_users.user_password, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.user_email = ? LIMIT 1", [req.body.email])
           .then(([rows]: any[]): void => {
-            const user = rows[0];
+            const [user] = rows;
 
             const { main_group, username, secondary_group, user_avatar } = user;
             
-            if (!checkPassword(req.body.password, user.user_password) && !isWorkGroup(main_group)) {
+            if (!checkPassword(req.body.password, user.user_password) || !isWorkGroup(main_group)) {
               Logger.log('default', `[${req.connection.remoteAddress}]`, `AUTH ${username} -> WORKGROUP ${isWorkGroup(main_group)} ->`, req.body.email);
-              res.status(UNAUTHORIZED)
-                 .send(`In Workgroup: ${isWorkGroup(main_group)}`);
+              return res.status(UNAUTHORIZED)
+                        .send(`In Workgroup: ${isWorkGroup(main_group)}`);
             }
             
             Logger.log('default', `[${req.connection.remoteAddress}]`, 'AUTH_SUCCESS', req.body.email, user.username);
