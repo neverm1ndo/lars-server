@@ -16,12 +16,15 @@ const parser = new Parser();
 const { OK, INTERNAL_SERVER_ERROR, CONFLICT, NOT_FOUND } = StatusCodes;
 const { DEV } = Workgroup;
 
-router.get('/config-files-tree', (req: any, res: any) => { // GET Files(configs) and directories tree
+router.get('/config-files-tree', async (req: any, res: any) => { // GET Files(configs) and directories tree
+  
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CONFIG_FILES_TREE [', req.originalUrl, ']');
   let root: TreeNode;
   
-  if (req.user.main_group == DEV) root = TreeNode.buildTree(process.env.CFG_DEV_PATH!, 'svr_sa');
-  else root = TreeNode.buildTree(process.env.CFG_DEFAULT_PATH!, 'configs');
+  if (req.user.main_group == DEV) 
+    root = await TreeNode.buildTree(process.env.CFG_DEV_PATH!, 'svr_sa');
+  else 
+    root = await TreeNode.buildTree(process.env.CFG_DEFAULT_PATH!, 'configs');
 
   if (!root) res.status(INTERNAL_SERVER_ERROR).send({ message: 'Cant read file tree' });
   
