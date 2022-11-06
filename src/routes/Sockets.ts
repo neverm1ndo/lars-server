@@ -2,8 +2,8 @@ import { Logger } from '@shared/Logger';
 import Workgroup from '@enums/workgroup.enum';
 import { Socket } from 'socket.io';
 import { io } from '../index';
-import { verifyToken, decodeToken } from '@shared/functions';
 import { samp } from '@shared/constants';
+import { ISocket } from '@interfaces/httpio.enum';
 
 
 const { DEV } = Workgroup;
@@ -15,41 +15,19 @@ enum ServerStatus {
   LAUNCHING,
 }
 
-const isDev = (socket: Socket): boolean => {
-  if (socket.data.main_group !== DEV) { 
-    socket.emit('error', 'Access denied'); 
-    return false; 
-  }
+const isDev = (socket: ISocket): boolean => {
+  if (socket.request.user?.main_group !== DEV) return false; 
   return true;
 }
 
-export const socketAuth = (socket: any, next: any) => {
-  const token = socket.handshake.auth.token;
-  if (!verifyToken(token)) {
-    const err = new Error("not authorized");
-    next(err);
-  } else {
-    const { id, username, main_group } = decodeToken(token)!;
-    socket.data.id = id;
-    socket.data.username = username;
-    socket.data.main_group = main_group;
-    next();
-  }
-}
+export const wrap = (middleware: any) => (socket: Socket, next: any) => middleware(socket.request, {}, next);
 
-const sockets = (socket: Socket) => {
-  socket.data.main_group === DEV ? socket.join('devs')
-                                 : socket.join('main');
+const sockets = (socket: ISocket) => {
+  isDev(socket) ? socket.join('devs')
+                : socket.join('main');
   
-  socket.on('get-room', () => {
-    socket.emit('room-name', [...socket.rooms].join(', '))
-  });
-
   socket.on('get-status', () => {
-    if (socket.data.main_group !== DEV) { 
-      socket.emit('error', 'Access denied'); 
-      return; 
-    }
+    if (!isDev(socket)) return; 
     samp.status.then((status: boolean) => {
                   socket.emit('server-status', status ? ServerStatus.LIVE : ServerStatus.OFFLINE);
                 })
