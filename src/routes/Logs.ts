@@ -6,9 +6,10 @@ import { Document, CallbackError } from 'mongoose';
 import { format } from 'url';
 
 import { parseSearchFilter, parseSearchQuery } from '@shared/functions';
+import { SearchQuery } from '@interfaces/search';
 
 const router = Router();
-const { UNAUTHORIZED, INTERNAL_SERVER_ERROR } = StatusCodes;
+const { INTERNAL_SERVER_ERROR } = StatusCodes;
 
 interface MDBRequest {
     'geo.ip'?: { 
@@ -31,83 +32,120 @@ interface MDBRequest {
 * REVIEW: remove duplicate code
 */
 
-// REVIEW: spaghetti code, add middlewares
-router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
-  if (!req.headers.authorization) return res.sendStatus(UNAUTHORIZED);
-  let filter: string[] = [];
-  let lim = 100;
-  let page = 0;
-  let date = {
-    from: +new Date('Jan 01 2000, 00:00:00')/1000,
-    to: Date.now()*1000
-  };
-  if (req.query.lim) lim = +req.query.lim;
-  if (req.query.page) page = +req.query.page;
-  if (req.query.filter) filter = parseSearchFilter(req.query.filter);
-  if (req.query.dateFrom) date.from = +req.query.dateFrom/1000;
-  if (req.query.dateTo) date.to = +req.query.dateTo/1000;
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> LINES', lim, page,' [', req.originalUrl, ']\n└ ', JSON.stringify(req.query));
-  LOG_LINE.find({ unix: { $gte: date.from, $lte: date.to }}, [], { sort: { unix : -1 }, limit: lim, skip: lim*page },)
-  .where('process').nin(filter)
-  .exec((err: any, lines: Document[]) => {
-    if (err) {
-      Logger.log('error', err);
-      return res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
-    }
-    res.send(lines);
-    });
-});
-// REVIEW: same spaghetti code
-router.get('/search', (req: any, res: any) => { // GET Search by nickname, ip, serals
-  if (!req.query.search) {
-    return res.redirect(format({ pathname: '/v2/logs/last', query: req.query }));
+interface ISearchOptions {
+  _lim: number;
+  _page: number;
+  _date: any;
+  filter: string[];
+  lim: number;
+  page: number;
+  date: {
+    from: number;
+    to: number;
   }
-  const query = parseSearchQuery(req.query.search);
-  let date = {
-    from: +new Date('Jan 01 2000, 00:00:00')/1000,
-    to: Math.round(Date.now()/1000)
-  };
-  let filter: string[] = [];
-  let lim = 40;
-  let page = 0;
-  if (req.query.lim) lim = Number(req.query.lim);
-  if (req.query.page) page = Number(req.query.page);
-  if (req.query.filter) filter = parseSearchFilter(req.query.filter);
-  if (req.query.dateFrom) date.from = +req.query.dateFrom/1000;
-  if (req.query.dateTo) date.to = +req.query.dateTo/1000;
-    Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SEARCH\n',
-               '                            └ ', JSON.stringify(req.query));
-  let mdbq: MDBRequest = {
-    'geo.ip': { $in: query?.ip },
-    'geo.as': query?.as,
-    'geo.ss': query?.ss,
-    nickname: { $in: query?.nickname },
-    process: query?.process,
-    'content.message': query?.cn,
-    unix: { $gte: date.from, $lte: date.to }
-  };
+}
 
-  /**
-  * FIXME: TEST IT!
-  */
-  if (!mdbq['geo.ip']?.$in) { delete mdbq['geo.ip'] };
-  if (!mdbq['geo.as']) { delete mdbq['geo.as'] };
-  if (!mdbq['geo.ss']) { delete mdbq['geo.ss'] };
-  if (!mdbq['process']) { delete mdbq['process'] };
-  if (!mdbq['content.message']) { delete mdbq['content.message'] };
-  if (!mdbq['nickname']?.$in) { delete mdbq['nickname'] };
+function toNumber(this: number, value: any): number {
+  return Number.isNaN(+value) ? +value : this;
+}
 
-  LOG_LINE.find(mdbq,
-  [],
-  { sort: { unix : -1 }, limit: lim, skip: lim*page})
-  .where('process').nin(filter)
-  .exec((err: CallbackError, lines: Document[]) => {
-    if (err) {
-      Logger.log('error', 'SEARCH', err);
-      return res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
+async function buildDBRequest(searchQuery: SearchQuery, query: ISearchOptions): Promise<MDBRequest> {
+  const { ip, as, ss, nickname, process, cn } = searchQuery;
+  let request: any = {
+    'geo.ip': { $in: ip },
+    'geo.as': as,
+    'geo.ss': ss,
+    nickname: { $in: nickname },
+    process,
+    'content.message': cn,
+    unix: { $gte: query.date.from, $lte: query.date.to }
+  };
+  try {
+    for (let key in request) {
+      if (!request[key]) {
+        delete request[key];
+        continue;
+      }
+      if (typeof request[key] !== 'object') continue;
+      if (!request[key].$in) delete request[key];
     }
-    res.send(lines);
-  });
+    return request as MDBRequest;
+  } catch(err) {
+    throw err;
+  }
+};
+
+const defaultSearchOptions: ISearchOptions = {
+  filter: [],
+  _lim: 100,
+  set lim(limit: any) {
+    this._lim = toNumber.call(this._lim, limit);
+  },
+  get lim() { return this._lim },
+  _page: 0,
+  set page(page: any) {
+    this._page = toNumber.call(this._page, page);
+  },
+  get page() { return this._page },
+  _date: {
+    from: new Date('Jan 01 2000, 00:00:00').valueOf() / 1000,
+    to: Date.now() * 1000
+  },
+  set date(date: { from: any; to: any }) {
+    const { from, to } = date;
+    this._date = {
+      from: toNumber.call(this._date.from, from),
+      to: toNumber.call(this._date.to, to),
+    };
+  },
+  get date() { return this._date; }
+};
+
+router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
+
+  const query: ISearchOptions = Object.assign(defaultSearchOptions, req.query)
+        query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
+
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> LINES', query.lim, query.page,' [', req.originalUrl, ']');
+  
+  LOG_LINE.find({ unix: { $gte: query.date.from, $lte: query.date.to }}, [], { sort: { unix : -1 }, limit: query.lim, skip: query.lim * query.page },)
+          .where('process').nin(query.filter)
+          .exec((err: any, lines: Document[]) => {
+            if (err) {
+              Logger.log('error', err);
+              return res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
+            }
+            res.send(lines);
+            });
+});
+
+router.get('/search', async (req: any, res: any) => { // GET Search by nickname, ip, serals
+  if (!req.query.search) {
+    const redirectURL = new URL('/v2/lars/logs/last', `https://${process.env.HOST}:${process.env.HTTPS_PORT || process.env.HTTP_PORT}`);
+          for (let param in req.query) {
+            redirectURL.searchParams.append(param, req.query[param]);
+          };
+    return res.redirect(redirectURL);
+  }
+  
+  const query: ISearchOptions = Object.assign(defaultSearchOptions, req.query);
+        query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
+  
+  const searchQuery: SearchQuery = parseSearchQuery(req.query.search);
+  
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SEARCH');
+  
+  const mdbq: MDBRequest = await buildDBRequest(searchQuery, query);
+
+  LOG_LINE.find(mdbq, [], { sort: { unix : -1 }, limit: query.lim, skip: query.lim * query.page})
+          .where('process').nin(query.filter)
+          .exec((err: CallbackError, lines: Document[]) => {
+            if (err) {
+              Logger.log('error', 'SEARCH', err);
+              return res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
+            }
+            res.send(lines);
+          });
 });
 
 export default router;
