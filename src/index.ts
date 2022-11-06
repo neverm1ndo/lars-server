@@ -1,21 +1,16 @@
 import './pre-start'; // Must be the first import
-import app from '@server';
+import app, { sessionMiddleware } from '@server';
 import https from 'https';
 import { readFileSync } from 'fs';
-import sockets, { socketAuth } from './routes/Sockets';
-import { Server, Socket } from 'socket.io';
+import sockets, { wrap } from './routes/Sockets';
+import { Server } from 'socket.io';
 import { socketCORS } from '@shared/constants';
+import passport from 'passport';
+import { IHttpsOptions, ISocket } from '@interfaces/httpio.enum';
 
 // Start the server
 
-interface HttpsOptions {
-  key: string,
-  cert: string,
-  ca?: string,
-  rejectUnauthorized: boolean
-}
-
-const httpsOptions: HttpsOptions = {
+const httpsOptions: IHttpsOptions = {
   key: readFileSync(process.env.SSL_KEY!, 'utf8'),
   cert: readFileSync(process.env.SSL_CERT!, 'utf8'),
   rejectUnauthorized: false
@@ -24,8 +19,10 @@ const httpsOptions: HttpsOptions = {
 const server = https.createServer(httpsOptions , app);
 
 export const io = new Server(server, { cors: socketCORS });
-             io.use(socketAuth);
-             io.on('connection', (socket: Socket) => {
+             io.use(wrap(sessionMiddleware));
+             io.use(wrap(passport.initialize()));
+             io.use(wrap(passport.session()));
+             io.on('connection', (socket: ISocket) => {
                sockets(socket);
              });
 
