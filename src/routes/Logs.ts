@@ -3,10 +3,9 @@ import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { Document, CallbackError } from 'mongoose';
-import { format } from 'url';
 
 import { parseSearchFilter, parseSearchQuery } from '@shared/functions';
-import { SearchQuery } from '@interfaces/search';
+import { ISearchQuery } from '@interfaces/search';
 
 const router = Router();
 const { INTERNAL_SERVER_ERROR } = StatusCodes;
@@ -49,7 +48,7 @@ function toNumber(this: number, value: any): number {
   return Number.isNaN(+value) ? +value : this;
 }
 
-async function buildDBRequest(searchQuery: SearchQuery, query: ISearchOptions): Promise<MDBRequest> {
+async function buildDBRequest(searchQuery: ISearchQuery, query: ISearchOptions): Promise<MDBRequest> {
   const { ip, as, ss, nickname, process, cn } = searchQuery;
   let request: any = {
     'geo.ip': { $in: ip },
@@ -89,7 +88,7 @@ const defaultSearchOptions: ISearchOptions = {
   get page() { return this._page },
   _date: {
     from: new Date('Jan 01 2000, 00:00:00').valueOf() / 1000,
-    to: Date.now() * 1000
+    to: Date.now() / 1000
   },
   set date(date: { from: any; to: any }) {
     const { from, to } = date;
@@ -103,7 +102,7 @@ const defaultSearchOptions: ISearchOptions = {
 
 router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
 
-  const query: ISearchOptions = Object.assign(defaultSearchOptions, req.query)
+  const query: ISearchOptions = { ...defaultSearchOptions, ...req.query };
         query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
 
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> LINES', query.lim, query.page,' [', req.originalUrl, ']');
@@ -116,7 +115,7 @@ router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
               return res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
             }
             res.send(lines);
-            });
+          });
 });
 
 router.get('/search', async (req: any, res: any) => { // GET Search by nickname, ip, serals
@@ -128,10 +127,10 @@ router.get('/search', async (req: any, res: any) => { // GET Search by nickname,
     return res.redirect(redirectURL);
   }
   
-  const query: ISearchOptions = Object.assign(defaultSearchOptions, req.query);
+  const query: ISearchOptions = { ...defaultSearchOptions, ...req.query };
         query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
   
-  const searchQuery: SearchQuery = parseSearchQuery(req.query.search);
+  const searchQuery: ISearchQuery = parseSearchQuery(req.query.search);
   
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SEARCH');
   

@@ -1,4 +1,4 @@
-import { LogLine } from '@interfaces/logline';
+import { ILogLine } from '@interfaces/logline';
 import { Processes } from '@enums/processes.enum';
 import { STAT } from '@schemas/stat.schema';
 import { LOG_LINE } from '@schemas/logline.schema';
@@ -45,7 +45,7 @@ namespace Statsman {
       Processes.DISCONNECT_KICKBAN,
       Processes.DISCONNECT_TIMEOUT,
     ]
-    update(line: LogLine): Promise<void> {
+    update(line: ILogLine): Promise<void> {
       return new Promise((resolve, reject) => {
         if (line.process === Processes.CONNECTION_CONNECT) { this.inc(); this.tail(); resolve(); }
         if (this.disconnectProcesses.includes(line.process)) { this.dec(); this.tail(); resolve(); }
