@@ -1,5 +1,4 @@
 import { createPool } from 'mysql2';
-import { Parser } from '@parser';
 import { Watcher } from '@watcher';
 import Backuper from '@backuper';
 import { Logger } from './Logger';
@@ -16,10 +15,16 @@ export const paramMissingError = 'One or more of the required parameters was mis
 export const noAvatarImageUrl: string = 'https://www.gta-liberty.ru/styles/prosilver_ex/theme/images/no_avatar.gif';
 
 
-export const parser = new Parser();
-export const watcher = new Watcher();
 export const statsman = new Statsman.OnlineMetric();
 export const samp = new SampServerControl();
+
+export const SQLQueries = {
+  GET_USER_BY_NAME: "SELECT phpbb_users.user_id, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.username = ? LIMIT 1",
+  GET_USER: "SELECT phpbb_users.user_id, phpbb_users.user_password, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.user_email = ? LIMIT 1",
+  GET_ADMIN_LIST: 'SELECT phpbb_users.user_id, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id IN (?, ?, ?, ?, ?, ?) AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id',
+  CHANGE_MAIN_GROUP: 'UPDATE phpbb_user_group, phpbb_users SET phpbb_user_group.group_id = ?, phpbb_users.group_id = ? WHERE phpbb_user_group.user_id = phpbb_users.user_id AND phpbb_users.user_id = ?;',
+  CHANGE_SECONDARY_GROUP: 'UPDATE phpbb_user_group INNER JOIN (SELECT MAX(group_id) as group_id FROM phpbb_user_group WHERE group_id BETWEEN 9 AND 14 AND user_id = ? GROUP BY user_id) AS secondary_group SET phpbb_user_group.group_id = ? WHERE phpbb_user_group.group_id = secondary_group.group_id AND user_id = ?',
+};
 
 const experimentalConfigFileStorage = experimentalStorage({
   destination: function (req: any, _file: any, cb: any) {
@@ -49,8 +54,8 @@ const confStorage = diskStorage({
   }
 });
 
-export const upmap: Multer =  multer({ storage: mapStorage });
-export const upcfg: Multer =  multer({ storage: experimentalConfigFileStorage });
+export const upmap : Multer =  multer({ storage: mapStorage });
+export const upcfg : Multer =  multer({ storage: experimentalConfigFileStorage });
 export const upfile: Multer =  multer({ storage: confStorage });
 
 export const tailOnlineStats = new CronJob('0 */30 * * * *', () => {
@@ -58,11 +63,12 @@ export const tailOnlineStats = new CronJob('0 */30 * * * *', () => {
 });
 
 export const rmOldBackups = new CronJob('0 0 0 */1 * *', () => {
-  Backuper.removeExpired().then(() => {
-    Logger.log('default', 'CRON', '->' ,'AUTO_CLEAR_OLD_BACKUPS');
-  }).catch(err => {
-    Logger.log('error', 'CRON_RM_BACKUPS', err.message);
-  });
+  Backuper.removeExpired()
+          .then(() => {
+            Logger.log('default', 'CRON', '->' ,'AUTO_CLEAR_OLD_BACKUPS');
+          }).catch(err => {
+            Logger.log('error', 'CRON_RM_BACKUPS', err.message);
+          });
 }, null, true, 'Europe/Moscow')
 
 
@@ -74,17 +80,9 @@ export const MSQLPool = createPool({
 });
 
 export const CORSoptions = {
-    allowedHeaders: [
-      'Origin',
-      'X-Requested-With',
-      'Content-Type',
-      'Accept',
-      'X-Access-Token',
-      'Authorization'
-    ],
     credentials: true,
     methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
-    origin: '*',
+    origin: ['http://localhost:4200'],
     preflightContinue: false,
   };
 

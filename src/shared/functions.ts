@@ -1,64 +1,92 @@
 import app from '@server';
 import md5 from 'md5';
 import jwt from 'jsonwebtoken';
+import iconv from 'iconv-lite';
 import { Logger } from './Logger';
 import { WSMessage } from '@interfaces/ws.message';
-import { parser, watcher, processTranslation, statsman } from './constants';
-import { LogLine } from '@interfaces/logline';
+import { processTranslation, statsman } from './constants';
+import { ILogLine } from '@interfaces/logline';
 import { Document } from 'mongoose';
 import { LOG_LINE } from '@schemas/logline.schema';
-import { readdir, lstatSync, readFile } from 'fs';
-import { join } from 'path';
-import { User } from '@interfaces/user';
-import { SearchQuery } from '@interfaces/search';
+import { IUserData } from '@interfaces/user';
+import { ISearchQuery } from '@interfaces/search';
 import { lookup, charset } from 'mime-types';
 import { Processes } from '@enums/processes.enum';
 import { io } from '../index';
 import _ from 'lodash';
+import { Parser2 } from 'src/Parser2';
+import { Watcher } from '@watcher';
+
+interface IRequest extends Request {
+  cookies: {
+    [key: string]: string;
+  }
+}
+
+export const cookieExtractor = function(req: IRequest) {
+  let token = null;
+  if (req && req.cookies) {
+    token = req.cookies['jwt'];
+  }
+  return token;
+}
 
 export const watch = (): void => {
-  const empty: LogLine = {
-        unix: 0,
-        date: new Date(),
-        process: '<none>',
-        id: 0,
-      };
-  let lastLine: LogLine = empty;
-  let lastDoc: Document<any>;
+  const parser: Parser2 = new Parser2();
+  const watcher: Watcher = new Watcher();
 
-  watcher.result$.subscribe((buffer: Buffer) => {
-    parser.parse(buffer).forEach((line: LogLine) => {
-      let ln = new LOG_LINE(line);
-      if ( // Miltiplier condition
-        lastLine.process === line.process &&
-        _.isEqual(lastLine.content, line.content) &&
-        lastLine.nickname === line.nickname) {
-        lastDoc.updateOne({$inc: { multiplier: 1 }}).catch((err) => {
-          Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
-        });
-      } else {
-        ln.save()
-          .catch((err: any) => {
-            Logger.log('error', err.message, ' in:\n', parser.ANSItoUTF8(buffer));
-          });
-        lastDoc = ln;
+  let _dbDocument: Document;
+  let _last: ILogLine;
+
+  const _isSimilarLine = (a: ILogLine, b: ILogLine): boolean => {
+    if (!a || !b) return false;
+    return a.process === b.process && _.isEqual(a.content, b.content) && a.nickname === b.nickname;
+  }
+
+  const _save = async (logLine: ILogLine): Promise<void> => {
+    const dbLine = new LOG_LINE(logLine);
+    
+    if (_isSimilarLine(logLine, _last)) {
+      try {
+        _dbDocument.updateOne({$inc: { multiplier: 1 }});
+      } catch(error) {
+        throw error;
       }
-      lastLine = line;
-      statsman.update(line)
+      return;
+    }
+    dbLine.save();
+  };
+
+  const _updateStatistics = async (logLine: ILogLine): Promise<void> => {
+      statsman.update(logLine)
               .then(() => {
                 io.sockets.emit('server-online', statsman.snapshot);
               })
-              .catch(() => {});
-              broadcastProcessNotification(line);
-    })
-  }, (err) => { Logger.log('error', err) });
+              .catch((err) => {
+                Logger.log('error', err);
+              });
+              broadcastProcessNotification(logLine);
+  };
+
+        watcher.overwatch()
+               .on('data', async (buffer: Buffer) => {
+                  try {
+                    const logLine: ILogLine = parser.parse(buffer);
+                  
+                    _save(logLine);
+                    _updateStatistics(logLine);
+                  
+                  } catch(error) {
+                    Logger.log('error', error);
+                  }
+               });
 }
 
 /**
 * Broadcasts notification about specific process
 * @param {LogLine} line LogLine instance
 */
-export const broadcastProcessNotification = (line: LogLine): void => {
+export const broadcastProcessNotification = (line: ILogLine): void => {
   io.sockets.emit('new-log-line');
   switch (line.process) {
     case Processes.GUARD_BLOCK_ON: 
@@ -88,35 +116,11 @@ export const getRandomInt = () => {
     return Math.floor(Math.random() * 1_000_000_000_000);
 };
 
-/**
-* @deprecated Read all log files and put lines into db
-* Just in case
-*/
-export const firstLaunch = (dir: string): void => {
-  readdir(dir, (err: NodeJS.ErrnoException | null, dirs: any[]) => {
-    if (err) return err;
-    for (let i = 0; i < dirs.length; i++) {
-      if (typeof dirs[i] == 'string') {
-        let fullPath = join(dir, dirs[i]);
-        if (lstatSync(fullPath).isDirectory()) {
-          firstLaunch(fullPath);
-        } else {
-          readFile(fullPath,(err: NodeJS.ErrnoException | null, buffer: Buffer) => {
-            if (err) return err;
-            parser.parse(buffer).forEach((line: LogLine) => {
-              let ln = new LOG_LINE(line);
-              ln.save();
-            });
-          })
-        }
-      }
-    }
-  });
-}
-
-export const getMimeType = (path:string): string | false => {
+export const getMimeType = (path: string): string | false => {
   let splited = path.split('.');
+  
   if (!splited) return '*/*';
+  
   switch (splited[splited.length - 1]) {
     case 'amx': return 'application/octet-stream';
     case 'so': return 'application/x-sharedlib';
@@ -130,11 +134,14 @@ export const getMimeType = (path:string): string | false => {
   return lookup(path);
 }
 
-// ???
-// export const getTodayDate = (): Date => {
-//   const now: Date = new Date();
-//   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-// }
+
+export function ANSItoUTF8(buffer: Buffer): Buffer {
+  return iconv.encode(iconv.decode(buffer, 'win1251'), 'utf8');
+}
+
+export function UTF8toANSI(buffer: Buffer): Buffer {
+  return iconv.encode(buffer.toString(), 'win1251');
+}
 
 export const getCharset = (typeString: string): string | false => {
   return charset(typeString);
@@ -150,15 +157,25 @@ export const checkPassword = (pass: string, hash: string): boolean => {
     return false;
   }
 
-  export const generateToken = (userInfo: any): string => {
+export const generateToken = (userInfo: any): string => {
   return jwt.sign(userInfo, app.get('secret'), { algorithm: 'HS256'});
 }
 
+/**
+ * @deprecated
+ * @param token 
+ * @returns 
+ */
 export const verifyToken = (token: string): boolean => {
   return jwt.decode(token, app.get('secret')) ? true : false;
 }
 
-export const decodeToken = (token: string): User | null => {
+/**
+ * @deprecated
+ * @param token 
+ * @returns 
+ */
+export const decodeToken = (token: string): IUserData | null => {
   let user;
   jwt.verify(token, app.get('secret'), (err: any, decoded: any) => {
     if (err) return null;
@@ -190,14 +207,16 @@ export const isWorkGroup = (group: number | string): boolean => {
 export const wsmsg = (msg: WSMessage): string => {
   return JSON.stringify(msg);
 }
+
 // REVIEW: needs to be completely rewritten
 /**
 * Parses serarch query, returns SearchQuery object
 * @param query string search query
 * @returns SearchQuery
+* @deprecated
 */
-export const parseSearchQuery = (query: any): SearchQuery => {
-  let result: SearchQuery = {};
+export const parseSearchQuery = (query: any): ISearchQuery => {
+  let result: ISearchQuery = {};
   let splited: any[] = [];
   if (query.includes('&')) {
     splited = query.split('&');
@@ -243,7 +262,7 @@ export const parseSearchQuery = (query: any): SearchQuery => {
    }
 
    Object.keys(result).forEach((key: string) => {
-    if (result[key as keyof SearchQuery]?.length === 0) delete result[key as keyof SearchQuery];
+    if (result[key as keyof ISearchQuery]?.length === 0) delete result[key as keyof ISearchQuery];
   });
 
   return result;

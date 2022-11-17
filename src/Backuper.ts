@@ -2,8 +2,7 @@ import { copy, unlink, readdir } from 'fs-extra';
 import { readFile, stat, Stats } from 'fs';
 import { join, basename, extname } from 'path';
 import { BACKUP } from '@schemas/backup.schema';
-import { getMimeType } from '@shared/functions';
-import { parser } from '@shared/constants';
+import { getMimeType, ANSItoUTF8 } from '@shared/functions';
 
 export enum BackupAction {
   DELETE,
@@ -107,7 +106,7 @@ export default class Backuper {
     return new Promise((res, rej) => {
       readFile(join(process.env.BACKUPS_PATH!, `${name}_${unix}`), (err: NodeJS.ErrnoException | null, buf: Buffer) => {
         if (err) { rej(err); return; }
-        res(parser.ANSItoUTF8(buf))
+        res(ANSItoUTF8(buf))
       });
     });
   }
