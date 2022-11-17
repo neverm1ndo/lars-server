@@ -1,8 +1,12 @@
-import { LogLine, ContentData } from '@interfaces/logline';
-import { GeoData } from '@interfaces/geodata';
+import { ILogLine, IContentData } from '@interfaces/logline';
+import { IGeoData } from '@interfaces/geodata';
 import iconv from 'iconv-lite';
 import { Logger } from '@shared/Logger';
 
+/**
+ * @deprecated
+ * Log string parser prototype
+ */
 export class Parser {
 
   private regexp = {
@@ -15,8 +19,6 @@ export class Parser {
     contentdataContainerNoQuotes : new RegExp(/(?<=\(\d+\)\s)([A-Za-z0-9/-\s\.\:\;\+_\&\$\#\@\!\[\]]+(?!\{))/), // Without quotes
   };
 
-  constructor() {}
-
   private parseGeoThing(unparsed: string, name: string): string {
     let geodata = new RegExp(`(?<=${name}:)(.[^,|}]*)`);
     return unparsed.match(geodata)![0];
@@ -27,7 +29,7 @@ export class Parser {
     return unparsed.match(countrydata)![0];
   }
 
-  public parseGeo(line: string): GeoData | undefined {
+  public parseGeo(line: string): IGeoData | undefined {
     let geodataContainer = new RegExp(/{(.*)}/, 'g');
     let unparsedgeo = line.match(geodataContainer);
     if (!unparsedgeo) return undefined; // empty geodata field
@@ -39,11 +41,11 @@ export class Parser {
       as: +this.parseGeoThing(geo, 'as'),
       ss: this.parseGeoThing(geo, 'ss'),
       org: this.parseGeoThing(geo, 'org'),
-      c: this.parseGeoThing(geo, 'cli')
+      cli: this.parseGeoThing(geo, 'cli')
     };
   }
 
-  public parseContent(line: string): ContentData | undefined {
+  public parseContent(line: string): IContentData | undefined {
     let parsed = line.match(this.regexp.contentdataContainerAdminAction);
     if (parsed) {
       return {
@@ -92,13 +94,13 @@ export class Parser {
     }
   }
 
-  public parse(textplane: string | Buffer): LogLine[] {
-    let parsed: LogLine[] = [];
+  public parse(textplane: string | Buffer): ILogLine[] {
+    let parsed: ILogLine[] = [];
     try {
       this.splitter(this.toUTF8(textplane)).forEach((line: string) => {
         let splits = line.split(' ');
         if (splits[0] !== '') {
-          let result: LogLine = {
+          let result: ILogLine = {
             unix: +splits[0],
             date: new Date(+splits[0]*1000),
             process: splits[2],
