@@ -1,13 +1,14 @@
 import type { Request } from 'express';
 
 import { pipeline, Transform } from 'stream';
-import { parser } from '@shared/constants';
 import { join, dirname } from 'path';
 import Backuper, { BackupAction } from '@backuper';
 
 import fs from 'fs';
 import { access } from 'fs/promises';
 import multer from "multer";
+
+import { UTF8toANSI } from './functions';
 
 import Workgroup from '@enums/workgroup.enum';
 
@@ -43,7 +44,7 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
               const writeStream = fs.createWriteStream(filepath);
               const transformEncoding = new Transform({
                 transform: (chunk: Buffer, _encoding: BufferEncoding, callback) => {
-                  callback(null, parser.UTF8toANSI(chunk));
+                  callback(null, UTF8toANSI(chunk));
                 }
               });
               const outStream = pipeline(file.stream, transformEncoding, writeStream, (err: NodeJS.ErrnoException | null) => {
