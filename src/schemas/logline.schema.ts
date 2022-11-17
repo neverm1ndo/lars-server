@@ -10,6 +10,12 @@ const logShema = new Schema({
     time: { type: String },
     oid: { type: Number },
     op: { type: String },
+    weapon: { type: String },
+    dm_id: { type: String },
+    auth: {
+      name: { type: String },
+      id: { type: String },
+    },
     message: { type: String }
   },
   geo: {
@@ -19,7 +25,7 @@ const logShema = new Schema({
     as: { type: Number },
     ss: { type: String },
     org: { type: String },
-    c: { type: String }
+    cli: { type: String }
   },
   multiplier: Number,
 })

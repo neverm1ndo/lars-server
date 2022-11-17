@@ -1,4 +1,4 @@
-export interface SearchQuery {
+export interface ISearchQuery {
   nickname?: string[];
   ip?: string[];
   dateFrom?: string,
