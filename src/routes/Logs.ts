@@ -4,8 +4,9 @@ import { Logger } from '@shared/Logger';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { Document, CallbackError } from 'mongoose';
 
-import { parseSearchFilter, parseSearchQuery } from '@shared/functions';
+import { parseSearchFilter } from '@shared/functions';
 import { ISearchQuery } from '@interfaces/search';
+import { QueryParser } from 'src/QueryParser';
 
 const router = Router();
 const { INTERNAL_SERVER_ERROR } = StatusCodes;
@@ -16,6 +17,9 @@ interface MDBRequest {
     };
     'geo.as'?: string;
     'geo.ss'?: string;
+    cn?: { 
+      $in?: string[] 
+    },
     nickname?: { 
       $in?: string[] 
     },
@@ -56,7 +60,7 @@ async function buildDBRequest(searchQuery: ISearchQuery, query: ISearchOptions):
     'geo.ss': ss,
     nickname: { $in: nickname },
     process,
-    'content.message': cn,
+    'content.message': {$in: cn },
     unix: { $gte: query.date.from, $lte: query.date.to }
   };
   try {
@@ -100,6 +104,8 @@ const defaultSearchOptions: ISearchOptions = {
   get date() { return this._date; }
 };
 
+const queryParser: QueryParser = new QueryParser();
+
 router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
 
   const query: ISearchOptions = { ...defaultSearchOptions, ...req.query };
@@ -130,7 +136,7 @@ router.get('/search', async (req: any, res: any) => { // GET Search by nickname,
   const query: ISearchOptions = { ...defaultSearchOptions, ...req.query };
         query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
   
-  const searchQuery: ISearchQuery = parseSearchQuery(req.query.search);
+  const searchQuery: ISearchQuery = queryParser.parse(req.query.search);
   
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SEARCH');
   

@@ -6,5 +6,5 @@ export interface ISearchQuery {
   process?: string;
   as?: string;
   ss?: string;
-  cn?: string;
+  cn?: string[];
 }
