@@ -13,7 +13,7 @@ export class Parser2 {
                 ["[0-9]{10}", "return 'UNIX';"],
                 ["[0-9]{8}T[0-9]{6}", "return 'DATE';"],
                 ["[0-9]+\\s(мин(ут)?ы?а?)(\\sи\\s[0-9]+\\s(секунды?а?))?", "return 'TIME';"],
-                ["[0-9a-zA-Z_\\s\\-\\.\\/]+", "return 'STRING';"],
+                ["[\\w_А-Яа-я\\s\\-\\.\\,\\/]+", "return 'STRING';"],
                 ["\\{", "return '{';"],
                 ["\\}", "return '}';"],
                 [",", "return ',';"],
@@ -34,13 +34,13 @@ export class Parser2 {
                 ["GEOText EOF", "return $1"],
             ],
             "LOGStatic": [
-                ["UNIX DATE LOGProcess STRING LOGUserId", "$$ = { unix: parseInt($UNIX) , date: $DATE, process: $LOGProcess, nickname: $STRING.trim(), id: $LOGUserId };"]
+                ["UNIX DATE LOGProcess STRING LOGUserId", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $STRING.trim(), id: $LOGUserId };"]
             ],
             "LOGText": [
                 // common login
                 ["LOGStatic GEOText", "return { ...$LOGStatic, geo: $GEOText };"],
                 // user auth
-                ["LOGStatic GEOElement LOGContent GEOText", "return { ...$LOGStatic, content: { auth: $LOGContent, ...$GEOElement }, geo: $GEOText };"],
+                ["LOGStatic GEOElement LOGContent GEOElement", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message, ...$2 }}, geo: $4 };"],
                 // with content
                 ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent };"],
                 ["LOGStatic", "return $$;"]
@@ -54,7 +54,7 @@ export class Parser2 {
             "LOGContent": [
                 ["' STRING '", "$$ = { message: $2 };"],
                 ["TIME", "$$ = { time: $1 };"],
-                ["GEOElement", "$$ = $1;"],
+                // ["GEOElement", "$$ = $1;"],
                 ["STRING LOGUserId ' STRING '", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $4 };"],
                 ["STRING", "$$ = { message: $1 };"],
             ],
@@ -68,6 +68,7 @@ export class Parser2 {
             "GEOElementName": [ "STRING" ],
             "GEOElement": [
                 ["GEOElementName : STRING", "$$ = { [$GEOElementName] : $3.trim() };"],
+                ["GEOElementName : GEOText", "$$ = $3;"]
             ],
             "GEOCountry": [ 
                 ["STRING", "$$ = $1;"],
@@ -102,6 +103,6 @@ export class Parser2 {
     }
 
     public parse(input: Buffer): ILogLine {
-        return this._engine.parse(this._toUTF8(input)) as ILogLine;
+        return this._engine.parse(input.toString() || this._toUTF8(input)) as ILogLine;
     }
 }

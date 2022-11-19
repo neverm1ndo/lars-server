@@ -4,11 +4,11 @@ import jwt from 'jsonwebtoken';
 import iconv from 'iconv-lite';
 import { Logger } from './Logger';
 import { WSMessage } from '@interfaces/ws.message';
-import { processTranslation, statsman } from './constants';
-import { ILogLine } from '@interfaces/logline';
+import { processTranslation, statsman, MSQLPool, SQLQueries, noAvatarImageUrl } from '@shared/constants';
+import { IContentData, ILogLine } from '@interfaces/logline';
 import { Document } from 'mongoose';
 import { LOG_LINE } from '@schemas/logline.schema';
-import { IUserData } from '@interfaces/user';
+import { IUserData, IDBUser } from '@interfaces/user';
 import { ISearchQuery } from '@interfaces/search';
 import { lookup, charset } from 'mime-types';
 import { Processes } from '@enums/processes.enum';
@@ -16,6 +16,7 @@ import { io } from '../index';
 import _ from 'lodash';
 import { Parser2 } from 'src/Parser2';
 import { Watcher } from '@watcher';
+
 
 interface IRequest extends Request {
   cookies: {
@@ -34,7 +35,8 @@ export const cookieExtractor = function(req: IRequest) {
 export const watch = (): void => {
   const parser: Parser2 = new Parser2();
   const watcher: Watcher = new Watcher();
-
+  const { GET_USER_BY_NAME } = SQLQueries;
+  
   let _dbDocument: Document;
   let _last: ILogLine;
 
@@ -43,17 +45,50 @@ export const watch = (): void => {
     return a.process === b.process && _.isEqual(a.content, b.content) && a.nickname === b.nickname;
   }
 
+  const _isContentAuth = (content?: IContentData): boolean => {
+    if (!content) return false;
+    return content.auth ? true : false;
+  }
+
   const _save = async (logLine: ILogLine): Promise<void> => {
-    const dbLine = new LOG_LINE(logLine);
+    
+    if (_isContentAuth(logLine.content)) {
+      try {
+        const [rows]: any[] = await MSQLPool.promise()
+                                            .query(GET_USER_BY_NAME, [logLine.content!.auth!.username]);
+        const [user] = rows;
+
+        const { main_group, username, secondary_group, user_avatar, user_id } = user;
+
+        const userData: IUserData = {
+          id: user_id,
+          username,
+          main_group,
+          secondary_group,
+          avatar: user_avatar ? `https://www.gta-liberty.ru/images/avatars/upload/${user_avatar}` : noAvatarImageUrl,
+        };
+
+        logLine.content!.auth = userData;
+      } catch(error) {
+        console.log(error);
+        throw error;
+      };
+    }
     
     if (_isSimilarLine(logLine, _last)) {
       try {
         _dbDocument.updateOne({$inc: { multiplier: 1 }});
       } catch(error) {
         throw error;
-      }
+      };
       return;
     }
+    
+    const dbLine = new LOG_LINE(logLine);
+    
+    _last = logLine;
+    _dbDocument = dbLine;
+    
     dbLine.save();
   };
 
@@ -62,24 +97,25 @@ export const watch = (): void => {
               .then(() => {
                 io.sockets.emit('server-online', statsman.snapshot);
               })
-              .catch((err) => {
-                Logger.log('error', err);
-              });
+              .catch(() => {});
               broadcastProcessNotification(logLine);
   };
 
-        watcher.overwatch()
-               .on('data', async (buffer: Buffer) => {
-                  try {
-                    const logLine: ILogLine = parser.parse(buffer);
-                  
-                    _save(logLine);
-                    _updateStatistics(logLine);
-                  
-                  } catch(error) {
-                    Logger.log('error', error);
-                  }
-               });
+  watcher.overwatch()
+         .on('data', async (buffer: Buffer) => {
+            try {
+              const logLine: ILogLine = parser.parse(buffer);
+              
+              console.log(buffer.toString())
+              console.log(logLine)
+            
+              _save(logLine);
+              _updateStatistics(logLine);
+            
+            } catch(error) {
+              Logger.log('error', error);
+            }
+         });
 }
 
 /**

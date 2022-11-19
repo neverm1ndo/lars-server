@@ -18,9 +18,12 @@ export class Watcher {
   public overwatch(): Stream {
     this._getLastLogFileStat()
         .then((stats: Stats) => {
-          this._bytes = stats.size + 2;
+          this._bytes = stats.size === 0 ? 0 : stats.size + 2;
+          console.log(this._bytes)
         });
+   
     this._fsWatcher.on('change', (path, stats) => this._fsWatcherHandler(path, stats));
+    // this._fsWatcher.on('add', (path, stats) => this._fsWatcherNewFileHandler(path, stats));
     this._fsWatcher.on('error', console.error);
     return this._stream;
   }
@@ -49,12 +52,18 @@ export class Watcher {
     }
   }
 
+  private _fsWatcherNewFileHandler(_path: string, stats?: Stats | undefined): void {
+    this._bytes = stats?.size ? stats.size + 2 : 0;
+  }
+
   private _fsWatcherHandler(path: string, stats?: Stats | undefined): void {
     
     if (!stats) return;
     
+    // console.log(this._bytes, stats.size);
+    
     if (stats.size <= this._bytes) {
-      this._bytes = 0;
+      return;
     }
 
     const stream: ReadStream = createReadStream(path, {

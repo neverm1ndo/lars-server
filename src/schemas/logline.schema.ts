@@ -13,8 +13,11 @@ const logShema = new Schema({
     weapon: { type: String },
     dm_id: { type: String },
     auth: {
-      name: { type: String },
-      id: { type: String },
+      id: { type: Number },
+      avatar: { type: String },
+      username: { type: String },
+      main_group: { type: Number },
+      secondary_group: { type: Number },
     },
     message: { type: String }
   },
