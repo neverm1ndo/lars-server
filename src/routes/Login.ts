@@ -1,37 +1,61 @@
 import StatusCodes from 'http-status-codes';
-import { Response, Router, json } from 'express';
+import { Router, json } from 'express';
 
-import { MSQLPool, noAvatarImageUrl, SQLQueries } from '@shared/constants';
+import { MSQLPool, SQLQueries } from '@shared/constants';
 import { corsOpt as cors } from '@shared/constants';
 import passport from 'passport';
 import { Guards } from '@shared/guards';
 import { Logger } from '@shared/Logger';
+import { checkPassword, isWorkGroup, getAvatarURL } from '@shared/functions';
+import { JWT } from '@shared/jwt';
+import { IJwtPayload } from '@interfaces/user';
 
 const router = Router();
-const { OK, INTERNAL_SERVER_ERROR } = StatusCodes;
+const { OK, INTERNAL_SERVER_ERROR, CONFLICT, UNAUTHORIZED } = StatusCodes;
 
-const { GET_USER_BY_NAME } = SQLQueries;
+const { GET_USER_BY_NAME, GET_USER } = SQLQueries;
 
-router.post('/login', cors, json(), passport.authenticate('login'), (req: any, res: any): void => {
-    const { user_id, username, main_group, secondary_group, user_avatar } = req.user;
-    res.send({
-      avatar: user_avatar ? `https://www.gta-liberty.ru/images/avatars/upload/${user_avatar}` : noAvatarImageUrl,
-      main_group,
-      secondary_group,
-      username,
-      user_id,
-    });
+router.post('/login', cors, json(), (req: any, res: any): void => {
+
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.sendStatus(CONFLICT);
+  }
+
+  MSQLPool.promise()
+          .query(GET_USER, [req.body.email])
+          .then(([rows]: any[]) => {
+            const [user] = rows;
+            
+            const { main_group, username, secondary_group, user_avatar, user_password, user_id } = user;
+
+            if (!checkPassword(password, user_password) || !isWorkGroup(main_group)) {
+              return res.sendStatus(UNAUTHORIZED);
+            }
+
+            const payload: IJwtPayload = {
+              id: user_id,
+              username,
+              main_group,
+              secondary_group,
+            };
+            
+            res.status(OK)
+               .send({
+                ...payload,
+                token: JWT.generateToken(payload),
+                avatar: getAvatarURL(user_avatar),
+               });
+          })
+          .catch((err: any) => {
+            res.sendStatus(INTERNAL_SERVER_ERROR)
+               .send(err);
+          });
 });
 
-router.get('/identity', Guards.rejectUnauthorized, cors, (req: any, res: any): void => {
-  const { user_id, user_avatar, user_email, main_group, secondary_group } = req.session.passport.user;
-  res.send({
-    id: user_id,
-    avatar: user_avatar,
-    email: user_email,
-    main_group,
-    secondary_group,
-  });
+router.get('/identity', passport.authenticate('jwt'), Guards.rejectUnauthorized, cors, (req: any, res: any): void => {
+  res.sendStatus(OK)
 });
 
 router.get('/logout', cors, ((req: any, res: any) => {
@@ -39,7 +63,7 @@ router.get('/logout', cors, ((req: any, res: any) => {
   res.sendStatus(OK).end();
 }));
 
-router.get('/user', Guards.rejectUnauthorized, cors, (req: any, res: any): void => {
+router.get('/user', passport.authenticate('jwt'), cors, (req: any, res: any): void => {
   MSQLPool.promise()
           .query(GET_USER_BY_NAME, [req.query.name])
           .then(([rows]: any[]): void => {
@@ -51,7 +75,7 @@ router.get('/user', Guards.rejectUnauthorized, cors, (req: any, res: any): void 
                   id: user.user_id,
                   main_group,
                   secondary_group,
-                  avatar: user_avatar ? `https://www.gta-liberty.ru/images/avatars/upload/${user_avatar}` : noAvatarImageUrl,
+                  avatar: getAvatarURL(user_avatar),
                 });
           })
           .catch((err: any): void => {

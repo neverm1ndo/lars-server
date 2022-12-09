@@ -6,7 +6,7 @@ export class QueryParser {
 
     /**
      * Query string syntax
-     * (nn|nickname):<NICKANME1>,<NICKNAME2> & (srl|serial):<AS>*<SS> - search in nicnames ['NICKNAME1', 'NICKNAME2'] with specific serials
+     * (nn|nickname):<NICKANME1>,<NICKNAME2> & (srl|serial):<AS>*<SS> - search in nicknames ['NICKNAME1', 'NICKNAME2'] with specific serials
      * "nn" - is an alias for "nickname" 
      */
 

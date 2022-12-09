@@ -10,6 +10,7 @@ import BackupsRouter from './Backups';
 import StatsRouter from './Stats';
 import { Guards } from '@shared/guards';
 import { corsOpt as cors } from '@shared/constants';
+import passport from 'passport';
 
 // Init router and path
 const router = Router();
@@ -26,7 +27,7 @@ const larsRouter = Router();
       larsRouter.use('/stats', StatsRouter);
       larsRouter.use('/utils', Guards.developerGuard, UtilsRouter);
 
-router.use('/lars', cors, Guards.rejectUnauthorized, larsRouter);
+router.use('/lars', cors, passport.authenticate('jwt'), larsRouter);
 
 // Export the base-router
 export default router;

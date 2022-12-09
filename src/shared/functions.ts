@@ -1,6 +1,6 @@
-import app from '@server';
+
 import md5 from 'md5';
-import jwt from 'jsonwebtoken';
+
 import iconv from 'iconv-lite';
 import { Logger } from './Logger';
 import { WSMessage } from '@interfaces/ws.message';
@@ -65,7 +65,7 @@ export const watch = (): void => {
           username,
           main_group,
           secondary_group,
-          avatar: user_avatar ? `https://www.gta-liberty.ru/images/avatars/upload/${user_avatar}` : noAvatarImageUrl,
+          avatar: getAvatarURL(user_avatar),
         };
 
         logLine.content!.auth = userData;
@@ -138,6 +138,10 @@ export const broadcastProcessNotification = (line: ILogLine): void => {
   }
 }
 
+export const getAvatarURL = function(filename: string): string {
+  return filename ? `https://www.gta-liberty.ru/images/avatars/upload/${filename}` : noAvatarImageUrl
+}
+
 export const isDate = (date :string): boolean => {
   return isNaN(Date.parse(date)) && (date !== '') && date !== undefined;
 } ;
@@ -193,39 +197,6 @@ export const checkPassword = (pass: string, hash: string): boolean => {
     return false;
   }
 
-export const generateToken = (userInfo: any): string => {
-  return jwt.sign(userInfo, app.get('secret'), { algorithm: 'HS256'});
-}
-
-/**
- * @deprecated
- * @param token 
- * @returns 
- */
-export const verifyToken = (token: string): boolean => {
-  return jwt.decode(token, app.get('secret')) ? true : false;
-}
-
-/**
- * @deprecated
- * @param token 
- * @returns 
- */
-export const decodeToken = (token: string): IUserData | null => {
-  let user;
-  jwt.verify(token, app.get('secret'), (err: any, decoded: any) => {
-    if (err) return null;
-    user = {
-      id: decoded.id,
-      username: decoded.username,
-      main_group: decoded.main_group,
-      secondary_group: decoded.secondary_group,
-    };
-  });
-  if (!user) return null;
-  return user;
-}
-
 export const getProcessFromTranslation = <T, K extends keyof T>(processes: T, translations: K[]): Array<T[K]> => {
   return translations.map((t) => processes[t]);
 }
@@ -238,8 +209,4 @@ export const parseSearchFilter = (filt: string): Array<Processes> => {
 export const isWorkGroup = (group: number | string): boolean => {
   group = group.toString();
   return group.includes('9') || group.includes('10') || group.includes('11') || group.includes('12') || group.includes('13');
-}
-
-export const wsmsg = (msg: WSMessage): string => {
-  return JSON.stringify(msg);
 }

@@ -111,6 +111,8 @@ router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
   const query: ISearchOptions = { ...defaultSearchOptions, ...req.query };
         query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
 
+        console.log(req.user)
+
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> LINES', query.lim, query.page,' [', req.originalUrl, ']');
   
   LOG_LINE.find({ unix: { $gte: query.date.from, $lte: query.date.to }}, [], { sort: { unix : -1 }, limit: query.lim, skip: query.lim * query.page },)
