@@ -19,11 +19,9 @@ export class Watcher {
     this._getLastLogFileStat()
         .then((stats: Stats) => {
           this._bytes = stats.size === 0 ? 0 : stats.size + 2;
-          console.log(this._bytes)
         });
    
     this._fsWatcher.on('change', (path, stats) => this._fsWatcherHandler(path, stats));
-    // this._fsWatcher.on('add', (path, stats) => this._fsWatcherNewFileHandler(path, stats));
     this._fsWatcher.on('error', console.error);
     return this._stream;
   }
@@ -59,8 +57,6 @@ export class Watcher {
   private _fsWatcherHandler(path: string, stats?: Stats | undefined): void {
     
     if (!stats) return;
-    
-    // console.log(this._bytes, stats.size);
     
     if (stats.size <= this._bytes) {
       return;
