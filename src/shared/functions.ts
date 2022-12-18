@@ -3,13 +3,11 @@ import md5 from 'md5';
 
 import iconv from 'iconv-lite';
 import { Logger } from './Logger';
-import { WSMessage } from '@interfaces/ws.message';
 import { processTranslation, statsman, MSQLPool, SQLQueries, noAvatarImageUrl } from '@shared/constants';
 import { IContentData, ILogLine } from '@interfaces/logline';
 import { Document } from 'mongoose';
 import { LOG_LINE } from '@schemas/logline.schema';
-import { IUserData, IDBUser } from '@interfaces/user';
-import { ISearchQuery } from '@interfaces/search';
+import { IUserData } from '@interfaces/user';
 import { lookup, charset } from 'mime-types';
 import { Processes } from '@enums/processes.enum';
 import { io } from '../index';
@@ -105,10 +103,7 @@ export const watch = (): void => {
          .on('data', async (buffer: Buffer) => {
             try {
               const logLine: ILogLine = parser.parse(buffer);
-              
-              console.log(buffer.toString())
-              console.log(logLine)
-            
+
               _save(logLine);
               _updateStatistics(logLine);
             
