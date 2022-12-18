@@ -31,10 +31,6 @@ interface MDBRequest {
     }
 }
 
-/*
-* REVIEW: remove duplicate code
-*/
-
 interface ISearchOptions {
   _lim: number;
   _page: number;
