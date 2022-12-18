@@ -6,7 +6,6 @@ import { join } from 'path';
 
 import express, { NextFunction, Request, Response, Express } from 'express';
 import passport from 'passport';
-import { IStrategyOptions, Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as JWTStrategy, ExtractJwt, StrategyOptions as JWTStrategyOptions } from 'passport-jwt';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
@@ -20,7 +19,7 @@ import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
 
 import { Logger } from '@shared/Logger';
-import { watch, isWorkGroup, checkPassword } from '@shared/functions';
+import { watch, isWorkGroup } from '@shared/functions';
 import { IDBUser, IJwtPayload } from '@interfaces/user';
 
 const app: Express = express();
@@ -56,28 +55,6 @@ export const sessionMiddleware = session({
 })
 
 app.use(sessionMiddleware);
-
-
-// const localStrategyOptions: IStrategyOptions = {
-//   usernameField: 'email',
-//   passwordField: 'password'
-// };
-
-// const localStrategy = new LocalStrategy(localStrategyOptions, (email: string, password: string, done) => {
-//   MSQLPool.promise()
-//           .query(GET_USER, [email])
-//           .then(([rows]: any[]): void => {
-//             const [user]: [IDBUser] = rows;
-//             if (!user) return done(null, false, { message: 'User not found' });
-//             if (!isWorkGroup(user.main_group)) return done(null, false, { message: 'Not in workgroup' });
-//             if (!checkPassword(password, user.user_password)) return done(null, false, { message: 'Wrong password' });
-//             const { user_id, username, user_email, main_group, secondary_group, user_avatar } = user;
-//             return done(null, { user_id, username, user_email, main_group, secondary_group, user_avatar });
-//           })
-//           .catch((err: any): void => {
-//             return done(err, false);
-//           });
-// });
 
 const jwtStrategyOptions: JWTStrategyOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
