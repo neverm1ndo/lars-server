@@ -74,15 +74,14 @@ export const watch = (): void => {
     }
     
     if (_isSimilarLine(logLine, _last)) {
-      try {
-        _dbDocument.updateOne({$inc: { multiplier: 1 }});
-      } catch(error) {
-        throw error;
-      };
+      _dbDocument.updateOne({$inc: { multiplier: 1 }})
+                 .catch((err) => {
+                    Logger.log('error', err.message);
+                 });
       return;
     }
     
-    const dbLine = new LOG_LINE(logLine);
+    const dbLine = new LOG_LINE<ILogLine>(logLine);
     
     _last = logLine;
     _dbDocument = dbLine;
