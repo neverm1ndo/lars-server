@@ -14,7 +14,7 @@ export class Parser2 {
                 ["[0-9]{8}T[0-9]{6}", "return 'DATE';"],
                 ["[0-9]+\\s(мин(ут)?ы?а?)(\\sи\\s[0-9]+\\s(секунды?а?))?", "return 'TIME';"],
                 ["\\,", "return ',';"],
-                ["[\\w_А-Яа-я\\s\\-\\.\\,\\?\\!\\/]+", "return 'STRING';"],
+                ["[\\w_а-яА-Я\\-\\s\\.\\?\\!\\/]+", "return 'STRING';"],
                 ["\\{", "return '{';"],
                 ["\\}", "return '}';"],
                 [":", "return ':';"],
@@ -26,7 +26,7 @@ export class Parser2 {
                 ["$", "return 'EOF';"],
             ],
         },
-        "tokens": "UNIX DATE TIME STRING NUMBER < > { } ( ) , : EOF",
+        "tokens": "UNIX DATE TIME COUNTRY STRING NUMBER < > { } ( ) , : EOF",
         "start": "LOGText",
         "bnf": {
             "expressions": [
@@ -52,17 +52,20 @@ export class Parser2 {
                 ["( STRING )", "$$ = parseInt($2);"]
             ],
             "LOGContent": [
-                ["' STRING '", "$$ = { message: $2 };"],
+                ["' LOGMessage '", "$$ = { message: $2 };"],
                 ["TIME", "$$ = { time: $1 };"],
                 ["STRING LOGUserId ' STRING '", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $4 };"],
                 ["STRING", "$$ = { message: $1 };"],
             ],
+            "LOGMessage": [
+                ["STRING", "$$ = $1;"],
+                ["STRING , LOGMessage", "console.log($1, $2, $3); $$ = [$1, $2, $3].join();"],
+            ],
             "GEOText": [ 
                 ["GEOValue EOF", "$$ = $1;"],
-             ],
-            
+             ],    
             "GEOValue": [
-                ["GEOObject", "$$ = $1;"]
+                ["GEOObject", "$$ = $1;"],
             ],
             "GEOElementName": [ "STRING" ],
             "GEOElement": [
