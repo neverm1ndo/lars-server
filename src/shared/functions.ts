@@ -1,4 +1,3 @@
-
 import md5 from 'md5';
 
 import iconv from 'iconv-lite';
@@ -202,5 +201,5 @@ export const parseSearchFilter = (filt: string): Array<Processes> => {
 
 export const isWorkGroup = (group: number | string): boolean => {
   group = group.toString();
-  return group.includes('9') || group.includes('10') || group.includes('11') || group.includes('12') || group.includes('13');
+  return ['9', '10', '11', '12', '13'].includes(group);
 }
