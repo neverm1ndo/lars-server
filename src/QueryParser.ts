@@ -19,7 +19,7 @@ export class QueryParser {
                 ["(nickname|nn):\\b", "return 'NN_OPERATOR';"],
                 ["(serial|srl):\\b", "return 'SRL_OPERATOR';"],
                 ["(cn):\\b", "return 'CN_OPERATOR';"],
-                ["^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", "return 'IP_ADDRESS'"],
+                // ["^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", "return 'IP_ADDRESS'"],
                 ["\\*", "return '*';"],
                 ["\\,", "return ',';"],
                 ["$", "return 'EOF';"],
@@ -28,11 +28,10 @@ export class QueryParser {
                 ["[0-9a-zA-Z_\\.\\/\\-]+", "return 'STRING';"],
             ],
         },
-        "tokens": "STRING AS SS IP_OPERATOR NN_OPERATOR SRL_OPERATOR CN_OPERATOR IP_ADDRESS & * , EOF",
+        "tokens": "STRING AS SS IP_OPERATOR NN_OPERATOR SRL_OPERATOR CN_OPERATOR & * , EOF",
         "start": "QText",
         "bnf": {
             "expressions": [
-                ["IP_ADDRESS EOF", "return { ip: $1 };"],
                 ["QText EOF", "return $1;"],
             ],
             "QText": [
