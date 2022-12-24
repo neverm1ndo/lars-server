@@ -13,7 +13,7 @@ const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 const router = Router();
 
 router.get('/backups-list', (req: any, res: any) => {
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUPS_LIST', '[', req.originalUrl, ']');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUPS_LIST');
   BACKUP.find({})
         .sort({ unix: - 1 })
         .exec((err: CallbackError, data: Document[]) => {
@@ -22,14 +22,14 @@ router.get('/backups-list', (req: any, res: any) => {
         });
 });
 
-router.get('/backup-file', (req: any, res: any) => {
-  if (!req.query.name || !req.query.unix ) { 
+router.get('/backup-file/:hash', (req: any, res: any) => {
+  if (!req.params.hash) { 
     res.sendStatus(CONFLICT)
        .end('Bad request: required parameters missed'); 
     return;
   }
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUP_FILE', '[', req.originalUrl, ']');
-  Backuper.getBackupFile(req.query.name, req.query.unix)
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUP_FILE');
+  Backuper.getBackupFile(req.params.hash)
           .then((data) => {
             res.status(OK)
                .send(data);
@@ -40,15 +40,15 @@ router.get('/backup-file', (req: any, res: any) => {
           });
 });
 
-router.get('/restore-backup', (req: any, res: Response) => {
-  if (!req.query.path || !req.query.unix) { 
+router.get('/restore-backup/:hash', (req: any, res: Response) => {
+  if (!req.params.hash) { 
     res.sendStatus(CONFLICT)
        .end('Bad request: required parameters missed'); 
     return;
   }
-  Backuper.restore(req.query.path, Number(req.query.unix))
+  Backuper.restore(req.params.hash)
           .then(() => {
-            Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RESTORED_BACKUP', req.query.path, '[', req.originalUrl, ']');
+            Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RESTORED_BACKUP', req.params.hash);
             res.status(OK)
                .send([]);
           })
@@ -58,17 +58,16 @@ router.get('/restore-backup', (req: any, res: Response) => {
           });
 });
 
-router.delete('/backup', (req: any, res: Response) => {
-  if (!req.query.path || !req.query.unix) { 
-    res.sendStatus(CONFLICT)
-       .end('Bad request: required parameters missed'); 
-    return;
+router.delete('/backup/:hash', (req: any, res: Response) => {
+  if (!req.params.hash) { 
+    return res.sendStatus(CONFLICT)
+              .end('Bad request: required parameters missed'); 
   }
-  Backuper.restore(req.query.path,  Number(req.query.unix))
+  Backuper.remove(req.params.hash)
           .then(() => {
-            Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RESTORED_BACKUP', req.query.path, '[', req.originalUrl, ']');
+            Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> REMOVED_BACKUP', req.params.hash);
             res.status(OK)
-              .send([]);
+               .send([]);
           })
           .catch(({ message }) => {
             res.status(INTERNAL_SERVER_ERROR)
@@ -76,7 +75,7 @@ router.delete('/backup', (req: any, res: Response) => {
           });
 });
 
-router.get('/size', (_req: any, res: Response) => { // GET restore file
+router.get('/size', (_req: any, res: Response) => {
   stat(process.env.BACKUPS_PATH!, (err: NodeJS.ErrnoException | null, stats: Stats) => {
     if (err) return res.status(INTERNAL_SERVER_ERROR)
                        .send({ message: err.message });
