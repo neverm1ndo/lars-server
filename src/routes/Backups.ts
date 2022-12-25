@@ -71,7 +71,7 @@ router.delete('/backup/:hash', (req: any, res: Response) => {
           })
           .catch(({ message }) => {
             res.status(INTERNAL_SERVER_ERROR)
-               .send({ message });
+               .send(message);
           });
 });
 

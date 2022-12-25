@@ -98,12 +98,12 @@ export default class Backuper {
       }
     });
     
-    return await stat(path).then(() => copyFile(path, join(process.env.BACKUPS_PATH!, hash)))
-                           .then(() => {
-                              console.log('BACKUPER_CREATE_BACKUP', path);
-                              backup.save();
-                           }).catch((err) => err.syscall == 'stat' ? console.log('BACKUPER_SKIP_NEW_FILE', path)
-                                                                   : console.error(err));
+    return stat(path).then(() => copyFile(path, join(process.env.BACKUPS_PATH!, hash)))
+                     .then(() => {
+                        console.log('BACKUPER_CREATE_BACKUP', path);
+                        backup.save();
+                     }).catch((err) => err.syscall == 'stat' ? console.log('BACKUPER_SKIP_NEW_FILE', path)
+                                                             : console.error(err));
   }
  
   /**
