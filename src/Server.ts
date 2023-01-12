@@ -114,9 +114,11 @@ if (process.env.NODE_ENV === 'production') {
     app.use(helmet());
 }
 
+console.log(join(__dirname, 'public'));
+
 // Add APIs
+app.use('/static', express.static(join(__dirname, '../static')));
 app.use('/v2', BaseRouter);
-app.use('/.well-known/acme-challenge', express.static(join(__dirname, '.well-known/acme-challenge')));
 
 // 404
 app.get('*', (_req: Request, res: Response) => {

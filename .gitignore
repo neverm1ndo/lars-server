@@ -1,5 +1,6 @@
 node_modules/*
 dist/*
+static/*
 build/*
 *.log
 logs/*
@@ -16,4 +17,3 @@ diary/*
 *.d
 *.greenlockrc
 support/*
-src/.well-known/*
