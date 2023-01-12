@@ -18,7 +18,7 @@ export class Watcher {
   public overwatch(): Stream {
     this._getLastLogFileStat()
         .then((stats: Stats) => {
-          this._bytes = stats.size === 0 ? 0 : stats.size + 2;
+          this._bytes = stats.size === 0 ? 0 : stats.size;
         });
    
     this._fsWatcher.on('change', (path, stats) => this._fsWatcherHandler(path, stats));
@@ -51,7 +51,7 @@ export class Watcher {
   }
 
   private _fsWatcherNewFileHandler(_path: string, stats?: Stats | undefined): void {
-    this._bytes = stats?.size ? stats.size + 2 : 0;
+    this._bytes = stats?.size ? stats.size : 0;
   }
 
   private _fsWatcherHandler(path: string, stats?: Stats | undefined): void {
@@ -64,7 +64,7 @@ export class Watcher {
 
     const stream: ReadStream = createReadStream(path, {
       start: this._bytes,
-      end: stats.size - 1,
+      end: stats.size - 2,
     });
     
     stream.on('readable', () => {
@@ -80,7 +80,7 @@ export class Watcher {
     
     });
     
-    this._bytes = stats.size + 2;  
+    this._bytes = stats.size;  
   }
 
 }
