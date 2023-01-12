@@ -35,7 +35,7 @@ const useCors = cors();
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.options('*', useCors);
+// app.options('*', useCors);
 
 app.set('secret', process.env.ACCESS_TOKEN_SECRET);
 
