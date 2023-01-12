@@ -6,7 +6,7 @@ import { Document, CallbackError } from 'mongoose';
 
 import { parseSearchFilter } from '@shared/functions';
 import { ISearchQuery } from '@interfaces/search';
-import { QueryParser } from 'src/QueryParser';
+import { QueryParser } from '../QueryParser';
 
 const router = Router();
 const { INTERNAL_SERVER_ERROR } = StatusCodes;

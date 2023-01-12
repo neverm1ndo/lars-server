@@ -11,7 +11,7 @@ import { lookup, charset } from 'mime-types';
 import { Processes } from '@enums/processes.enum';
 import { io } from '../index';
 import _ from 'lodash';
-import { Parser2 } from 'src/Parser2';
+import { Parser2 } from '../Parser2';
 import { Watcher } from '@watcher';
 
 
