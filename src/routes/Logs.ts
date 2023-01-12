@@ -122,7 +122,7 @@ router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
 
 router.get('/search', async (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.query.search) {
-    const redirectURL = new URL('/v2/lars/logs/last', `https://${process.env.HOST}:${process.env.HTTPS_PORT || process.env.HTTP_PORT}`);
+    const redirectURL = new URL('/v2/lars/logs/last', `https://${process.env.HOST}`);
           for (let param in req.query) {
             redirectURL.searchParams.append(param, req.query[param]);
           };
