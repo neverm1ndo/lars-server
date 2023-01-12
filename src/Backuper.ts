@@ -112,9 +112,12 @@ export default class Backuper {
    * @returns {Promise<void>}
    */
   static async restore(hash: string): Promise<void> {
-    return BACKUP.findOne({ hash })
-                 .exec()
-                 .then((backup: BackupNote) => {
+    return BACKUP.findOne<BackupNote>({ hash })
+                 .then((backup) => {
+                  if (!backup) throw 'no backup';
+                  return backup;
+                 })
+                 .then((backup) => {
                     const backupFilePath: string = path.join(process.env.BACKUPS_PATH!, backup.hash);
                     return copyFile(backupFilePath, backup.file.path);
                  });
@@ -126,9 +129,12 @@ export default class Backuper {
   static async removeExpired(): Promise<any> {
     const now: Date = new Date();
     
-    const unlinkShchedule: Promise<void[]> = BACKUP.find({ expires: { $lte: now }}, [])
-          .exec()
-          .then((notes: BackupNote[]) => {
+    const unlinkShchedule: Promise<void[]> = BACKUP.find<BackupNote>({ expires: { $lte: now }}, [])
+          .then((notes) => {
+            if (!notes) throw 'no backup';
+            return notes;
+          })
+          .then((notes) => {
             return Promise.all(notes.map((note) => unlink(path.join(process.env.BACKUPS_PATH!, note.file.name))));
           });
     
