@@ -117,7 +117,7 @@ if (process.env.NODE_ENV === 'production') {
 console.log(join(__dirname, 'public'));
 
 // Add APIs
-app.use('/static', express.static(join(__dirname, '../static')));
+app.use('/.well-known/acme-challenge', express.static(join(__dirname, '../static/.well-known/acme-challenge')));
 app.use('/v2', BaseRouter);
 
 // 404
