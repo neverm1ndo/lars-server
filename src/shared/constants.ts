@@ -1,5 +1,4 @@
 import { createPool } from 'mysql2';
-import { Watcher } from '@watcher';
 import Backuper from '@backuper';
 import { Logger } from './Logger';
 import multer, { Multer, diskStorage} from 'multer';
@@ -79,22 +78,21 @@ export const MSQLPool = createPool({
   password: process.env.DB_PASSWORD
 });
 
-const whitelist = ['http://localhost'];
+const whitelist: string[] = JSON.parse(process.env.CORS_WL!);
 
 export const CORSoptions = {
-  allowedHeaders: [
-    'Origin',
-    'X-Requested-With',
-    'Content-Type',
-    'Accept',
-    'X-Access-Token',
-    'Authorization'
-  ],
-    credentials: true,
-    methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
-    origin: '*',
-    preflightContinue: false,
-  };
+  credentials: true,
+  methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
+  origin: function (origin: any, callback: any) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
 
   export const socketCORS = {
       origin: '*',
