@@ -88,7 +88,7 @@ const defaultSearchOptions: ISearchOptions = {
   get page() { return this._page },
   _date: {
     from: new Date('Jan 01 2000, 00:00:00').valueOf() / 1000,
-    to: Date.now() / 1000
+    to: Date.now()
   },
   set date(date: { from: any; to: any }) {
     const { from, to } = date;
