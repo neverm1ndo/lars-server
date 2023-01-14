@@ -14,7 +14,7 @@ export class SampServerControl {
     });
   }
 
-  public reboot(): Promise<boolean> {
+  public async reboot(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       let cmd: string;
       switch (process.platform) {
@@ -34,7 +34,7 @@ export class SampServerControl {
     });
   }
 
-  public launch(): Promise<void> {
+  public async launch(): Promise<void> {
     return new Promise((resolve, reject) => {
       exec(process.env.SERVER_STARTER!, (err: any, _stdout: string) => {
         if (err) reject(err);
@@ -45,7 +45,7 @@ export class SampServerControl {
     });
   }
 
-  public stop() {
+  public async stop() {
     return new Promise((resolve, reject) => {
       exec(process.env.SERVER_KILLER!, (err: any, stdout: any) => {
         if (err) reject(err);
