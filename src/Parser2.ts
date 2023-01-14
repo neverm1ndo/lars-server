@@ -59,7 +59,7 @@ export class Parser2 {
             ],
             "LOGMessage": [
                 ["STRING", "$$ = $1;"],
-                ["STRING , LOGMessage", "console.log($1, $2, $3); $$ = [$1, $2, $3].join();"],
+                ["STRING , LOGMessage", "$$ = [$1, $2, $3].join();"],
             ],
             "GEOText": [ 
                 ["GEOValue EOF", "$$ = $1;"],
@@ -73,7 +73,7 @@ export class Parser2 {
                 ["GEOElementName : GEOText", "$$ = $3;"]
             ],
             "GEOCountry": [ 
-                ["STRING", "$$ = $1; console.log($$);"],
+                ["STRING", "$$ = $1;"],
             ],
             "GEOElementList": [
                 ["GEOElement", "$$ = $1;"],
