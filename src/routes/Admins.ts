@@ -27,7 +27,7 @@ router.get('/list', (req: any, res: any) => {
             res.send(rows);
           })
           .catch((err: any): void => {
-            res.status(INTERNAL_SERVER_ERROR).send(err);
+            res.status(INTERNAL_SERVER_ERROR).send(err.message);
             Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.username, 'Failed admin list query');
             Logger.log('error', err);
           });
@@ -46,7 +46,7 @@ router.patch('/change-group', Guards.developerGuard, json(), corsOpt, (req: any,
           })
           .catch((err: any): void => {
             res.status(INTERNAL_SERVER_ERROR)
-               .send(err);
+               .send(err.message);
             
                Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.username, `Failed to change ${req.body.username} admin status to ${req.body.group}`)
                Logger.log('error', err);

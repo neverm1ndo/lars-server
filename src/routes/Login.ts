@@ -50,7 +50,7 @@ router.post('/login', cors, json(), (req: any, res: any): void => {
           })
           .catch((err: any) => {
             res.sendStatus(INTERNAL_SERVER_ERROR)
-               .send(err);
+               .send(err.message);
           });
 });
 
@@ -60,7 +60,7 @@ router.get('/identity', passport.authenticate('jwt'), Guards.rejectUnauthorized,
 
 router.get('/logout', cors, ((req: any, res: any) => {
   req.session.destroy();
-  res.sendStatus(OK).end();
+  res.sendStatus(OK);
 }));
 
 router.get('/user', passport.authenticate('jwt'), cors, (req: any, res: any): void => {
@@ -80,7 +80,7 @@ router.get('/user', passport.authenticate('jwt'), cors, (req: any, res: any): vo
           })
           .catch((err: any): void => {
             res.status(INTERNAL_SERVER_ERROR)
-                .send(err);
+                .send(err.message);
             Logger.log('error', 'GET_USER', err);
           });
 });

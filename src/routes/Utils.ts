@@ -2,15 +2,16 @@ import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import { json } from 'body-parser';
-import { unlink } from 'fs-extra';
+// import { unlink } from 'fs-extra';
 import Backuper, { BackupAction } from '@backuper';
 import { mkdir, rmdir, move } from 'fs-extra';
+import { unlink } from 'fs/promises';
 
-import { io } from '../index';
+import { io } from '../index';;
 
 const router = Router();
 
-const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
+const { OK, INTERNAL_SERVER_ERROR, CONFLICT, NOT_FOUND } = StatusCodes;
 
 router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Removes config file
   if (!req.query.path) { 
@@ -20,18 +21,13 @@ router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Remove
   Logger.log('default', 'DELETE │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
   
   Backuper.backup(req.query.path, req.user, BackupAction.DELETE)
-          .then(() => new Promise<void>(
-            (res, rej) => unlink(
-              req.query.path, 
-              (err: NodeJS.ErrnoException | null) => (!!err ? rej(err) : res())))
-          )
-          .then(() => {
-            res.send({ status: 'deleted' });
-          })
-          .catch((err) => {
-            res.sendStatus(INTERNAL_SERVER_ERROR)
-               .end(err);
-          })
+          .then(() => unlink(req.query.path))
+                      .then(() => {
+                        res.send({ status: 'deleted' });
+                      })
+                      .catch((err) => {
+                        res.status(NOT_FOUND).send(err.message);
+                      })
           .catch((err) => {
             Logger.log('error', 'DELETE_FILE', err.message);
             res.status(INTERNAL_SERVER_ERROR)

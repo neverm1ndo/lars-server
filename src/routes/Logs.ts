@@ -114,7 +114,7 @@ router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
           .exec((err: any, lines: Document[]) => {
             if (err) {
               Logger.log('error', err);
-              return res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
+              return res.status(INTERNAL_SERVER_ERROR).send(err.message);
             }
             res.send(lines);
           });
@@ -122,7 +122,7 @@ router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
 
 router.get('/search', async (req: any, res: any) => { // GET Search by nickname, ip, serals
   if (!req.query.search) {
-    const redirectURL = new URL('/v2/lars/logs/last', `https://${process.env.HOST}`);
+    const redirectURL = new URL('/v2/lars/logs/last', `${req.protocol}://${process.env.HOST}`);
           for (let param in req.query) {
             redirectURL.searchParams.append(param, req.query[param]);
           };
@@ -145,7 +145,7 @@ router.get('/search', async (req: any, res: any) => { // GET Search by nickname,
           .exec((err: CallbackError, lines: Document[]) => {
             if (err) {
               Logger.log('error', 'SEARCH', err);
-              return res.sendStatus(INTERNAL_SERVER_ERROR).end(err);
+              return res.status(INTERNAL_SERVER_ERROR).end(err.message);
             }
             res.send(lines);
           });

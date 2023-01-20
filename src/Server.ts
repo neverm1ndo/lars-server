@@ -27,7 +27,7 @@ const app: Express = express();
 const { BAD_REQUEST, NOT_FOUND } = StatusCodes;
 const { GET_USER_BY_NAME } = SQLQueries;
 
-const useCors = cors();
+// const useCors = cors();
 
 /**
  * Express middlewares
@@ -133,9 +133,7 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
       'PROTOCOL', req.protocol, '\n',
       'XHR', req.xhr,
     );
-    return res.status(BAD_REQUEST).json({
-      error: 'ERR: ' + err.message,
-    });
+    return res.status(BAD_REQUEST).send('ERR: ' + err.message);
 });
 
 // Crontasks

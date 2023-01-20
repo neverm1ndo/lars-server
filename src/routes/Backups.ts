@@ -24,8 +24,8 @@ router.get('/backups-list', (req: any, res: any) => {
 
 router.get('/backup-file/:hash', (req: any, res: any) => {
   if (!req.params.hash) { 
-    res.sendStatus(CONFLICT)
-       .end('Bad request: required parameters missed'); 
+    res.status(CONFLICT)
+       .send('Bad request: required parameters missed'); 
     return;
   }
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUP_FILE');
@@ -42,8 +42,8 @@ router.get('/backup-file/:hash', (req: any, res: any) => {
 
 router.get('/restore-backup/:hash', (req: any, res: Response) => {
   if (!req.params.hash) { 
-    res.sendStatus(CONFLICT)
-       .end('Bad request: required parameters missed'); 
+    res.status(CONFLICT)
+       .send('Bad request: required parameters missed'); 
     return;
   }
   Backuper.restore(req.params.hash)
@@ -54,7 +54,7 @@ router.get('/restore-backup/:hash', (req: any, res: Response) => {
           })
           .catch((err) => {
             res.status(INTERNAL_SERVER_ERROR)
-               .send({ message: err.message });
+               .send(err.message);
           });
 });
 
@@ -78,7 +78,7 @@ router.delete('/backup/:hash', (req: any, res: Response) => {
 router.get('/size', (_req: any, res: Response) => {
   stat(process.env.BACKUPS_PATH!, (err: NodeJS.ErrnoException | null, stats: Stats) => {
     if (err) return res.status(INTERNAL_SERVER_ERROR)
-                       .send({ message: err.message });
+                       .send(err.message);
     res.status(OK)
        .send(stats);
   });
