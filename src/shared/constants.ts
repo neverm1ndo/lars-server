@@ -5,7 +5,7 @@ import multer, { Multer, diskStorage} from 'multer';
 import cors from 'cors';
 import { CronJob } from 'cron';
 import experimentalStorage from '@shared/experimental.confstorage';
-import { SampServerControl } from '@shared/samp03svr.control';
+import { SampServerControl } from '@shared/omp-server.control';
 
 import { Processes } from '@enums/processes.enum';
 import Statsman from '../Statsman';
