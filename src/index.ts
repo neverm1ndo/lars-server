@@ -22,6 +22,10 @@ export const io = new Server(server, { cors: socketCORS });
              io.use(wrap(sessionMiddleware));
              io.use(wrap(passport.initialize()));
              io.use(wrap(passport.session()));
+             io.use((socket: any, next) => {
+              socket.request.user ? next() 
+                                  : next(new Error('unauthorized'));
+             });
              io.on('connection', (socket: ISocket) => {
                sockets(socket);
              });

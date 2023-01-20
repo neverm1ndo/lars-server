@@ -1,6 +1,5 @@
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
-import cors from 'cors';
 import helmet from 'helmet';
 import { join } from 'path';
 
@@ -26,8 +25,6 @@ const app: Express = express();
 
 const { BAD_REQUEST, NOT_FOUND } = StatusCodes;
 const { GET_USER_BY_NAME } = SQLQueries;
-
-// const useCors = cors();
 
 /**
  * Express middlewares
@@ -113,8 +110,6 @@ if (process.env.NODE_ENV === 'development') {
 if (process.env.NODE_ENV === 'production') {
     app.use(helmet());
 }
-
-console.log(join(__dirname, 'public'));
 
 // Add APIs
 app.use('/.well-known/acme-challenge', express.static(join(__dirname, '../static/.well-known/acme-challenge')));
