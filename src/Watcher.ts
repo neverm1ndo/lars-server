@@ -22,6 +22,7 @@ export class Watcher {
         });
    
     this._fsWatcher.on('change', (path, stats) => this._fsWatcherHandler(path, stats));
+    this._fsWatcher.on('add', (path, stats) => this._fsWatcherNewFileHandler(path, stats));
     this._fsWatcher.on('error', console.error);
     return this._stream;
   }
