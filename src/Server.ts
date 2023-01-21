@@ -24,7 +24,7 @@ import { IDBUser, IJwtPayload } from '@interfaces/user';
 
 const app: Express = express();
 
-const { BAD_REQUEST, NOT_FOUND, UNAUTHORIZED } = StatusCodes;
+const { BAD_REQUEST, NOT_FOUND } = StatusCodes;
 const { GET_USER_BY_NAME, GET_USER } = SQLQueries;
 
 /**
@@ -61,7 +61,14 @@ const jwtStrategyOptions: JWTStrategyOptions = {
 
 const jwtStrategy = new JWTStrategy(jwtStrategyOptions, async (jwtPayload: IJwtPayload, done) => {
   try {
-    return done(null, jwtPayload);
+    const [user]: IDBUser[] = await MSQLPool.promise()
+                                            .query(GET_USER_BY_NAME, [jwtPayload.username])
+                                            .then(([rows]: any) => rows);
+    if (!isWorkGroup(user.main_group)) {
+      return done(null, false, { message: 'User is not in workgroup' });
+    }
+    
+    return done(null, user);
   } catch (error) {
     done(error);
   }
@@ -81,7 +88,7 @@ const localStrategy: LocalStrategy = new LocalStrategy(localStrategyOptions, asy
       return done(null, false, { message: 'User not found' });
     }
     
-    const { main_group, username, secondary_group, user_avatar, user_password, user_id } = user;
+    const { main_group, user_password } = user;
     
     if (!checkPassword(password, user_password)) {
       return done(null, false, { message: 'Wrong password' });

@@ -37,6 +37,8 @@ export const wrap = (middleware: any) => (socket: Socket, next: any) => middlewa
 const sockets = (socket: ISocket) => {
   isDev(socket) ? socket.join('devs')
                 : socket.join('main');
+
+  console.log(socket.request.user);
   
   Logger.log('default', 'SOCKET |', socket.request.user?.username, 'connected');
   
