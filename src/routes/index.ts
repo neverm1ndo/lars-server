@@ -27,7 +27,7 @@ const larsRouter = Router();
       larsRouter.use('/stats', StatsRouter);
       larsRouter.use('/utils', Guards.developerGuard, UtilsRouter);
 
-router.use('/lars', cors, passport.authenticate('jwt'), larsRouter);
+router.use('/lars', cors, passport.authenticate('jwt', { session: false }), larsRouter);
 
 // Export the base-router
 export default router;

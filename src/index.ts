@@ -16,15 +16,18 @@ const httpsOptions: IHttpsOptions = {
   rejectUnauthorized: false
 };
 
-const server = https.createServer(httpsOptions , app);
+const server: https.Server = https.createServer(httpsOptions , app);
 
-export const io = new Server(server, { cors: socketCORS });
+export const io: Server = new Server(server, { cors: socketCORS, path: '/notifier/' });
+             
              io.use(wrap(sessionMiddleware));
+             io.use(wrap(passport.authenticate('jwt')));
              io.use(wrap(passport.initialize()));
              io.use(wrap(passport.session()));
+             
              io.use((socket: any, next) => {
               socket.request.user ? next() 
-                                  : next(new Error('unauthorized'));
+                                  : next(new Error('Unauthorized'));
              });
              io.on('connection', (socket: ISocket) => {
                sockets(socket);

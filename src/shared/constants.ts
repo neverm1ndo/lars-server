@@ -101,6 +101,7 @@ export const socketCORS = {
   methods: ['GET', 'POST'],
   credentials: true
 }
+
 export const corsOpt = cors(CORSoptions);
 
 export const processTranslation = {
