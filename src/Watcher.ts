@@ -1,6 +1,6 @@
 import { createReadStream, ReadStream, Stats, watchFile } from 'fs';
-import { stat, readdir } from 'fs/promises';
-import { pipeline, Stream } from 'stream';
+import { stat, readdir, access, writeFile } from 'fs/promises';
+import { Stream } from 'stream';
 import chokidar from 'chokidar';
 import * as path from 'path';
 import bufferSplit from 'buffer-split';
@@ -31,20 +31,32 @@ export class Watcher {
     return this._stream;
   }
 
-  public serverLogWatch(logpath: string): Stream {
-    watchFile(logpath, { persistent: true, interval: 2000 }, async (curr: Stats, prev: Stats) => {
-      const readStream: ReadStream = createReadStream(logpath, {
-        start: prev.size,
-        end: curr.size,
-      });
-      readStream.on('readable', async () => {
-        const data: Buffer | null = readStream.read();
-        if (!data) return readStream.destroy();
-    
+  public async serverLogWatch(logpath: string): Promise<Stream> {
+    if (!logpath || process.env.NODE_ENV === 'development') return this._serverLogStream;
+
+    function __watch(this: Watcher): Stream {
+      watchFile(logpath, { persistent: true, interval: 2000 }, async (curr: Stats, prev: Stats) => {
+        const readStream: ReadStream = createReadStream(logpath, {
+          start: prev.size,
+          end: curr.size,
+        });
+        readStream.on('readable', async () => {
+          const data: Buffer | null = readStream.read();
+          if (!data) return readStream.destroy();
+          
           this._serverLogStream.emit('data', ANSItoUTF8(data).toString());
+        });
       });
-    });
-    return this._serverLogStream;
+      return this._serverLogStream;
+    }
+
+    try {
+      await access(logpath);
+    } catch(error) {
+      await writeFile(logpath, '');
+    } finally {
+      return __watch.call(this);
+    }
   }
 
   private async _getLastLogFileStat(): Promise<Stats> {

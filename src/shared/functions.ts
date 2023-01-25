@@ -13,6 +13,7 @@ import { io } from '../index';
 import _ from 'lodash';
 import { Parser2 } from '../Parser2';
 import { Watcher } from '@watcher';
+import { Stream } from 'stream';
 
 
 interface IRequest extends Request {
@@ -88,9 +89,9 @@ export const watch = (): void => {
     dbLine.save();
   };
 
-  const _watchServerLog = function() {
-    watcher.serverLogWatch(process.env.SERVER_LOG_PATH!)
-           .on('data', (buffer: Buffer) => {
+  const _watchServerLog = async function(): Promise<void> {
+    const stream: Stream = await watcher.serverLogWatch(process.env.SERVER_LOG_PATH!);
+          stream.on('data', (buffer: Buffer) => {
               io.to('server_log').emit('server_log', buffer.toString());
            });
   };
