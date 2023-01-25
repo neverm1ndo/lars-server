@@ -31,7 +31,7 @@ export class Watcher {
   }
 
   public serverLogWatch(logpath: string): Stream {
-    watchFile(logpath, { persistent: true }, (curr: Stats, prev: Stats) => {
+    watchFile(logpath, { persistent: true, interval: 2000 }, (curr: Stats, prev: Stats) => {
       const readStream: ReadStream = createReadStream(logpath, {
         start: prev.size,
         end: curr.size,
