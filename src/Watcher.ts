@@ -31,16 +31,18 @@ export class Watcher {
   }
 
   public serverLogWatch(logpath: string): Stream {
-    watchFile(logpath, { persistent: true, interval: 2000 }, (curr: Stats, prev: Stats) => {
+    watchFile(logpath, { persistent: true, interval: 2000 }, async (curr: Stats, prev: Stats) => {
       const readStream: ReadStream = createReadStream(logpath, {
         start: prev.size,
         end: curr.size,
       });
-      readStream.on('readable', () => {
+      readStream.on('readable', async () => {
         const data: Buffer | null = readStream.read();
         if (!data) return readStream.destroy();
     
           this._serverLogStream.emit('data', data);
+
+          console.log(data.toString())
       });
     });
     return this._serverLogStream;
