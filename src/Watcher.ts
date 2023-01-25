@@ -96,11 +96,7 @@ export class Watcher {
       
       if (!data) return stream.destroy();
       
-      const newLines: Buffer[] = bufferSplit(data, Buffer.from('\n'));
-
-      for (let line of newLines) {
-        this._stream.emit('data', line);
-      }
+      this._stream.emit('data', data);
     
     });
     
