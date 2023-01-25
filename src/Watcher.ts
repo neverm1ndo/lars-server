@@ -1,9 +1,10 @@
 import { createReadStream, ReadStream, Stats, watchFile } from 'fs';
 import { stat, readdir } from 'fs/promises';
-import { Stream } from 'stream';
+import { pipeline, Stream } from 'stream';
 import chokidar from 'chokidar';
 import * as path from 'path';
 import bufferSplit from 'buffer-split';
+import { UTF8toANSI } from '@shared/functions';
 
 export class Watcher {
 
@@ -40,9 +41,7 @@ export class Watcher {
         const data: Buffer | null = readStream.read();
         if (!data) return readStream.destroy();
     
-          this._serverLogStream.emit('data', data);
-
-          console.log(data.toString())
+          this._serverLogStream.emit('data', UTF8toANSI(data).toString());
       });
     });
     return this._serverLogStream;
