@@ -4,7 +4,7 @@ import { pipeline, Stream } from 'stream';
 import chokidar from 'chokidar';
 import * as path from 'path';
 import bufferSplit from 'buffer-split';
-import { UTF8toANSI } from '@shared/functions';
+import { ANSItoUTF8, UTF8toANSI } from '@shared/functions';
 
 export class Watcher {
 
@@ -41,7 +41,7 @@ export class Watcher {
         const data: Buffer | null = readStream.read();
         if (!data) return readStream.destroy();
     
-          this._serverLogStream.emit('data', UTF8toANSI(data).toString());
+          this._serverLogStream.emit('data', ANSItoUTF8(data).toString());
       });
     });
     return this._serverLogStream;
