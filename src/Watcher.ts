@@ -39,12 +39,8 @@ export class Watcher {
       readStream.on('readable', () => {
         const data: Buffer | null = readStream.read();
         if (!data) return readStream.destroy();
-      
-        const newLines: Buffer[] = bufferSplit(data, Buffer.from('\n'));
-  
-        for (let line of newLines) {
-          this._serverLogStream.emit('data', line);
-        }
+    
+          this._serverLogStream.emit('data', data);
       });
     });
     return this._serverLogStream;
@@ -96,7 +92,11 @@ export class Watcher {
       
       if (!data) return stream.destroy();
       
-      this._stream.emit('data', data);
+      const newLines: Buffer[] = bufferSplit(data, Buffer.from('\n'));
+
+      for (let line of newLines) {
+        this._stream.emit('data', line);
+      }
     
     });
     
