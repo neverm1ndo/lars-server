@@ -88,6 +88,13 @@ export const watch = (): void => {
     dbLine.save();
   };
 
+  const _watchServerLog = function() {
+    watcher.serverLogWatch(process.env.SERVER_LOG_PATH!)
+           .on('data', (buffer: Buffer) => {
+              io.to('server_log').emit('server_log', buffer.toString());
+           });
+  };
+
   const _updateStatistics = async (logLine: ILogLine): Promise<void> => {
       statsman.update(logLine)
               .then(() => {
@@ -109,6 +116,7 @@ export const watch = (): void => {
               Logger.log('error', error);
             }
          });
+  _watchServerLog();
 }
 
 /**

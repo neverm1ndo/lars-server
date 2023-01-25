@@ -38,7 +38,7 @@ const sockets = (socket: ISocket) => {
   isDev(socket) ? socket.join('devs')
                 : socket.join('main');
 
-  console.log(socket.request.user);
+  if (socket.handshake.auth.app === 'modloader') socket.join('server_log');
   
   Logger.log('default', 'SOCKET |', socket.request.user?.username, 'connected');
   

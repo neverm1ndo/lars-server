@@ -1,4 +1,4 @@
-import { createReadStream, ReadStream, Stats } from 'fs';
+import { createReadStream, ReadStream, Stats, watchFile } from 'fs';
 import { stat, readdir } from 'fs/promises';
 import { Stream } from 'stream';
 import chokidar from 'chokidar';
@@ -6,14 +6,17 @@ import * as path from 'path';
 import bufferSplit from 'buffer-split';
 
 export class Watcher {
-  
-  private _fsWatcher: chokidar.FSWatcher = chokidar.watch(process.env.LOGS_PATH!, {
+
+  private readonly __options: chokidar.WatchOptions = {
     ignored: /(^|[\/\\])\../,
     persistent: true,
-  });
+  }
+  
+  private _fsWatcher: chokidar.FSWatcher = chokidar.watch(process.env.LOGS_PATH!, this.__options);
 
   private _bytes: number = 0;
   private _stream: Stream = new Stream();
+  private _serverLogStream: Stream = new Stream();
   
   public overwatch(): Stream {
     this._getLastLogFileStat()
@@ -25,6 +28,26 @@ export class Watcher {
     this._fsWatcher.on('add', (path, stats) => this._fsWatcherNewFileHandler(path, stats));
     this._fsWatcher.on('error', console.error);
     return this._stream;
+  }
+
+  public serverLogWatch(logpath: string): Stream {
+    watchFile(logpath, { persistent: true }, (curr: Stats, prev: Stats) => {
+      const readStream: ReadStream = createReadStream(logpath, {
+        start: prev.size,
+        end: curr.size,
+      });
+      readStream.on('readable', () => {
+        const data: Buffer | null = readStream.read();
+        if (!data) return readStream.destroy();
+      
+        const newLines: Buffer[] = bufferSplit(data, Buffer.from('\n'));
+  
+        for (let line of newLines) {
+          this._serverLogStream.emit('data', line);
+        }
+      });
+    });
+    return this._serverLogStream;
   }
 
   private async _getLastLogFileStat(): Promise<Stats> {
