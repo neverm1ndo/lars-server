@@ -36,6 +36,7 @@ export class Watcher {
 
     function __watch(this: Watcher): Stream {
       watchFile(logpath, { persistent: true, interval: 2000 }, async (curr: Stats, prev: Stats) => {
+        if (curr.size <= prev.size) return;
         const readStream: ReadStream = createReadStream(logpath, {
           start: prev.size,
           end: curr.size,
