@@ -1,7 +1,6 @@
-import { ChildProcess, ChildProcessWithoutNullStreams, ExecException, SpawnOptions, SpawnOptionsWithoutStdio, exec, spawn } from 'child_process';
+import { ChildProcess, ExecException, SpawnOptionsWithoutStdio, exec, spawn } from 'child_process';
 import { CommonErrors } from '@shared/constants';
 import { ErrorCode } from '@enums/error.codes.enum';
-// import { debounce } from 'lodash';
 import { io } from '../index';
 import { ANSItoUTF8 } from './functions';
 
@@ -12,23 +11,22 @@ namespace PlatformUtilities {
     KILLALL : 'killall',
     CMD     : 'bash',
     OMP     : 'omp-server',
+    NOHUP   : 'nohup',
     PIDOF   : 'pidof',
   };
 }
 export class OMPServerControl {
 
   constructor() {
+    console.log('[OMP] Checking server instance existance')
     this.__getProcessPIDbyName(this.__serverName)
         .then((pid: number) => {
-          this.__PID = pid;
           console.log('[OMP] server existing with pid', pid);
         })
         .catch((error) => {
           console.error(error);
-        })
+        });
   }
-
-  private __PID?: number;
   
   private readonly __serverName: string = 'omp-server';
 
@@ -36,10 +34,6 @@ export class OMPServerControl {
 
   private __isTrueStdout(stdout: string): boolean {
     return stdout.trim() === 'true';
-  }
-
-  private __getSubprocessPID(subprocess: ChildProcess) {
-    return subprocess.pid;
   }
 
   private async __getProcessPIDbyName(name: string): Promise<number> {
@@ -56,19 +50,20 @@ export class OMPServerControl {
 
 
   private async __spawn(name: string, cmd: string, args: string[], options?: SpawnOptionsWithoutStdio): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-      const subprocess: ChildProcessWithoutNullStreams = spawn(cmd, args, options);
-            subprocess.stdout.on('data', (data: any) => {
-              io.to('server_log').emit('server_log', ANSItoUTF8(data).toString());
-              resolve(data);
+    const subprocess: ChildProcess = spawn(cmd, args, options);
+    return new Promise((resolve, reject) => {
+            subprocess.stdout?.on('data', (chunk: any) => {
+              resolve(ANSItoUTF8(chunk).toString());
             });
-            subprocess.stderr.on('data', (data) => {
-              console.error(` - ${name} stderr : ${data.toString()}`);
-              reject(data);
-            });
-            subprocess.stdout.on('close', (code: any) => {
-              console.log(` - ${name} close : child process exited with code ${code}`);
+            subprocess.on('close', (code : any) => {
               reject(code);
+            });
+            subprocess.on('error', (code : any) => {
+              console.error(code);
+              reject(code);
+            });
+            subprocess.stderr?.on('data', (chunk: any) => {
+              reject(chunk);
             });
       this.__subprocesses.set(name, subprocess);
     });
@@ -85,59 +80,64 @@ export class OMPServerControl {
     });
   }
 
-  public async reboot() {
-
-    const args: string[] = [this.__serverName];
-
-    // if (!this.__subprocesses.has(this.__serverName)) {
-    //   try {
-    //     await this.stop();
-    //     await this.launch();
-        
-    //     return;
-    //   } catch (error) {
-    //     console.error(error);
-    //     return;
-    //   }
-    // }
-
-
+  public async reboot(): Promise<void> {
     try {
-      await this.__spawn('reboot', PlatformUtilities.LINUX.PKILL, args);
+      const pid: number = await this.__getProcessPIDbyName(this.__serverName);
+      
+      const args: string[] = [pid.toString()];
+      console.log('[OMP] Killing', pid);
+      
+      const subprocess = await this.__spawn('reboot', PlatformUtilities.LINUX.KILL, args);
+            subprocess.stdout?.on('data', (chunk: Buffer) => {
+              console.log(chunk.toString())
+            });
+            subprocess.on('close', (code: any) => {
+              console.log(` - reboot close : child process exited with code ${code}`);
+            });
+
+      console.log('[OMP] Killed', pid);
     } catch(error) {
-      console.error(error)
+      console.error(error);
     } finally {
       this.__subprocesses.delete('reboot');
     } 
   }
 
   public async launch(): Promise<void> {
-    const args: string[] = [];
+    const args: string[] = [PlatformUtilities.LINUX.OMP];
     const options: SpawnOptionsWithoutStdio = {
       cwd: process.env.OMP_CWD,
       detached: true,
     };
 
     try {
-      if (this.__subprocesses.has(this.__serverName)) throw new Error('Error:' + CommonErrors[ErrorCode.CHILD_PROCESS_ALREADY_SERVED]);
-      await this.__spawn(this.__serverName, PlatformUtilities.LINUX.OMP, args, options);
-      const subprocess = this.__subprocesses.get(this.__serverName)!;
-      this.__PID = this.__getSubprocessPID(subprocess);
+      console.log('[OMP] Launching server...')
+      const pid: number = await this.__getProcessPIDbyName(this.__serverName);
+      
+      if (pid) {
+        console.log('[OMP] Found PID', pid);
+        return void(console.error(new Error(CommonErrors[ErrorCode.CHILD_PROCESS_ALREADY_SERVED])));
+      }
+      
+      console.log('[OMP] Launching server...')
+      await this.__spawn('omp', PlatformUtilities.LINUX.NOHUP, args, options);
+
     } catch (error) {
-    
       console.error(error);
-      await this.launch();
     }
   }
 
   public async stop() {
     try {
-      if (!this.__subprocesses.has(this.__serverName)) throw new Error('Error:' + CommonErrors[ErrorCode.CHILD_PROCESS_IS_NOT_EXISTS]);
+      if (!this.__subprocesses.has('omp')) throw new Error(CommonErrors[ErrorCode.CHILD_PROCESS_IS_NOT_EXISTS]);
       
-      const subprocess = this.__subprocesses.get(this.__serverName)!;
-      const killed = subprocess.kill();
+      const subprocess = this.__subprocesses.get('omp');
+
+      let killed: boolean = false;
+
+      if (subprocess) killed = subprocess.kill();
       
-      if (!killed) throw new Error('Error:' + ErrorCode.CHILD_PROCESS_CANT_KILL);
+      if (!killed) throw new Error('Error code:' + ErrorCode.CHILD_PROCESS_CANT_KILL);
       
     } catch (error) {
       console.log(error);

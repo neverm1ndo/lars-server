@@ -42,15 +42,16 @@ const sockets = (socket: ISocket) => {
   
   Logger.log('default', 'SOCKET |', socket.request.user?.username, 'connected');
   
-  socket.on('get-status', () => {
+  socket.on('get-status', async () => {
     if (!isDev(socket)) return; 
-    omp.status.then((status: boolean) => {
-                  socket.emit('server-status', status ? ServerStatus.LIVE : ServerStatus.OFFLINE);
-                })
-                .catch((err) => {
-                  Logger.log('error', err.message);
-                  socket.emit('server-error', err);
-                });
+    
+    try {
+      const status: boolean = await omp.status;
+      socket.emit('server-status', status ? ServerStatus.LIVE : ServerStatus.OFFLINE);
+    } catch (error: any) {
+      Logger.log('error', error.message);
+      socket.emit('server-error', error);
+    }
   });
 
   socket.on('reboot-server', async () => {

@@ -117,12 +117,12 @@ export const watch = (): void => {
               Logger.log('error', error);
             }
          });
-  // _watchServerLog();
+  _watchServerLog();
 }
 
 /**
 * Broadcasts notification about specific process
-* @param {LogLine} line LogLine instance
+* @param {ILogLine} line LogLine instance
 */
 export const broadcastProcessNotification = (line: ILogLine): void => {
   io.sockets.emit('new-log-line');
