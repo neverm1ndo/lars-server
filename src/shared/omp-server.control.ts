@@ -44,9 +44,9 @@ export class OMPServerControl {
     };
   }
 
-  private async __spawn(name: string, cmd: PlatformUtilities.Utilities, options: string[]): Promise<any> {
+  private async __spawn(name: string, cmd: PlatformUtilities.Utilities, args: string[], options?: SpawnOptionsWithoutStdio): Promise<any> {
     return new Promise<boolean>((resolve, reject) => {
-      const subprocess: ChildProcessWithoutNullStreams = spawn(cmd, options);
+      const subprocess: ChildProcessWithoutNullStreams = spawn(cmd, args, options);
             subprocess.stdout.on('data', (data: any) => {
               console.log(` - ${name} :`, data);
               resolve(data);
@@ -91,11 +91,15 @@ export class OMPServerControl {
   }
 
   public async launch(): Promise<void> {
-    const options: string[] = [];
+    const args: string[] = [];
+    const options: SpawnOptionsWithoutStdio = {
+      cwd: '/home/svr_sa/',
+      detached: true,
+    };
 
     try {
       if (this.__subprocesses.has('omp-server')) throw new Error('Error:' + CommonErrors[ErrorCode.CHILD_PROCESS_ALREADY_SERVED]);
-      const subprocess = await this.__spawn('omp-server', PlatformUtilities.LINUX.OMP, options);
+      const subprocess = await this.__spawn('omp-server', PlatformUtilities.LINUX.OMP, args, options);
       this.__subprocesses.set('omp-server', subprocess);
     } catch (error) {
       console.error(error);
