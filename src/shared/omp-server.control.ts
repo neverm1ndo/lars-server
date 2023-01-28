@@ -59,7 +59,7 @@ export class OMPServerControl {
     return new Promise<any>((resolve, reject) => {
       const subprocess: ChildProcessWithoutNullStreams = spawn(cmd, args, options);
             subprocess.stdout.on('data', (data: any) => {
-              if (name === this.__serverName) io.to('server_log').emit('server_log', ANSItoUTF8(data).toString());
+              io.to('server_log').emit('server_log', ANSItoUTF8(data).toString());
               resolve(data);
             });
             subprocess.stderr.on('data', (data) => {
@@ -89,17 +89,17 @@ export class OMPServerControl {
 
     const args: string[] = [this.__serverName];
 
-    if (!this.__subprocesses.has(this.__serverName)) {
-      try {
-        await this.stop();
-        await this.launch();
+    // if (!this.__subprocesses.has(this.__serverName)) {
+    //   try {
+    //     await this.stop();
+    //     await this.launch();
         
-        return;
-      } catch (error) {
-        console.error(error);
-        return;
-      }
-    }
+    //     return;
+    //   } catch (error) {
+    //     console.error(error);
+    //     return;
+    //   }
+    // }
 
 
     try {
