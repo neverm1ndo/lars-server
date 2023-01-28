@@ -1,31 +1,37 @@
 import { ChildProcess, ChildProcessWithoutNullStreams, ExecException, SpawnOptions, SpawnOptionsWithoutStdio, exec, spawn } from 'child_process';
-import { statsman, CommonErrors } from '@shared/constants';
+import { CommonErrors } from '@shared/constants';
 import { ErrorCode } from '@enums/error.codes.enum';
-
-enum Platform {
-  UNSUPPORTED,
-  WIN32 = 'win32',
-  LINUX = 'linux',
-}
+// import { debounce } from 'lodash';
+import { io } from '../index';
+import { ANSItoUTF8 } from './functions';
 
 namespace PlatformUtilities {
-  export type Utilities = PlatformUtilities.LINUX | PlatformUtilities.WIN32;
-  export enum LINUX {
-    PKILL = 'pkill',
-    CMD   = 'bash',
-    OMP   = '/home/svr_sa/omp-server'
-  }
-  export enum WIN32 {
-    PKILL = 'kill',
-    CMD   = 'pwsh.exe',
-    OMP   = 'omp-server.exe',
-  }
+  export const LINUX = {
+    PKILL   : 'pkill',
+    KILL    : 'kill',
+    KILLALL : 'killall',
+    CMD     : 'bash',
+    OMP     : 'omp-server',
+    PIDOF   : 'pidof',
+  };
 }
 export class OMPServerControl {
+
+  constructor() {
+    this.__getProcessPIDbyName(this.__serverName)
+        .then((pid: number) => {
+          this.__PID = pid;
+          console.log('[OMP] server existing with pid', pid);
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+  }
+
+  private __PID?: number;
   
   private readonly __serverName: string = 'omp-server';
 
-  private readonly __cmd: PlatformUtilities.Utilities | undefined = this.__getPlatformCmd();
   private __subprocesses: Map<string, ChildProcess> = new Map();
 
   private __isTrueStdout(stdout: string): boolean {
@@ -36,23 +42,28 @@ export class OMPServerControl {
     return subprocess.pid;
   }
 
-  private __getPlatformCmd(): PlatformUtilities.Utilities | undefined {
-    switch (process.platform) {
-      case Platform.WIN32 : return PlatformUtilities.WIN32.CMD;
-      case Platform.LINUX : return PlatformUtilities.LINUX.CMD;
-      default: return void(Platform.UNSUPPORTED);
-    };
+  private async __getProcessPIDbyName(name: string): Promise<number> {
+      return new Promise((resolve, reject) => {
+        const pid = spawn(PlatformUtilities.LINUX.PIDOF, [this.__serverName]);
+              pid.stdout.on('data', (data: any) => {
+                resolve(parseInt(data));
+              });
+              pid.stderr.on('data', (data: any) => {
+                reject(data);
+              });
+      });
   }
 
-  private async __spawn(name: string, cmd: PlatformUtilities.Utilities, args: string[], options?: SpawnOptionsWithoutStdio): Promise<any> {
-    return new Promise<boolean>((resolve, reject) => {
+
+  private async __spawn(name: string, cmd: string, args: string[], options?: SpawnOptionsWithoutStdio): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
       const subprocess: ChildProcessWithoutNullStreams = spawn(cmd, args, options);
             subprocess.stdout.on('data', (data: any) => {
-              console.log(` - ${name} :`, data);
+              if (name === this.__serverName) io.to('server_log').emit('server_log', ANSItoUTF8(data).toString());
               resolve(data);
             });
             subprocess.stderr.on('data', (data) => {
-              console.error(` - ${name} stderr : ${data}`);
+              console.error(` - ${name} stderr : ${data.toString()}`);
               reject(data);
             });
             subprocess.stdout.on('close', (code: any) => {
@@ -75,50 +86,65 @@ export class OMPServerControl {
   }
 
   public async reboot() {
-    const options: string[] = [PlatformUtilities.LINUX.PKILL, this.__serverName];
 
-    if (!this.__cmd) throw new Error('Error:' + CommonErrors[ErrorCode.UNSUPPORTED_PLATFORM]);
+    const args: string[] = [this.__serverName];
+
+    if (!this.__subprocesses.has(this.__serverName)) {
+      try {
+        await this.stop();
+        await this.launch();
+        
+        return;
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+    }
+
 
     try {
-      const reboot = await this.__spawn('reboot', this.__cmd, options);
-      console.log(' - reboot:', reboot);
+      await this.__spawn('reboot', PlatformUtilities.LINUX.PKILL, args);
     } catch(error) {
       console.error(error)
     } finally {
       this.__subprocesses.delete('reboot');
-    }
-  
+    } 
   }
 
   public async launch(): Promise<void> {
     const args: string[] = [];
     const options: SpawnOptionsWithoutStdio = {
-      cwd: '/home/svr_sa/',
+      cwd: process.env.OMP_CWD,
       detached: true,
     };
 
     try {
-      if (this.__subprocesses.has('omp-server')) throw new Error('Error:' + CommonErrors[ErrorCode.CHILD_PROCESS_ALREADY_SERVED]);
-      const subprocess = await this.__spawn('omp-server', PlatformUtilities.LINUX.OMP, args, options);
-      this.__subprocesses.set('omp-server', subprocess);
+      if (this.__subprocesses.has(this.__serverName)) throw new Error('Error:' + CommonErrors[ErrorCode.CHILD_PROCESS_ALREADY_SERVED]);
+      await this.__spawn(this.__serverName, PlatformUtilities.LINUX.OMP, args, options);
+      const subprocess = this.__subprocesses.get(this.__serverName)!;
+      this.__PID = this.__getSubprocessPID(subprocess);
     } catch (error) {
+    
       console.error(error);
+      await this.launch();
     }
   }
 
   public async stop() {
     try {
-      if (!this.__subprocesses.has('omp-server')) throw new Error('Error:' + CommonErrors[ErrorCode.CHILD_PROCESS_IS_NOT_EXISTS]);
-      const subprocess = this.__subprocesses.get('omp-server')!;
+      if (!this.__subprocesses.has(this.__serverName)) throw new Error('Error:' + CommonErrors[ErrorCode.CHILD_PROCESS_IS_NOT_EXISTS]);
+      
+      const subprocess = this.__subprocesses.get(this.__serverName)!;
       const killed = subprocess.kill();
-
+      
       if (!killed) throw new Error('Error:' + ErrorCode.CHILD_PROCESS_CANT_KILL);
       
     } catch (error) {
       console.log(error);
-    } 
-    // finally {
-    //   this.__subprocesses.delete('omp-server');
-    // }
+      
+      const pid = this.__getProcessPIDbyName(this.__serverName);
+      await this.__spawn('stop', PlatformUtilities.LINUX.KILL, ['-15', pid.toString()]);
+      return;
+    }
   }
 }

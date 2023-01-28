@@ -117,7 +117,7 @@ export const watch = (): void => {
               Logger.log('error', error);
             }
          });
-  _watchServerLog();
+  // _watchServerLog();
 }
 
 /**
