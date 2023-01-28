@@ -5,17 +5,24 @@ import multer, { Multer, diskStorage} from 'multer';
 import cors from 'cors';
 import { CronJob } from 'cron';
 import experimentalStorage from '@shared/experimental.confstorage';
-import { SampServerControl } from '@shared/omp-server.control';
+import { OMPServerControl } from '@shared/omp-server.control';
 
 import { Processes } from '@enums/processes.enum';
 import Statsman from '../Statsman';
+import { ErrorCode } from '@enums/error.codes.enum';
 
 export const paramMissingError = 'One or more of the required parameters was missing.';
 export const noAvatarImageUrl: string = 'https://www.gta-liberty.ru/styles/prosilver_ex/theme/images/no_avatar.gif';
 
+export const CommonErrors = {
+  [ErrorCode.UNSUPPORTED_PLATFORM]: 'Platform is not supported',
+  [ErrorCode.PARAM_MISSING]: 'One or more of the required parameters was missing.',
+  [ErrorCode.CHILD_PROCESS_ALREADY_SERVED]: 'One of the requested child processes already served.',
+  [ErrorCode.CHILD_PROCESS_IS_NOT_EXISTS]: 'Child process is not exists.',
+}
 
 export const statsman = new Statsman.OnlineMetric();
-export const samp = new SampServerControl();
+export const omp = new OMPServerControl();
 
 export const SQLQueries: { [key: string]: string } = {
   GET_USER_BY_NAME: "SELECT phpbb_users.user_id, phpbb_users.user_email, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.username = ? LIMIT 1",
