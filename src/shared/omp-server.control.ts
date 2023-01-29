@@ -19,8 +19,9 @@ export class OMPServerControl {
   constructor() {
     console.log('[OMP] Checking server instance existance')
     this.__getProcessPIDbyName(this.__serverName)
-        .then((pid: number) => {
-          console.log('[OMP] server existing with pid', pid);
+        .then((pid: number | null) => {
+          if (pid) return console.log('[OMP] server existing with pid', pid);
+          console.log('[OMP] server is down');
         })
         .catch((error) => {
           console.error(error);
@@ -31,7 +32,7 @@ export class OMPServerControl {
 
   private __subprocesses: Map<string, ChildProcess> = new Map();
 
-  private async __getProcessPIDbyName(name: string): Promise<number> {
+  private async __getProcessPIDbyName(name: string): Promise<number | null> {
       return new Promise((resolve, reject) => {
         const pid = spawn(PlatformUtilities.LINUX.PIDOF, [name]);
               pid.stdout.on('data', (data: any) => {
@@ -41,7 +42,7 @@ export class OMPServerControl {
                 reject(data);
               });
               pid.on('close', (code) => {
-                reject(code);
+                resolve(null);
               });
       });
   }
@@ -56,20 +57,24 @@ export class OMPServerControl {
             subprocess.on('close', (code : any) => {
               reject(code);
             });
-            subprocess.on('error', (code : any) => {
-              console.error(code);
-              reject(code);
-            });
             subprocess.stderr?.on('data', (chunk: any) => {
               reject(chunk);
+            });
+            subprocess.on('error', (code : any) => {
+              console.error(code);
+              reject(`exit:${code} ${subprocess.exitCode}`);
             });
       this.__subprocesses.set(name, subprocess);
     });
   }
 
   public async getServerStatus(): Promise<boolean> {
-    const pid: number = await this.__getProcessPIDbyName(this.__serverName);
-    return !!pid;
+    try {
+      const pid: number | null = await this.__getProcessPIDbyName(this.__serverName);
+      return pid ? true : false;
+    } catch (code) {
+      return false;
+    };
   }
 
   public async reboot(): Promise<void> {
@@ -90,7 +95,7 @@ export class OMPServerControl {
   }
 
   public async launch(): Promise<void> {
-    const args: string[] = [PlatformUtilities.LINUX.OMP];
+    const args: string[] = [/**PlatformUtilities.LINUX.OMP*/];
     const options: SpawnOptionsWithoutStdio = {
       cwd: process.env.OMP_CWD,
       detached: true,
@@ -98,15 +103,17 @@ export class OMPServerControl {
 
     try {
       console.log('[OMP] Launching server...')
-      const pid: number = await this.__getProcessPIDbyName(this.__serverName);
+      const pid: number | null = await this.__getProcessPIDbyName(this.__serverName);
       
       if (pid) {
         console.log('[OMP] Found PID', pid);
-        return void(console.error(new Error(CommonErrors[ErrorCode.CHILD_PROCESS_ALREADY_SERVED])));
+        throw new Error(CommonErrors[ErrorCode.CHILD_PROCESS_ALREADY_SERVED]);
       }
       
       console.log('[OMP] Launching server...')
-      await this.__spawn('omp', PlatformUtilities.LINUX.NOHUP, args, options);
+      const awake = await this.__spawn('omp', PlatformUtilities.LINUX.OMP, args, options);
+
+      if (!awake) throw new Error(CommonErrors[ErrorCode.CHILD_PROCESS_CANT_SERVE])
 
     } catch (error) {
       console.error(error);

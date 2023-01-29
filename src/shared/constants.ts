@@ -19,6 +19,7 @@ export const CommonErrors = {
   [ErrorCode.PARAM_MISSING]: 'One or more of the required parameters was missing.',
   [ErrorCode.CHILD_PROCESS_ALREADY_SERVED]: 'One of the requested child processes already served.',
   [ErrorCode.CHILD_PROCESS_IS_NOT_EXISTS]: 'Child process is not exists.',
+  [ErrorCode.CHILD_PROCESS_CANT_SERVE]: 'Child process cant serve.',
 }
 
 export const statsman = new Statsman.OnlineMetric();
