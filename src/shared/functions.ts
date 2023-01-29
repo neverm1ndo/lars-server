@@ -124,7 +124,7 @@ export const watch = (): void => {
 * Broadcasts notification about specific process
 * @param {ILogLine} line LogLine instance
 */
-export const broadcastProcessNotification = (line: ILogLine): void => {
+export const broadcastProcessNotification: any = (line: ILogLine): void => {
   io.sockets.emit('new-log-line');
   switch (line.process) {
     case Processes.GUARD_BLOCK_ON: 
