@@ -99,22 +99,22 @@ const sockets = (socket: ISocket) => {
     };
   });
 
-  socket.on('launch-server', async () => {
+  socket.on('launch-server', () => {
     if (!isDev(socket)) return;
     
     Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> LAUNCH_SVR_SA');
 
     io.emit('server-status', ServerStatus.LAUNCHING);
     
-    try {
-      const stdout = await omp.launch(); 
-
-      io.sockets.emit('server-launched', stdout);
-      Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> LAUNCHED_SVR_SA');
-    } catch (error: any) {
-      Logger.log('error', error.message);
-      socket.broadcast.to('devs').emit('server-error', error);
-    };
+    omp.launch()
+       .then(() => {
+         io.sockets.emit('server-launched');
+         Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> LAUNCHED_SVR_SA');
+       })
+       .catch((error) => {
+         Logger.log('error', error.message);
+         socket.broadcast.to('devs').emit('server-error', error);
+       });
   });
 
   socket.on('user-action', (action) => {
