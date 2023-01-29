@@ -40,6 +40,9 @@ export class OMPServerControl {
               pid.stderr.on('data', (data: any) => {
                 reject(data);
               });
+              pid.on('close', (code) => {
+                reject(code);
+              });
       });
   }
 
