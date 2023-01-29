@@ -2,6 +2,7 @@ import { ChildProcess, ExecException, SpawnOptionsWithoutStdio, exec, spawn } fr
 import { CommonErrors } from '@shared/constants';
 import { ErrorCode } from '@enums/error.codes.enum';
 import { ANSItoUTF8 } from './functions';
+import path from 'path';
 
 namespace PlatformUtilities {
   export const LINUX = {
@@ -111,7 +112,7 @@ export class OMPServerControl {
       }
       
       console.log('[OMP] Launching server...')
-      const awake = await this.__spawn('omp', PlatformUtilities.LINUX.OMP, args, options);
+      const awake = await this.__spawn('omp', path.join(process.env.OMP_CWD, PlatformUtilities.LINUX.OMP), args, options);
 
       if (!awake) throw new Error(CommonErrors[ErrorCode.CHILD_PROCESS_CANT_SERVE])
 
