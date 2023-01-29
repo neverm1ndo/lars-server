@@ -46,7 +46,7 @@ const sockets = (socket: ISocket) => {
     if (!isDev(socket)) return; 
     
     try {
-      const status: boolean = await omp.status;
+      const status: boolean = await omp.getServerStatus();
       socket.emit('server-status', status ? ServerStatus.LIVE : ServerStatus.OFFLINE);
     } catch (error: any) {
       Logger.log('error', error.message);

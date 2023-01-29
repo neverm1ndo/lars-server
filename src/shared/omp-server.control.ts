@@ -1,7 +1,6 @@
 import { ChildProcess, ExecException, SpawnOptionsWithoutStdio, exec, spawn } from 'child_process';
 import { CommonErrors } from '@shared/constants';
 import { ErrorCode } from '@enums/error.codes.enum';
-import { io } from '../index';
 import { ANSItoUTF8 } from './functions';
 
 namespace PlatformUtilities {
@@ -32,13 +31,9 @@ export class OMPServerControl {
 
   private __subprocesses: Map<string, ChildProcess> = new Map();
 
-  private __isTrueStdout(stdout: string): boolean {
-    return stdout.trim() === 'true';
-  }
-
   private async __getProcessPIDbyName(name: string): Promise<number> {
       return new Promise((resolve, reject) => {
-        const pid = spawn(PlatformUtilities.LINUX.PIDOF, [this.__serverName]);
+        const pid = spawn(PlatformUtilities.LINUX.PIDOF, [name]);
               pid.stdout.on('data', (data: any) => {
                 resolve(parseInt(data));
               });
@@ -69,38 +64,26 @@ export class OMPServerControl {
     });
   }
 
-  get status(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      exec(process.env.GET_SERVER_STATE!, (err: ExecException | null, stdout: string, stderr: string) => {
-        if (err) return void(reject(err));
-        if (stderr) return void(reject(stderr));
-        
-        resolve(this.__isTrueStdout(stdout));
-      });
-    });
+  public async getServerStatus(): Promise<boolean> {
+    const pid: number = await this.__getProcessPIDbyName(this.__serverName);
+    return !!pid;
   }
 
   public async reboot(): Promise<void> {
-    try {
-      const pid: number = await this.__getProcessPIDbyName(this.__serverName);
+    // try {
+    //   const pid: number = await this.__getProcessPIDbyName(this.__serverName);
       
-      const args: string[] = [pid.toString()];
-      console.log('[OMP] Killing', pid);
-      
-      const subprocess = await this.__spawn('reboot', PlatformUtilities.LINUX.KILL, args);
-            subprocess.stdout?.on('data', (chunk: Buffer) => {
-              console.log(chunk.toString())
-            });
-            subprocess.on('close', (code: any) => {
-              console.log(` - reboot close : child process exited with code ${code}`);
-            });
+    //   const args: string[] = [pid.toString()];
+    //   console.log('[OMP] Killing', pid);
 
-      console.log('[OMP] Killed', pid);
-    } catch(error) {
-      console.error(error);
-    } finally {
-      this.__subprocesses.delete('reboot');
-    } 
+
+
+    //   console.log('[OMP] Killed', pid);
+    // } catch(error) {
+    //   console.error(error);
+    // } finally {
+    //   this.__subprocesses.delete('reboot');
+    // } 
   }
 
   public async launch(): Promise<void> {
@@ -134,9 +117,8 @@ export class OMPServerControl {
       const subprocess = this.__subprocesses.get('omp');
 
       let killed: boolean = false;
-
       if (subprocess) killed = subprocess.kill();
-      
+         
       if (!killed) throw new Error('Error code:' + ErrorCode.CHILD_PROCESS_CANT_KILL);
       
     } catch (error) {
@@ -145,6 +127,8 @@ export class OMPServerControl {
       const pid = this.__getProcessPIDbyName(this.__serverName);
       await this.__spawn('stop', PlatformUtilities.LINUX.KILL, ['-15', pid.toString()]);
       return;
+    } finally {
+      this.__subprocesses.delete('omp')
     }
   }
 }
