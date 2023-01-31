@@ -2,12 +2,12 @@ import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
 import { Logger } from '@shared/Logger';
 import { json } from 'body-parser';
-// import { unlink } from 'fs-extra';
 import Backuper, { BackupAction } from '@backuper';
 import { mkdir, rmdir, move } from 'fs-extra';
 import { unlink } from 'fs/promises';
 
-import { io } from '../index';;
+import { io } from '../index';
+import path from 'path'
 
 const router = Router();
 
@@ -39,10 +39,10 @@ router.get('/download-file', (req: any, res: any) => { // GET download config fi
   if (!req.query.path) { 
     return res.send(CONFLICT); 
   }
-  
+
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
   
-  res.sendFile(req.query.path);
+  res.sendFile(path.normalize(req.query.path));
 });
 
 router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
