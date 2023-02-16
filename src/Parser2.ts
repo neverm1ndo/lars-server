@@ -13,6 +13,7 @@ export class Parser2 {
                 ["[0-9]{10}", "return 'UNIX';"],
                 ["[0-9]{8}T[0-9]{6}", "return 'DATE';"],
                 ["[0-9]+\\s(мин(ут)?ы?а?)(\\sи\\s[0-9]+\\s(секунды?а?))?", "return 'TIME';"],
+                ["^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", "return 'IP_ADDRESS'"],
                 ["\\,", "return ',';"],
                 ["\\{", "return '{';"],
                 ["\\}", "return '}';"],
@@ -27,7 +28,7 @@ export class Parser2 {
                 ["$", "return 'EOF';"],
             ],
         },
-        "tokens": "UNIX DATE TIME COUNTRY STRING NUMBER < > { } ( ) , : EOF",
+        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY STRING NUMBER < > { } ( ) , : EOF",
         "start": "LOGText",
         "bnf": {
             "expressions": [
@@ -70,6 +71,7 @@ export class Parser2 {
             ],
             "GEOElementName": [ "STRING" ],
             "GEOElement": [
+                ["GEOElementName : IP_ADDRESS", "$$ = { [$GEOElementName] : $3.trim() };"],
                 ["GEOElementName : STRING", "$$ = { [$GEOElementName] : $3.trim() };"],
                 ["GEOElementName : GEOText", "$$ = $3;"]
             ],
