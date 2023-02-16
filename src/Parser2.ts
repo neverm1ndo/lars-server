@@ -14,7 +14,6 @@ export class Parser2 {
                 ["[0-9]{8}T[0-9]{6}", "return 'DATE';"],
                 ["[0-9]+\\s(мин(ут)?ы?а?)(\\sи\\s[0-9]+\\s(секунды?а?))?", "return 'TIME';"],
                 ["\\,", "return ',';"],
-                ["[^\\r\\n][\\w_а-яА-Я\\-\\s\\.\\?\\!\\/]+", "return 'STRING';"],
                 ["\\{", "return '{';"],
                 ["\\}", "return '}';"],
                 [":", "return ':';"],
@@ -23,6 +22,8 @@ export class Parser2 {
                 ["\\>", "return '>';"],
                 ["\\(", "return '(';"],
                 ["\\)", "return ')';"],
+                ["[^\\r\\n][\\w_а-яА-Я\\-\\s\\.\\?\\!\\/]+", "return 'STRING';"],
+                ["\\d+", "return 'NUMBER';"],
                 ["$", "return 'EOF';"],
             ],
         },
@@ -40,7 +41,7 @@ export class Parser2 {
                 // common login
                 ["LOGStatic GEOText", "return { ...$LOGStatic, geo: $GEOText };"],
                 // user auth
-                ["LOGStatic GEOElement LOGContent GEOElement", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message, ...$2 }}, geo: $4 };"],
+                ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message, ...$2 }}, geo: $4 };"],
                 // with content
                 ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent };"],
                 ["LOGStatic", "return $$;"]
@@ -49,7 +50,7 @@ export class Parser2 {
                 ["< STRING >", "$$ = $1 + $2 + $3;"]
             ],
             "LOGUserId": [
-                ["( STRING )", "$$ = parseInt($2);"]
+                ["( NUMBER )", "$$ = parseInt($2);"]
             ],
             "LOGContent": [
                 ["' LOGMessage '", "$$ = { message: $2 };"],
@@ -97,6 +98,7 @@ export class Parser2 {
     private _toUTF8(value: string | Buffer): string {
         const result = typeof value === 'string' ? iconv.encode(this._decodeWIN1251toString(Buffer.from(value, 'binary')), 'utf8')
                                                  : iconv.encode(this._decodeWIN1251toString(value), 'utf8');
+        console.log(result.toString());
         return result.toString();
     }
 
@@ -105,6 +107,7 @@ export class Parser2 {
     }
 
     public parse(input: Buffer): ILogLine {
+        // console.log(this._toUTF8(input));
         return this._engine.parse(this._toUTF8(input)) as ILogLine;
     }
 }
