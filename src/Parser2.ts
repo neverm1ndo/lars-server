@@ -22,7 +22,7 @@ export class Parser2 {
                 ["\\>", "return '>';"],
                 ["\\(", "return '(';"],
                 ["\\)", "return ')';"],
-                ["[^\\r\\n][\\w_а-яА-Я\\-\\s\\.\\?\\!\\/]+", "return 'STRING';"],
+                ["[\\w_а-яА-Я\\-\\s\\.\\?\\!\\/]+", "return 'STRING';"],
                 ["\\d+", "return 'NUMBER';"],
                 ["$", "return 'EOF';"],
             ],
