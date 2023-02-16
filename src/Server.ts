@@ -10,7 +10,7 @@ import { Strategy as LocalStrategy, IStrategyOptions as ILocalStrategyOptions } 
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 
-import { connect, ConnectOptions } from 'mongoose';
+import { connect, ConnectOptions, set } from 'mongoose';
 import { rmOldBackups, SQLQueries, tailOnlineStats, MSQLPool } from '@shared/constants';
 
 import BaseRouter from './routes';
@@ -33,11 +33,10 @@ const { GET_USER_BY_NAME, GET_USER } = SQLQueries;
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// app.options('*', useCors);
-
 app.set('secret', process.env.ACCESS_TOKEN_SECRET);
 
 // MongoDB connection
+set('strictQuery', false);
 const clientPromise = connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true } as ConnectOptions).then(m => m.connection.getClient());
 
 export const sessionMiddleware = session({
