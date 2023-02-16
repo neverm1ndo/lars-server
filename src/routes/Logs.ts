@@ -133,10 +133,8 @@ router.get('/search', async (req: any, res: any) => { // GET Search by nickname,
         query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
   
   const searchQuery: ISearchQuery = queryParser.parse(req.query.search);
-
-  console.log(searchQuery)
   
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SEARCH');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SEARCH', req.query.search);
   
   const mdbq: MDBRequest = await buildDBRequest(searchQuery, query);
 
