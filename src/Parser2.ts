@@ -71,10 +71,13 @@ export class Parser2 {
             ],
             "GEOElementName": [ "STRING" ],
             "GEOElement": [
-                ["GEOElementName : IP_ADDRESS", "$$ = { [$GEOElementName] : $3.trim() };"],
-                ["GEOElementName : STRING", "$$ = { [$GEOElementName] : $3.trim() };"],
-                ["GEOElementName : NUMBER", "$$ = { [$GEOElementName] : $3.trim() };"],
+                ["GEOElementName : GEOElementValue", "$$ = { [$GEOElementName] : $3.trim() };"],
                 ["GEOElementName : GEOText", "$$ = $3;"]
+            ],
+            "GEOElementValue": [
+                ['IP_ADDRESS', '$$ = $1'],
+                ['STRING', '$$ = $1'],
+                ['NUMBER', '$$ = $1'],
             ],
             "GEOCountry": [ 
                 ["STRING", "$$ = $1;"],
