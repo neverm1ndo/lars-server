@@ -53,7 +53,7 @@ export class Parser2 {
                 ["( NUMBER )", "$$ = parseInt($2);"]
             ],
             "LOGContent": [
-                ["' LOGMessage '", "$$ = { message: $2 };"],
+                ["' LOGMessage '", "$$ = { message: $2.trimRight() };"],
                 ["TIME", "$$ = { time: $1 };"],
                 ["STRING LOGUserId ' STRING '", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $4 };"],
                 ["STRING", "$$ = { message: $1 };"],
