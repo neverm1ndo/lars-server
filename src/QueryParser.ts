@@ -19,7 +19,7 @@ export class QueryParser {
                 ["(nickname|nn):\\b", "return 'NN_OPERATOR';"],
                 ["(serial|srl):\\b", "return 'SRL_OPERATOR';"],
                 ["(cn):\\b", "return 'CN_OPERATOR';"],
-                // ["^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", "return 'IP_ADDRESS'"],
+                ["^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", "return 'IP_ADDRESS'"],
                 ["\\*", "return '*';"],
                 ["\\,", "return ',';"],
                 ["$", "return 'EOF';"],
@@ -36,8 +36,10 @@ export class QueryParser {
             ],
             "QText": [
                 ["QElementList EOF", "return $1;"],
+                ["STRING EOF", "return $1"],
             ],
             "QArray": [
+                ["IP_ADDRESS", "$$ = [$1];"],
                 ["STRING", "$$ = [$1];"],
                 ["STRING , QArray", "$$ = [$1, ...$3];"]
             ],
@@ -46,7 +48,9 @@ export class QueryParser {
                 ["QElement & QElementList", "$$ = { ...$1 , ...$3 };"]
             ],
             "QSerials": [
-                ["AS * SS", "$$ = { as: $1, ss: $3 };"]
+                ["AS * SS", "$$ = { as: $1, ss: $3 };"],
+                ["SS", "$$ = { ss: $1 };"],
+                ["AS", "$$ = { as: $1 };"],
             ],
             "QElement": [
                 ["IP_OPERATOR QArray", "$$ = { ip: $2 };"],
@@ -62,6 +66,10 @@ export class QueryParser {
     }
 
     public parse(input: string): ISearchQuery {
-        return this._engine.parse(input);
+        try {
+            return this._engine.parse(input);
+        } catch { // parse fail state
+            return { nickname: [input] };
+        };
     }
 }
