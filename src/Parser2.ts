@@ -53,7 +53,7 @@ export class Parser2 {
                 ["( NUMBER )", "$$ = parseInt($2);"]
             ],
             "LOGContent": [
-                ["' LOGMessage '", "$$ = { message: $2.replace(/\r?\n|\r/g, '') };"],
+                ["' LOGMessage '", "$$ = { message: $2 };"],
                 ["TIME", "$$ = { time: $1 };"],
                 ["STRING LOGUserId ' STRING '", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $4 };"],
                 ["STRING", "$$ = { message: $1 };"],
@@ -98,7 +98,6 @@ export class Parser2 {
     private _toUTF8(value: string | Buffer): string {
         const result = typeof value === 'string' ? iconv.encode(this._decodeWIN1251toString(Buffer.from(value, 'binary')), 'utf8')
                                                  : iconv.encode(this._decodeWIN1251toString(value), 'utf8');
-        console.log(result.toString());
         return result.toString();
     }
 
@@ -107,7 +106,7 @@ export class Parser2 {
     }
 
     public parse(input: Buffer): ILogLine {
-        // console.log(this._toUTF8(input));
-        return this._engine.parse(this._toUTF8(input)) as ILogLine;
+        const utf8 = this._toUTF8(input).replace(/\r?\n|\r/g, '');
+        return this._engine.parse(utf8) as ILogLine;
     }
 }
