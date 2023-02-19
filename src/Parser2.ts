@@ -6,29 +6,36 @@ export class Parser2 {
     private _grammar = {
         "lex": {
             "macros": {
+                "digit": "[0-9]",
                 "esc": "\\\\",
+                "int": "-?(?:[0-9]|[1-9][0-9]+)",
+                "exp": "(?:[eE][-+]?[0-9]+)",
+                "frac": "(?:[0-9]+)"
             },
             "rules": [
                 ["\\s+", "/* skip whitespace */"],
                 ["[0-9]{10}", "return 'UNIX';"],
                 ["[0-9]{8}T[0-9]{6}", "return 'DATE';"],
+                ["[0-9]{4,5}", "return 'AS';"],
                 ["[0-9]+\\s(мин(ут)?ы?а?)(\\sи\\s[0-9]+\\s(секунды?а?))?", "return 'TIME';"],
                 ["(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)", "return 'IP_ADDRESS'"],
-                ["\\,", "return ',';"],
+                [",", "return ',';"],
                 ["\\{", "return '{';"],
                 ["\\}", "return '}';"],
                 [":", "return ':';"],
                 ["\\<", "return '<';"],
-                ["\\'", "return `'`;"],
+                ["\\/", "return '/';"],
                 ["\\>", "return '>';"],
                 ["\\(", "return '(';"],
                 ["\\)", "return ')';"],
-                ["\\d+", "return 'NUMBER';"],
-                ["[\\w_а-яА-Я0-9\\-\\s\\.\\?\\!\\/]+", "return 'STRING';"],
+                ["[0-9]+\\.[0-9]+\\.?([0-9]+)?(\\-R[0-9]+)?", "return 'CLI';"],
+                ["{int}\\b", "return 'NUMBER';"],
+                ["\"(?:\\\\[\"bfnrt/\\\\]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\"", "yytext = yytext.substr(1,yyleng-2); return 'MESSAGE';"],
+                ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+", "return 'STRING';"],
                 ["$", "return 'EOF';"],
             ],
         },
-        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY STRING NUMBER < > { } ( ) , : EOF",
+        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI NUMBER MESSAGE STRING AS < / > { } ( ) , : EOF",
         "start": "LOGText",
         "bnf": {
             "expressions": [
@@ -42,26 +49,40 @@ export class Parser2 {
                 // common login
                 ["LOGStatic GEOText", "return { ...$LOGStatic, geo: $GEOText };"],
                 // user auth
-                ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message, ...$2 }}, geo: $4 };"],
+                ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message }}, geo: $3 };"],
                 // with content
                 ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent };"],
-                ["LOGStatic", "return $$;"]
+                ["LOGStatic", "return $$;"],
+                ["LOGStatic GEOElement", "return { ...$LOGStatic, content: { props: { ...$GEOElement }}};"],
+                ["LOGStatic GEOElement MESSAGE", "return { ...$LOGStatic, content: { props: { ...$GEOElement }, message: $MESSAGE }};"]
             ],
             "LOGProcess": [
-                ["< STRING >", "$$ = $1 + $2 + $3;"]
+                ["< LOGProcessElement >", "$$ = [$1,...$2, $3].join('');"]
+            ],
+            "LOGProcessElement": [
+                ["STRING", "$$ = $1;"],
+                ["STRING / LOGProcessElement", "$$ = [$1,...$2, $3].join('');"],
             ],
             "LOGUserId": [
                 ["( NUMBER )", "$$ = parseInt($2);"]
             ],
             "LOGContent": [
-                ["' LOGMessage '", "$$ = { message: $2 };"],
-                ["TIME", "$$ = { time: $1 };"],
-                ["STRING LOGUserId ' STRING '", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $4 };"],
-                ["STRING", "$$ = { message: $1 };"],
+                ["MESSAGE", "$$ = { message: $1 };"], // common message
+                ["TIME", "$$ = { time: $1 };"], // afk pause time
+                ["STRING LOGUserId STRING MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $MESSAGE };"], // kills deaths kicks bans
+                ["LOGContentNumberTuple", "$$ = { tuple: $1 };"],
+                ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
+                ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2 }};"],
+                ["STRING LOGUserId STRING", "$$ = { type: $3, target: { id: $2, username: $1 }};"],
+                ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1 }};"],
             ],
-            "LOGMessage": [
-                ["STRING", "$$ = $1;"],
-                ["STRING , LOGMessage", "$$ = [$1, $2, $3].join();"],
+            "LOGContentNumberTuple": [
+                ["NUMBER", "$$ = parseInt($1);"],
+                ["NUMBER LOGContentNumberTuple", "$$ = [$1, ...$2];"]
+            ],
+            "LOGContentStringTuple": [
+                ["STRING", "$$ = [$1];"],
+                ["STRING LOGContentStringTuple", "$$ = [$1, ...$2];"]
             ],
             "GEOText": [ 
                 ["GEOValue EOF", "$$ = $1;"],
@@ -71,13 +92,14 @@ export class Parser2 {
             ],
             "GEOElementName": [ "STRING" ],
             "GEOElement": [
-                ["GEOElementName : GEOElementValue", "$$ = { [$GEOElementName] : $3.trim() };"],
+                ["GEOElementName : GEOElementValue", "$$ = { [$GEOElementName] : $3 };"],
                 ["GEOElementName : GEOText", "$$ = $3;"]
             ],
             "GEOElementValue": [
-                ['IP_ADDRESS', '$$ = $1'],
-                ['STRING', '$$ = $1'],
-                ['NUMBER', '$$ = $1'],
+                ['IP_ADDRESS', '$$ = $1;'],
+                ['STRING', '$$ = $1.trim();'],
+                ['AS', '$$ = parseInt($1);'],
+                ['CLI', '$$ = $1;'],
             ],
             "GEOCountry": [ 
                 ["STRING", "$$ = $1;"],
