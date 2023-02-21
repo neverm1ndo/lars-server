@@ -114,6 +114,7 @@ export const watch = (): void => {
               _updateStatistics(logLine);
             
             } catch(error) {
+              console.log(buffer.toString());
               Logger.log('error', error);
             }
          });

@@ -19,7 +19,14 @@ const logShema = new Schema({
       main_group: { type: Number },
       secondary_group: { type: Number },
     },
-    message: { type: String }
+    message: { type: String },
+    numbers: [Number],
+    action: { type: String },
+    targetType: { type: String },
+    target: {
+      id: { type: Number },
+      username: { type: String },
+    }
   },
   geo: {
     country: { type: String },
