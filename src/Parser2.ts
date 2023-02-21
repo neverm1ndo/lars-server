@@ -70,7 +70,7 @@ export class Parser2 {
                 ["TIME", "$$ = { time: $1 };"], // afk pause time
                 ["TIME MESSAGE", "$$ = { time: $1, message: $2 };"], // hand mutes
                 ["STRING LOGUserId STRING MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $MESSAGE };"], // kills deaths kicks bans
-                ["LOGContentNumberTuple", "$$ = { numbers: $1 };"],
+                ["LOGContentNumberTuple", "$$ = $1.length > 0 ? { numbers: $1 } : {};"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
                 ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2 }};"],
                 ["STRING LOGUserId STRING", "$$ = { type: $3, target: { id: $2, username: $1 }};"],

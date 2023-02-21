@@ -40,4 +40,4 @@ const logShema = new Schema({
   multiplier: Number,
 })
 
-export const LOG_LINE = model( 'LogLine', logShema);
+export const LOG_LINE = model('LogLine', logShema);
