@@ -77,7 +77,7 @@ export class Parser2 {
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1 }};"],
             ],
             "LOGContentNumberTuple": [
-                ["NUMBER", "$$ = $1;"],
+                ["NUMBER", "$$ = [parseFloat($1)];"],
                 ["NUMBER LOGContentNumberTuple", "$$ = [parseFloat($1), ...$2];"]
             ],
             "LOGContentStringTuple": [
