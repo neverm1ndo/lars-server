@@ -27,7 +27,7 @@ export class Parser2 {
                 ["\\>", "return '>';"],
                 ["\\(", "return '(';"],
                 ["\\)", "return ')';"],
-                ["[0-9]\\.[0-9]\\.?([0-9a-zA-Z]+)?(\\-R[0-9])?", "return 'CLI';"],
+                ["[0-9]\\.[0-9]\\.?(([0-9a-zA-Z]+)|(\\-R[0-9]))(\\-R[0-9])?", "return 'CLI';"],
                 ["{int}{frac}?\\b", "return 'NUMBER';"],
                 ["\'(?:\\\\[\"bfnrt/\\\\]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\'", "yytext = yytext.substr(1,yyleng-2); return 'MESSAGE';"],
                 ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+", "return 'STRING';"],
@@ -77,12 +77,12 @@ export class Parser2 {
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1 }};"],
             ],
             "LOGContentNumberTuple": [
-                ["NUMBER", "$$ = [parseFloat($1)];"],
+                ["NUMBER", "$$ = $1;"],
                 ["NUMBER LOGContentNumberTuple", "$$ = [parseFloat($1), ...$2];"]
             ],
             "LOGContentStringTuple": [
                 ["STRING", "$$ = [$1];"],
-                ["STRING LOGContentStringTuple", "$$ = [$1, ...$2];"]
+                ["STRING LOGContentStringTuple", "$$ = [...$1, ...$2];"]
             ],
             "GEOText": [ 
                 ["GEOValue EOF", "$$ = $1;"],
