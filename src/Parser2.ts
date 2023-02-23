@@ -72,9 +72,9 @@ export class Parser2 {
                 ["STRING LOGUserId STRING MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $MESSAGE };"], // kills deaths kicks bans
                 ["LOGContentNumberTuple", "$$ = $1;"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
-                ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim(); }};"],
-                ["STRING LOGUserId STRING", "$$ = { type: $3, target: { id: $2, username: $1.trim(); }};"],
-                ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim(); }};"],
+                ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim() }};"],
+                ["STRING LOGUserId STRING", "$$ = { type: $3, target: { id: $2, username: $1.trim() }};"],
+                ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim() }};"],
             ],
             "LOGContentNumberTuple": [
                 ["NUMBER", "$$ = [parseFloat($1)];"],
