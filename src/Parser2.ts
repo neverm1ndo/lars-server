@@ -27,7 +27,7 @@ export class Parser2 {
                 ["\\>", "return '>';"],
                 ["\\(", "return '(';"],
                 ["\\)", "return ')';"],
-                ["[0-9]\\.[0-9]\\.?(([0-9a-zA-Z]+)|(\\-R[0-9]))(\\-R[0-9])?", "return 'CLI';"],
+                ["[0-9]\\.[0-9]\\.?(([0-9]?[a-zA-Z]+)|(\\-R[0-9]))(\\-R[0-9])?", "return 'CLI';"],
                 ["{int}{frac}?\\b", "return 'NUMBER';"],
                 ["\'(?:\\\\[\"bfnrt/\\\\]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\'", "yytext = yytext.substr(1,yyleng-2); return 'MESSAGE';"],
                 ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+", "return 'STRING';"],
@@ -70,11 +70,11 @@ export class Parser2 {
                 ["TIME", "$$ = { time: $1 };"], // afk pause time
                 ["TIME MESSAGE", "$$ = { time: $1, message: $2 };"], // hand mutes
                 ["STRING LOGUserId STRING MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $MESSAGE };"], // kills deaths kicks bans
-                ["LOGContentNumberTuple", "$$ = $1.length > 0 ? { numbers: $1 } : {};"],
+                ["LOGContentNumberTuple", "$$ = $1;"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
-                ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2 }};"],
-                ["STRING LOGUserId STRING", "$$ = { type: $3, target: { id: $2, username: $1 }};"],
-                ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1 }};"],
+                ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim(); }};"],
+                ["STRING LOGUserId STRING", "$$ = { type: $3, target: { id: $2, username: $1.trim(); }};"],
+                ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim(); }};"],
             ],
             "LOGContentNumberTuple": [
                 ["NUMBER", "$$ = [parseFloat($1)];"],

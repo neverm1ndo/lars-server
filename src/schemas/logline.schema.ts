@@ -20,7 +20,11 @@ const logShema = new Schema({
       secondary_group: { type: Number },
     },
     message: { type: String },
-    numbers: [Number],
+    numbers: {
+      required: false,
+      type: [Number],
+      default: undefined,
+    },
     action: { type: String },
     targetType: { type: String },
     target: {
