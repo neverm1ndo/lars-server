@@ -30,7 +30,10 @@ const logShema = new Schema({
     target: {
       id: { type: Number },
       username: { type: String },
-    }
+    },
+    props: {
+      type: Schema.Types.Mixed
+    },
   },
   geo: {
     country: { type: String },
