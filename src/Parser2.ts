@@ -51,9 +51,9 @@ export class Parser2 {
                 ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message }}, geo: $3 };"],
                 // with content
                 ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent };"],
-                ["LOGStatic", "return $$;"],
                 ["LOGStatic GEOElement", "return { ...$LOGStatic, content: { props: { ...$GEOElement }}};"],
-                ["LOGStatic GEOElement MESSAGE", "return { ...$LOGStatic, content: { props: { ...$GEOElement }, message: $MESSAGE }};"]
+                ["LOGStatic GEOElement MESSAGE", "return { ...$LOGStatic, content: { props: { ...$GEOElement }, message: $MESSAGE }};"],
+                ["LOGStatic", "return $$;"]
             ],
             "LOGProcess": [
                 ["< LOGProcessElement >", "$$ = [$1,...$2, $3].join('');"]
@@ -75,7 +75,6 @@ export class Parser2 {
                 ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim() }};"],
                 ["STRING LOGUserId STRING", "$$ = { targetType: $3, target: { id: $2, username: $1.trim() }};"],
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim() }};"],
-                ["GEOElement", "SS = $1;"]
             ],
             "LOGContentNumberTuple": [
                 ["NUMBER", "$$ = [parseFloat($1)];"],
