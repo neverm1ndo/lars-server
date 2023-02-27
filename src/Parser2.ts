@@ -27,7 +27,7 @@ export class Parser2 {
                 ["\\>", "return '>';"],
                 ["\\(", "return '(';"],
                 ["\\)", "return ')';"],
-                ["[0-9]\\.[0-9](\\.|[a-zA-Z]+)\\.?[0-9]?\\.?([A-Z]+)?(\\-[a-zA-Z0-9]+)?", "return 'CLI';"],
+                ["[0-9]\\.[0-9](\\.|[a-zA-Z]+)\\.?[0-9]?([a-zA-Z]+)?\\.?([A-Z]+)?(\\-[a-zA-Z0-9]+)?", "return 'CLI';"],
                 ["{int}{frac}?\\b", "return 'NUMBER';"],
                 ["\'(?:\\\\[\"bfnrt/\\\\]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\'", "yytext = yytext.substr(1,yyleng-2); return 'MESSAGE';"],
                 ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+", "return 'STRING';"],
