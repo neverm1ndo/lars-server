@@ -73,6 +73,7 @@ export class Parser2 {
                 ["LOGContentNumberTuple", "$$ = $1;"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
                 ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim() }};"],
+                ["STRING STRING LOGUserId MESSAGE", "$$ = { action: $1, target: { id: $3, username: $2.trim() }, message: $MESSAGE};"],
                 ["STRING LOGUserId STRING", "$$ = { targetType: $3, target: { id: $2, username: $1.trim() }};"],
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim() }};"],
             ],
