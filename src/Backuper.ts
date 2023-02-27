@@ -135,7 +135,7 @@ export default class Backuper {
             return notes;
           })
           .then((notes) => {
-            return Promise.all(notes.map((note) => unlink(path.join(process.env.BACKUPS_PATH!, note.file.name))));
+            return Promise.all(notes.map((note) => unlink(path.join(process.env.BACKUPS_PATH!, note.hash))));
           });
     
     const deleteBackupNotes = BACKUP.deleteMany({ expires: { $lte: new Date() }}, [])
