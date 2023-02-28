@@ -48,7 +48,8 @@ export class Parser2 {
                 // common login
                 ["LOGStatic GEOText", "return { ...$LOGStatic, geo: $GEOText };"],
                 // user auth
-                ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message }, content: $LOGContent}, geo: $3 };"],
+                ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message }, ...$LOGContent}, geo: $GEOText };"],
+                ["LOGStatic LOGContent MESSAGE GEOText", "return { ...$LOGStatic, content: { ...$LOGContent, message: $MESSAGE }, geo: $GEOText };"],
                 // with content
                 ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent };"],
                 // ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent, geo: $GEOText };"],
@@ -68,15 +69,17 @@ export class Parser2 {
             ],
             "LOGContent": [
                 ["MESSAGE", "$$ = { message: $1 };"], // common message
-                ["TIME", "$$ = { time: $1 };"], // afk pause time
-                ["TIME MESSAGE", "$$ = { time: $1, message: $2 };"], // hand mutes
-                ["STRING LOGUserId STRING MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $MESSAGE };"], // kills deaths kicks bans
+                ["LOGContentTime", "$$ = $1;"],
                 ["LOGContentNumberTuple", "$$ = $1;"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
                 ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim() }};"],
-                ["STRING STRING LOGUserId MESSAGE", "$$ = { action: $1, target: { id: $3, username: $2.trim() }, message: $MESSAGE};"],
                 ["STRING LOGUserId STRING", "$$ = { targetType: $3, target: { id: $2, username: $1.trim() }};"],
+                ["STRING LOGUserId STRING MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $MESSAGE };"], // kills deaths kicks bans
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim() }};"],
+            ],
+            "LOGContentTime": [
+                ["TIME", "$$ = { time: $1 };"], // afk pause time
+                ["TIME MESSAGE", "$$ = { time: $1, message: $2 };"], // hand mutes
             ],
             "LOGContentNumberTuple": [
                 ["NUMBER", "$$ = [parseFloat($1)];"],
