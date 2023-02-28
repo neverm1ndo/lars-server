@@ -48,13 +48,13 @@ export class Parser2 {
                 // common login
                 ["LOGStatic GEOText", "return { ...$LOGStatic, geo: $GEOText };"],
                 // user auth
-                ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message }, ...$LOGContent}, geo: $GEOText };"],
-                ["LOGStatic LOGContent MESSAGE GEOText", "return { ...$LOGStatic, content: { ...$LOGContent, message: $MESSAGE }, geo: $GEOText };"],
+                // ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: { auth: { username: $LOGContent.message }, ...$LOGContent}, geo: $GEOText };"],
+                ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: $LOGContent, geo: $GEOText };"],
                 // with content
                 ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent };"],
                 // ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent, geo: $GEOText };"],
-                ["LOGStatic GEOElement", "return { ...$LOGStatic, content: { props: { ...$GEOElement }}};"],
-                ["LOGStatic GEOElement MESSAGE", "return { ...$LOGStatic, content: { props: { ...$GEOElement }, message: $MESSAGE }};"],
+                ["LOGStatic GEOElement", "return { ...$LOGStatic, content: { props: $GEOElement }};"],
+                ["LOGStatic GEOElement MESSAGE", "return { ...$LOGStatic, content: { props: $GEOElement , message: $MESSAGE }};"],
                 ["LOGStatic", "return $$;"]
             ],
             "LOGProcess": [
@@ -72,10 +72,10 @@ export class Parser2 {
                 ["LOGContentTime", "$$ = $1;"],
                 ["LOGContentNumberTuple", "$$ = $1;"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
-                ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim() }};"],
-                ["STRING LOGUserId STRING", "$$ = { targetType: $3, target: { id: $2, username: $1.trim() }};"],
-                ["STRING LOGUserId STRING MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, weapon: $MESSAGE };"], // kills deaths kicks bans
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim() }};"],
+                // ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim() }};"],
+                ["STRING LOGUserId STRING", "$$ = { targetType: $3, target: { id: $2, username: $1.trim() }};"],
+                ["STRING LOGUserId MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, message: $MESSAGE };"], // kills deaths kicks bans
             ],
             "LOGContentTime": [
                 ["TIME", "$$ = { time: $1 };"], // afk pause time
