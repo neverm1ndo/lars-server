@@ -2,7 +2,7 @@ import { Logger } from '@shared/Logger';
 import Workgroup from '@enums/workgroup.enum';
 import { Socket } from 'socket.io';
 import { io } from '../index';
-import { omp } from '@shared/constants';
+import { omp, statsman } from '@shared/constants';
 import { getAvatarURL } from '@shared/functions';
 import { ISocket } from '@interfaces/httpio.enum';
 
@@ -71,6 +71,10 @@ const sockets = (socket: ISocket) => {
       
       socket.broadcast.to('devs').emit('server-rebooted');
       io.sockets.emit('server-status', ServerStatus.LIVE);
+      
+      statsman.snapshot = 0;
+      statsman.tail();
+      
       Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> REBOOTED_SVR_SA');
     } catch(error: any) {
       Logger.log('error', error.message);
@@ -92,6 +96,10 @@ const sockets = (socket: ISocket) => {
         username: socket.data.username, 
         group_id: socket.data.main_group 
       });
+      
+      statsman.snapshot = 0;
+      statsman.tail();
+      
       Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username,'-> STOPED_SVR_SA');
     } catch (error: any) {
       Logger.log('error', error.message);

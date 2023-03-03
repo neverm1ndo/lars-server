@@ -3,8 +3,6 @@ import { Processes } from '@enums/processes.enum';
 import { STAT } from '@schemas/stat.schema';
 import { LOG_LINE } from '@schemas/logline.schema';
 import dgram from 'dgram';
-// import { getTodayDate } from '@shared/functions'
-import { Logger } from '@shared/Logger';
 
 namespace Statsman {
   class Metric {
