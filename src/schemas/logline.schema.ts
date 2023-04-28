@@ -21,9 +21,8 @@ const logShema = new Schema({
     },
     message: { type: String },
     numbers: {
-      required: false,
       type: [Number],
-      default: undefined,
+      required: false,
     },
     action: { type: String },
     targetType: { type: String },

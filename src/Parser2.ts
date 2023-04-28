@@ -70,7 +70,7 @@ export class Parser2 {
             "LOGContent": [
                 ["MESSAGE", "$$ = { message: $1 };"], // common message
                 ["LOGContentTime", "$$ = $1;"],
-                ["LOGContentNumberTuple", "$$ = $1;"],
+                ["LOGContentNumberTuple", "$$ = { numbers: $1 };"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim() }};"],
                 // ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim() }};"],
