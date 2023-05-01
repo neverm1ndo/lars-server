@@ -31,6 +31,7 @@ export const SQLQueries: { [key: string]: string } = {
   GET_ADMIN_LIST: 'SELECT phpbb_users.user_id, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id IN (?, ?, ?, ?, ?, ?) AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id',
   CHANGE_MAIN_GROUP: 'UPDATE phpbb_user_group, phpbb_users SET phpbb_user_group.group_id = ?, phpbb_users.group_id = ? WHERE phpbb_user_group.user_id = phpbb_users.user_id AND phpbb_users.user_id = ?;',
   CHANGE_SECONDARY_GROUP: 'UPDATE phpbb_user_group INNER JOIN (SELECT MAX(group_id) as group_id FROM phpbb_user_group WHERE group_id BETWEEN 9 AND 14 AND user_id = ? GROUP BY user_id) AS secondary_group SET phpbb_user_group.group_id = ? WHERE phpbb_user_group.group_id = secondary_group.group_id AND user_id = ?',
+  GET_BANLIST: 'SELECT * FROM phpbb_samp_bans INNER JOIN (SELECT username as banned_username FROM phpbb_samp_bans, phpbb_users WHERE phpbb_samp_bans.user_id = phpbb_users.user_id) AS banned_user INNER JOIN (SELECT username as admin_username, user_avatar as admin_avatar FROM phpbb_samp_bans, phpbb_users WHERE phpbb_samp_bans.admin_id = phpbb_users.user_id) AS admin_user',
 };
 
 const experimentalConfigFileStorage = experimentalStorage({
