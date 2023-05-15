@@ -28,13 +28,14 @@ export class Parser2 {
                 ["\\(", "return '(';"],
                 ["\\)", "return ')';"],
                 ["[0-9]\\.[0-9](\\.|[a-zA-Z]+)\\.?[0-9]?([a-zA-Z]+)?\\.?([A-Z]+)?(\\-[a-zA-Z0-9]+)?", "return 'CLI';"],
+                ["[0-9A-Z]{20}", "return 'SS';"],
                 ["{int}{frac}?\\b", "return 'NUMBER';"],
                 ["\'(?:\\\\[\"bfnrt/\\\\]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\'", "yytext = yytext.substr(1,yyleng-2); return 'MESSAGE';"],
                 ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+", "return 'STRING';"],
                 ["$", "return 'EOF';"],
             ],
         },
-        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI NUMBER MESSAGE STRING < / > { } ( ) , : EOF",
+        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI SS NUMBER MESSAGE STRING < / > { } ( ) , : EOF",
         "start": "LOGText",
         "bnf": {
             "expressions": [
@@ -102,6 +103,7 @@ export class Parser2 {
             ],
             "GEOElementValue": [
                 ['IP_ADDRESS', '$$ = $1;'],
+                ['SS', '$$ = $1;'],
                 ['STRING', '$$ = $1.trim();'],
                 ['CLI', '$$ = $1;'],
                 ['NUMBER', '$$ = parseFloat($1);'],
