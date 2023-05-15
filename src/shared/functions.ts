@@ -14,6 +14,7 @@ import _ from 'lodash';
 import { Parser2 } from '../Parser2';
 import { Watcher } from '@watcher';
 import { Stream } from 'stream';
+import Workgroup from '@enums/workgroup.enum';
 
 
 interface IRequest extends Request {
@@ -209,7 +210,6 @@ export const parseSearchFilter = (filt: string): Array<Processes> => {
   return getProcessFromTranslation(processTranslation, splited);
 }
 
-export const isWorkGroup = (group: number | string): boolean => {
-  group = group.toString();
-  return ['9', '10', '11', '12', '13'].includes(group);
+export const isWorkGroup = (group: number | Workgroup): boolean => {
+  return group >= 9 && group <= 13;
 }

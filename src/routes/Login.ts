@@ -6,11 +6,10 @@ import { corsOpt as cors } from '@shared/constants';
 import passport from 'passport';
 import { Guards } from '@shared/guards';
 import { Logger } from '@shared/Logger';
-import { checkPassword, isWorkGroup, getAvatarURL } from '@shared/functions';
+import { getAvatarURL } from '@shared/functions';
 import { JWT } from '@shared/jwt';
 import { IJwtPayload } from '@interfaces/user';
 import { io } from '../index';
-import jwt from 'express-jwt';
 
 interface IRequest extends Request {
   session: any;
@@ -19,7 +18,7 @@ interface IRequest extends Request {
 const router = Router();
 const { OK, INTERNAL_SERVER_ERROR, CONFLICT, UNAUTHORIZED } = StatusCodes;
 
-const { GET_USER_BY_NAME, GET_USER } = SQLQueries;
+const { GET_USER_BY_NAME } = SQLQueries;
 
 router.post('/login', cors, json(), (req: any, res: any, next: (err?: any) => any): void => {
   passport.authenticate('local', async (err, user, _info) => {
@@ -28,7 +27,7 @@ router.post('/login', cors, json(), (req: any, res: any, next: (err?: any) => an
       req.login(user, { session: true }, async (error: any) => {
         if (error) return next(error);
         
-        const { main_group, username, secondary_group, user_avatar, user_password, user_id } = user;
+        const { main_group, username, secondary_group, user_avatar, user_id } = user;
         
         const payload: IJwtPayload = {
           id: user_id,
