@@ -28,7 +28,7 @@ router.get('/backup/:hash', (req: any, res: any) => {
        .send('Bad request: required parameters missed'); 
     return;
   }
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUP_FILE');
+  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUP_FILE', req.params.hash);
   Backuper.getBackupFile(req.params.hash)
           .then((data) => {
             res.status(OK)
