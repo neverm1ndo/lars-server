@@ -12,7 +12,7 @@ const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 
 const router = Router();
 
-router.get('/backups-list', (req: any, res: any) => {
+router.get('/backups', (req: any, res: any) => {
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUPS_LIST');
   BACKUP.find({})
         .sort({ unix: - 1 })
@@ -22,7 +22,7 @@ router.get('/backups-list', (req: any, res: any) => {
         });
 });
 
-router.get('/backup-file/:hash', (req: any, res: any) => {
+router.get('/backup/:hash', (req: any, res: any) => {
   if (!req.params.hash) { 
     res.status(CONFLICT)
        .send('Bad request: required parameters missed'); 
@@ -40,7 +40,7 @@ router.get('/backup-file/:hash', (req: any, res: any) => {
           });
 });
 
-router.get('/restore-backup/:hash', (req: any, res: Response) => {
+router.get('/restore/:hash', (req: any, res: Response) => {
   if (!req.params.hash) { 
     res.status(CONFLICT)
        .send('Bad request: required parameters missed'); 
