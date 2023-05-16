@@ -12,7 +12,7 @@ const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 
 const router = Router();
 
-router.get('/backups', (req: any, res: any) => {
+router.get('/list', (req: any, res: any) => {
   Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUPS_LIST');
   BACKUP.find({})
         .sort({ unix: - 1 })
