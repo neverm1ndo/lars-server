@@ -20,7 +20,7 @@ export const CommonErrors = {
   [ErrorCode.CHILD_PROCESS_ALREADY_SERVED]: 'One of the requested child processes already served.',
   [ErrorCode.CHILD_PROCESS_IS_NOT_EXISTS]: 'Child process is not exists.',
   [ErrorCode.CHILD_PROCESS_CANT_SERVE]: 'Child process cant serve.',
-}
+} as const;
 
 export const statsman = new Statsman.OnlineMetric();
 export const omp = new OMPServerControl();
@@ -28,11 +28,24 @@ export const omp = new OMPServerControl();
 export const SQLQueries: { [key: string]: string } = {
   GET_USER_BY_NAME: "SELECT phpbb_users.user_id, phpbb_users.user_email, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.username = ? LIMIT 1",
   GET_USER: "SELECT phpbb_users.user_id, phpbb_users.user_password, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id BETWEEN 9 AND 14 AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id AND phpbb_users.user_email = ? LIMIT 1",
+  
   GET_ADMIN_LIST: 'SELECT phpbb_users.user_id, phpbb_users.username, phpbb_users.user_avatar, phpbb_users.user_email, phpbb_users.group_id AS main_group, role.secondary_group FROM phpbb_users INNER JOIN (SELECT phpbb_user_group.user_id, MAX(phpbb_user_group.group_id) as secondary_group FROM phpbb_users, phpbb_user_group WHERE phpbb_users.group_id IN (?, ?, ?, ?, ?, ?) AND phpbb_user_group.user_id = phpbb_users.user_id GROUP BY phpbb_user_group.user_id) AS role ON role.user_id = phpbb_users.user_id',
   CHANGE_MAIN_GROUP: 'UPDATE phpbb_user_group, phpbb_users SET phpbb_user_group.group_id = ?, phpbb_users.group_id = ? WHERE phpbb_user_group.user_id = phpbb_users.user_id AND phpbb_users.user_id = ?;',
   CHANGE_SECONDARY_GROUP: 'UPDATE phpbb_user_group INNER JOIN (SELECT MAX(group_id) as group_id FROM phpbb_user_group WHERE group_id BETWEEN 9 AND 14 AND user_id = ? GROUP BY user_id) AS secondary_group SET phpbb_user_group.group_id = ? WHERE phpbb_user_group.group_id = secondary_group.group_id AND user_id = ?',
+  
   GET_BANLIST: 'SELECT * FROM phpbb_samp_bans INNER JOIN (SELECT username AS admin_username, user_id, user_avatar AS admin_avatar FROM phpbb_users) AS admin_user ON phpbb_samp_bans.admin_id = admin_user.user_id LEFT JOIN (SELECT username AS banned_username, user_id FROM phpbb_users) AS banned_user ON phpbb_samp_bans.user_id = banned_user.user_id',
-};
+  BAN_CN_SEARCH: 'SELECT * FROM phpbb_samp_bans WHERE serial_cn = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?',
+  BAN_IP_SEARCH: 'SELECT * FROM phpbb_samp_bans WHERE ip = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?',
+  BAN_SERIALS_SEARCH: 'SELECT * FROM phpbb_samp_bans WHERE serial_as = ?, serial_ss = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?',
+  BAN_CHANGE_DATE: 'UPDATE phpbb_samp_bans SET banned_to = ? WHERE id = ?',
+  __BAN_ADMIN_SEARCH: 'SELECT * FROM phpbb_samp_bans WHERE admin_id = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?',
+  __BAN_NICKNAME_SEARCH: 'SELECT * FROM phpbb_samp_bans WHERE serial_cn = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?',
+  
+  BAN_COMMENT: 'SELECT * FROM phpbb_samp_bans_comments WHERE ban_id = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?',
+ 
+  BAN_POST_COMMENT: 'INSERT INTO phpbb_samp_bans_comments (id, ban_id, commentator_id, comment_text) VALUES (NULL, ?, ?, ?)',
+  BAN_PATCH_COMMENT: 'UPDATE phpbb_samp_bans_comments SET comment_text = ? WHERE id = ? LIMIT 1',
+} as const;
 
 const experimentalConfigFileStorage = experimentalStorage({
   destination: function (req: any, _file: any, cb: any) {
