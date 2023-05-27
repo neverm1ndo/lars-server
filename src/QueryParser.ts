@@ -5,9 +5,28 @@ export class QueryParser {
     private _engine;
 
     /**
-     * Query string syntax
-     * (nn|nickname):<NICKANME1>,<NICKNAME2> & (srl|serial):<AS>*<SS> - search in nicknames ['NICKNAME1', 'NICKNAME2'] with specific serials
-     * "nn" - is an alias for "nickname" 
+     * Search engine query string syntax
+     * !! Experimental lex !!
+     * 
+     * Logical Operators:
+     *      & - logical AND
+     * 
+     * Search operators:
+     *      bans:<nickname | ip | cn | as&ss> - search bans only
+     *      nickname:<nickname&...> - search by nickname
+     *      nn:<nickname&...> - alias for nickname:
+     *      ip:<ip> - search by ip address
+     *      serial:<as>&<ss> - search by serials
+     *      s:<as>&<ss> - alias for serial:
+     * 
+     * Experimental filtering:
+     *      ac: - show anti-cheat responses only
+     *      admin:<nickname&...> - show admin actions
+     *      daterange:<unix&unix> - show a certain period of time
+     *      message:<any string> - find specific string in messages
+     *      cli:<client version>
+     *      gun:<gun_id> - show kills with specific gun
+     *      dev: - show info for mod developers
      */
 
     private _grammar = {
