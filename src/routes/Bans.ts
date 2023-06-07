@@ -9,7 +9,8 @@ const router = Router();
 const { 
   MOVED_PERMANENTLY, 
   INTERNAL_SERVER_ERROR, 
-  CONFLICT, 
+  CONFLICT,
+  NOT_IMPLEMENTED,
   OK 
 } = StatusCodes;
 
@@ -22,6 +23,7 @@ const {
   BAN_COMMENT,
   BAN_POST_COMMENT,
   BAN_PATCH_COMMENT,
+  BAN_USERNAME_SEARCH,
 } = SQLQueries;
 
 interface Ban {
@@ -46,161 +48,143 @@ const DEFAULT_QUERY_PARAMS: { [key: string]: number } = {
   limit: 50,
 } as const;
 
-function limitAndPageQueryParamsCheck(req: Request, res: Response, next: NextFunction) {
-  let { page, limit } = DEFAULT_QUERY_PARAMS;
-  
-  if (req.query.p) page = +req.query.p;
-  if (req.query.lim) limit = +req.query.lim;
+function limitAndPageQueryParamsCheck(req: Request, res: Response, next: NextFunction) {  
+  if (req.query.p)   req.body.page  = Number.parseInt(req.query.p as string);
+  if (req.query.lim) req.body.limit = Number.parseInt(req.query.lim as string);
 
-  if (Number.isNaN(page) || Number.isNaN(limit)) res.sendStatus(CONFLICT);
+  req.body = Object.assign(req.body, DEFAULT_QUERY_PARAMS);
+
+  if (Number.isNaN(req.body.page) || Number.isNaN(req.body.limit)) res.sendStatus(CONFLICT);
   next();
 }
 
-router.get('/', (req: Request, res: Response) => {
+function transformDBResponseBeforeSend([rows]: any[]): Ban[] {
+  return (rows as Ban[]).map((ban: Ban) => {
+    ban.admin_avatar = getAvatarURL(ban.admin_avatar);
+    return ban;
+  });
+}
+
+async function sendDBRequest(request: string, params?: any[]) {
+  return MSQLPool.promise()
+                 .query(request, params);
+}
+
+async function requestBansFromDB(request: string, params?: any[]): Promise<Ban[]> {
+  return sendDBRequest(request, params).then(transformDBResponseBeforeSend);
+}
+
+router.use(limitAndPageQueryParamsCheck);
+
+router.get('/', async (req: Request, res: Response) => {
   
-  let { page, limit } = DEFAULT_QUERY_PARAMS;
+  const { page, limit } = req.body;
+
+  try {
+    const banlist: Ban[] = await requestBansFromDB(GET_BANLIST, [limit, page]);
+    res.send(banlist);
+  } catch(err) {
+    console.error(err);
+    res.sendStatus(INTERNAL_SERVER_ERROR);
+  };
+});
+
+router.get('/cn/:serial', async (req: Request, res: Response) => {
+
+  const { page, limit } = req.body;
+
+  try {
+    const banlist: Ban[] = await requestBansFromDB(BAN_CN_SEARCH, [req.params.serial, limit, page]);
+    res.send(banlist);
+  } catch(err) {
+    console.error(err);
+    res.sendStatus(INTERNAL_SERVER_ERROR);
+  };
+});
+
+router.get('/ip/:ip', async (req: Request, res: Response) => {
+
+  const { page, limit } = req.body;
+
+  try {
+    const banlist: Ban[] = await requestBansFromDB(BAN_IP_SEARCH, [req.params.ip, limit, page]);
+    res.send(banlist);
+  } catch(err) {
+    console.error(err);
+    res.sendStatus(INTERNAL_SERVER_ERROR);
+  };
+});
+
+router.get('/serials', async (req: Request, res: Response) => {
   
-  if (req.query.p) page = +req.query.p;
-  if (req.query.lim) limit = +req.query.lim;
-
-  if (Number.isNaN(page) || Number.isNaN(limit)) return res.sendStatus(CONFLICT);
+  const { page, limit } = req.body;
   
-  MSQLPool.promise()
-          .query(GET_BANLIST /**, [limit, page] */)
-          .then(([rows]): void => {
-            (rows as Ban[]).map((ban: Ban) => {
-              ban.admin_avatar = getAvatarURL(ban.admin_avatar);
-              return ban;
-            });
-            
-            res.send(rows as Ban[]);
-          })
-          .catch((err): void => {
-            console.log(err);
-            res.sendStatus(INTERNAL_SERVER_ERROR);
-          });
+  try {
+    const banlist: Ban[] = await requestBansFromDB(BAN_SERIALS_SEARCH, [req.params.as, req.params.ss, limit, page]);
+    res.send(banlist);
+  } catch(err) {
+    console.error(err);
+    res.sendStatus(INTERNAL_SERVER_ERROR);
+  };
 });
 
-router.get('/cn/:serial', (req: Request, res: Response) => {
-  let page = 0;
-  let limit = 50;
-  if (!req.params.serial) res.sendStatus(CONFLICT);
-  if (req.query.p) page = +req.query.p;
-  if (req.query.lim) limit = +req.query.lim;
-  MSQLPool.promise()
-          .query(BAN_CN_SEARCH, [req.params.serial, limit, page])
-          .then(([rows]): void => {
-            res.send(rows as Ban[]);
-          })
-          .catch((err): void => {
-            console.log(err);
-            res.sendStatus(INTERNAL_SERVER_ERROR);
-          });
+router.get('/admin/:username', (_req: Request, res: Response) => {
+  return res.sendStatus(NOT_IMPLEMENTED);
 });
 
-router.get('/ip/:ip', (req: Request, res: Response) => {
-  let page = 0;
-  let limit = 50;
-  if (!req.params.ip) res.sendStatus(CONFLICT);
-  if (req.query.p) page = +req.query.p;
-  if (req.query.lim) limit = +req.query.lim;
-  MSQLPool.promise()
-          .query(BAN_IP_SEARCH, [req.params.ip, limit, page])
-          .then(([rows]): void => {
-            res.send(rows as Ban[]);
-          })
-          .catch((err): void => {
-            console.log(err);
-            res.sendStatus(INTERNAL_SERVER_ERROR);
-          });
+router.get('/user/:username', async (req: Request, res: Response) => {
+  
+  const { page, limit } = req.body;
+
+  try {
+    const banlist: Ban[] = await requestBansFromDB(BAN_USERNAME_SEARCH, [req.params.username, limit, page]);
+    res.send(banlist);
+  } catch(err) {
+    console.error(err);
+    res.sendStatus(INTERNAL_SERVER_ERROR);
+  };
+  
 });
 
-router.get('/serials', (req: Request, res: Response) => {
-  let page = 0;
-  let limit = 50;
-  if (!req.query.as && !req.query.ss) res.sendStatus(CONFLICT);
-  if (req.query.p) page = +req.query.p;
-  if (req.query.lim) limit = +req.query.lim;
-  MSQLPool.promise()
-          .query(BAN_SERIALS_SEARCH, [req.query.as, req.query.ss, limit, page])
-          .then(([rows]): void => {
-            res.send(rows as Ban[]);
-          })
-          .catch((err): void => {
-            console.log(err);
-            res.sendStatus(INTERNAL_SERVER_ERROR);
-          });
-});
 
-router.get('/admin/:id', (req: Request, res: Response) => {
-  let page = 0;
-  let limit = 50;
-  if (!req.params.id) res.sendStatus(CONFLICT);
-  if (req.query.p) page = +req.query.p;
-  if (req.query.lim) limit = +req.query.lim;
-  MSQLPool.promise()
-          .query('SELECT * FROM phpbb_samp_bans WHERE admin_id = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?', [req.params.id, limit, page])
-          .then(([rows]): void => {
-            res.send(rows as Ban[]);
-          })
-          .catch((err): void => {
-            console.log(err);
-            res.sendStatus(INTERNAL_SERVER_ERROR);
-          });
-});
+/**
+ * Changes ban date or set it permanent
+ */
+router.patch('/ban/:id', json(), async (req: Request, res: Response) => {
+  try {
+    if (!req.body.banned_to) throw CONFLICT;
 
-router.get('/user/:username', (req: Request, res: Response) => {
-  let page = 0;
-  let limit = 50;
-  if (!req.params.id) res.sendStatus(CONFLICT);
-  if (req.query.p) page = +req.query.p;
-  if (req.query.lim) limit = +req.query.lim;
-  MSQLPool.promise()
-          .query('SELECT * FROM phpbb_samp_bans WHERE username = ? ORDER BY banned_from DESC LIMIT ? OFFSET ?', [req.params.username, limit, page])
-          .then(([rows]): void => {
-            res.send(rows as Ban[]);
-          })
-          .catch((err): void => {
-            console.log(err);
-            res.sendStatus(INTERNAL_SERVER_ERROR);
-          });
-});
+    await sendDBRequest(BAN_CHANGE_DATE, [req.body.banned_to, req.params.id]);
 
-router.patch('/ban/:id', json(), (req: Request, res: Response) => {
-  MSQLPool.promise()
-          .query(BAN_CHANGE_DATE, [req.body.banned_to, req.params.id])
-          .then((): void => {
-            res.sendStatus(OK);
-          })
-          .catch((err): void => {
-            console.error(err);
-            res.sendStatus(INTERNAL_SERVER_ERROR);
-          });
+    res.sendStatus(OK);
+  } catch(err) {
+    console.error(err);
+    if (typeof err === 'number') return res.sendStatus(err);
+  
+    res.sendStatus(INTERNAL_SERVER_ERROR);
+  };
 });
 
 /**
- * Bans admin comments
+ * Admin comments for bans
  * Uses only in LARS
  */
-
-router.get('/ban/comment/:id', (req: Request, res: Response) => {
-  MSQLPool.promise()
-          .query(BAN_COMMENT, [req.body.banned_to, req.params.id])
-          .then((): void => {
-            res.sendStatus(OK);
-          })
-          .catch((err): void => {
-            console.error(err);
-            res.sendStatus(INTERNAL_SERVER_ERROR);
-          });
+router.get('/ban/comment/:id', async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id) throw new Error('Conflict params');
+    const comments = await sendDBRequest(BAN_COMMENT, [req.params.id]);
+  
+    res.send(comments);
+  } catch(err) {
+    console.error(err);
+    res.sendStatus(INTERNAL_SERVER_ERROR);
+  }
 });
 
 router.post('/ban/comment/:id', json(), (req: Request, res: Response) => {
   MSQLPool.promise()
           .query(BAN_POST_COMMENT, [req.body.banned_to, req.params.id])
-          .then((): void => {
-            res.sendStatus(OK);
-          })
+          .then((): void => { res.sendStatus(OK); })
           .catch((err): void => {
             console.error(err);
             res.sendStatus(INTERNAL_SERVER_ERROR);
@@ -210,9 +194,7 @@ router.post('/ban/comment/:id', json(), (req: Request, res: Response) => {
 router.patch('/ban/comment/:id', json(), (req: Request, res: Response) => {
   MSQLPool.promise()
           .query(BAN_PATCH_COMMENT, [req.body.banned_to, req.params.id])
-          .then((): void => {
-            res.sendStatus(OK);
-          })
+          .then((): void => { res.sendStatus(OK); })
           .catch((err): void => {
             console.error(err);
             res.sendStatus(INTERNAL_SERVER_ERROR);
