@@ -47,8 +47,7 @@ export default class Backuper {
     Logger.Err(error, true);
   }
   
-  /**
-   * 
+  /** 
    * @param path - path to the backuping file 
    * @param user - user info of backup initiator
    * @param action - action that initiated backup
@@ -129,7 +128,7 @@ export default class Backuper {
   static async removeExpired(): Promise<any> {
     const now: Date = new Date();
     
-    const unlinkShchedule: Promise<void[]> = BACKUP.find<BackupNote>({ expires: { $lte: now }}, [])
+    const unlinkShchedule: Promise<unknown> = BACKUP.find<BackupNote>({ expires: { $lte: now }}, [])
           .then((notes) => {
             if (!notes) throw 'no backup';
             return notes;
@@ -158,8 +157,7 @@ export default class Backuper {
                  });
   }
 
-  /**
-   * 
+  /** 
    * @param hash 
    * @returns {Promise<Buffer>} - file buffer
    */
