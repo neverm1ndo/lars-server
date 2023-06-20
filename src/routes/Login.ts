@@ -1,5 +1,5 @@
 import StatusCodes from 'http-status-codes';
-import { Router, json, Request } from 'express';
+import { Router, json } from 'express';
 
 import { MSQLPool, SQLQueries } from '@shared/constants';
 import { corsOpt as cors, logger } from '@shared/constants';
@@ -12,14 +12,10 @@ import { IJwtPayload } from '@interfaces/user';
 import { io } from '../index';
 import Workgroup from '@enums/workgroup.enum';
 
-interface IRequest extends Request {
-  session: any;
-}
-
 const LOGGER_PREFIX = '[AUTH]';
 
 const router = Router();
-const { OK, INTERNAL_SERVER_ERROR, CONFLICT, UNAUTHORIZED } = StatusCodes;
+const { OK, INTERNAL_SERVER_ERROR } = StatusCodes;
 
 const { GET_USER_BY_NAME } = SQLQueries;
 
@@ -61,11 +57,11 @@ router.post('/login', cors, json(), (req: any, res: any, next: (err?: any) => an
   })(req, res, next);
 });
 
-router.get('/identity', Guards.rejectUnauthorized, cors, (req: any, res: any): void => {
+router.get('/identity', Guards.rejectUnauthorized, cors, (_req: any, res: any): void => {
   res.sendStatus(OK);
 });
 
-const reqLogout = function(req: any, res: any, next: (c?: any) => any) {
+const reqLogout = function(req: any, _res: any, next: (c?: any) => any) {
   req.logout(function(err: any) {
     if (err) return next(err);
     next();
