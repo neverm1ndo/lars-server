@@ -11,14 +11,14 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 
 import { connect, ConnectOptions, set } from 'mongoose';
-import { rmOldBackups, SQLQueries, tailOnlineStats, MSQLPool } from '@shared/constants';
+import { rmOldBackups, SQLQueries, tailOnlineStats, MSQLPool, logger } from '@shared/constants';
 
 import BaseRouter from './routes';
 
 import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
 
-import { Logger } from '@shared/Logger';
+// import { Logger } from '@shared/Logger';
 import { watch, isWorkGroup, checkPassword } from '@shared/functions';
 import { IDBUser, IJwtPayload } from '@interfaces/user';
 
@@ -108,7 +108,7 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(jwtPayload: IJwtPayload, done) {
-  done(null, jwtPayload);
+  done(null, jwtPayload as any);
 });
 
 app.use(passport.initialize());
@@ -138,7 +138,7 @@ app.get('*', (_req: Request, res: Response) => {
 
 // Print API errors
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-    Logger.log('error', 
+    logger.log('[INTERNAL_ERROR]', 
       'SERVER', err, '\n',
       'ORIGINAL_URL', req.originalUrl, '\n',
       'PROTOCOL', req.protocol, '\n',

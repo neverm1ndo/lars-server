@@ -1,8 +1,7 @@
 import { ChildProcess, SpawnOptionsWithoutStdio, spawn } from 'child_process';
-import { CommonErrors } from '@shared/constants';
+import { CommonErrors, logger } from '@shared/constants';
 import { ErrorCode } from '@enums/error.codes.enum';
 import path from 'path';
-import { Logger } from './Logger';
 
 namespace PlatformUtilities {
   export const LINUX = {
@@ -52,12 +51,12 @@ export class OMPServerControl {
           this._stdout(LOG_MESSAGES.SERVER_IS_DOWN);
         })
         .catch((error) => {
-          console.error(error);
+          this._stdout(error.message);
         });
   }
 
   protected _stdout(...args: any[]): void {
-    Logger.log('default', '[OMP]', ...args);
+    logger.log('[OMP]', ...args);
   }
 
   private _isSupportedPlatform(platform: NodeJS.Platform): boolean {

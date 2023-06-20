@@ -1,7 +1,7 @@
 import md5 from 'md5';
 
 import iconv from 'iconv-lite';
-import { Logger } from './Logger';
+import { logger } from './constants';
 import { processTranslation, statsman, MSQLPool, SQLQueries, noAvatarImageUrl } from '@shared/constants';
 import { IContentData, ILogLine } from '@interfaces/logline';
 import { Document } from 'mongoose';
@@ -77,7 +77,7 @@ export const watch = (): void => {
     if (_isSimilarLine(logLine, _last)) {
       _dbDocument.updateOne({$inc: { multiplier: 1 }})
                  .catch((err) => {
-                    Logger.log('error', err.message);
+                    logger.log('[ERROR]', err.message);
                  });
       return;
     }
@@ -114,9 +114,9 @@ export const watch = (): void => {
               _save(logLine);
               _updateStatistics(logLine);
             
-            } catch(error) {
+            } catch(error: any) {
               console.log(buffer.toString());
-              Logger.log('error', error);
+              logger.log('[ERROR]', error.message);
             }
          });
   _watchServerLog();
@@ -152,7 +152,7 @@ export const isDate = (date :string): boolean => {
 
 export const pErr = (err: Error) => {
     if (err) {
-        Logger.log('error', err);
+        logger.log('[ERROR]', err.message);
     }
 };
 
@@ -191,15 +191,20 @@ export const getCharset = (typeString: string): string | false => {
   return charset(typeString);
 }
 
-export const checkPassword = (pass: string, hash: string): boolean => {
-    let salt = hash.slice(0, hash.length - 32);
-    let realPassword = hash.slice(hash.length - 32, hash.length);
-    let password = md5(salt + pass);
-    if (password === realPassword) {
-      return true;
-    } 
-    return false;
-  }
+export const checkPassword = (pass?: string, hash?: string): boolean => {
+    
+  if (!pass || !hash) return false;
+    
+  let salt = hash.slice(0, hash.length - 32);
+  let realPassword = hash.slice(hash.length - 32, hash.length);
+  let password = md5(salt + pass);
+  
+  if (password === realPassword) {
+    return true;
+  } 
+  
+  return false;
+}
 
 export const getProcessFromTranslation = <T, K extends keyof T>(processes: T, translations: K[]): Array<T[K]> => {
   return translations.map((t) => processes[t]);
@@ -210,6 +215,7 @@ export const parseSearchFilter = (filt: string): Array<Processes> => {
   return getProcessFromTranslation(processTranslation, splited);
 }
 
-export const isWorkGroup = (group: number | Workgroup): boolean => {
+export const isWorkGroup = (group?: number | Workgroup): boolean => {
+  if (!group) return false;
   return group >= 9 && group <= 13;
 }

@@ -1,13 +1,14 @@
-import { Logger } from '@shared/Logger';
 import Workgroup from '@enums/workgroup.enum';
 import { Socket } from 'socket.io';
 import { io } from '../index';
-import { omp, statsman } from '@shared/constants';
+import { omp, statsman, logger } from '@shared/constants';
 import { getAvatarURL } from '@shared/functions';
 import { ISocket } from '@interfaces/httpio.enum';
 
 
 const { DEV } = Workgroup;
+
+const LOGGER_PREFIX = '[SOCKET]';
 
 enum ServerStatus {
   OFFLINE = 1,
@@ -40,16 +41,18 @@ const sockets = (socket: ISocket) => {
 
   if (socket.handshake.auth.app === 'modloader') socket.join('server_log');
   
-  Logger.log('default', 'SOCKET |', socket.request.user?.username, 'connected');
+  logger.log(LOGGER_PREFIX, 'USER_CONNECT', `(${socket.handshake.address})`, socket.request.user?.username, Workgroup[socket.request.user?.main_group as number]);
   
   socket.on('get-status', async () => {
     if (!isDev(socket)) return; 
     
     try {
       const status: boolean = await omp.getServerStatus();
+
+      logger.log(LOGGER_PREFIX, 'SERVER_GET_STATUS', `(${socket.handshake.address})`, socket.request.user?.username, status);
       socket.emit('server-status', status ? ServerStatus.LIVE : ServerStatus.OFFLINE);
     } catch (error: any) {
-      Logger.log('error', error.message);
+      logger.err(LOGGER_PREFIX, 'SERVER_STATUS', error.message);
       socket.emit('server-error', error);
     }
   });
@@ -57,7 +60,7 @@ const sockets = (socket: ISocket) => {
   socket.on('reboot-server', async () => {
     if (!isDev(socket)) return;
     
-    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> REBOOT_SVR_SA');
+    logger.log(LOGGER_PREFIX, 'SERVER_REBOOT', `(${socket.handshake.address})`, socket.request.user?.username);
     
     io.sockets.emit('server-status', ServerStatus.REBOOTING);
     io.sockets.emit('alert:server-rebooting', { 
@@ -75,9 +78,9 @@ const sockets = (socket: ISocket) => {
       statsman.snapshot = 0;
       statsman.tail();
       
-      Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> REBOOTED_SVR_SA');
+      logger.log(LOGGER_PREFIX, 'SERVER_REBOOT_SUCCESS', `(${socket.handshake.address})`, socket.request.user?.username);
     } catch(error: any) {
-      Logger.log('error', error.message);
+      logger.err(LOGGER_PREFIX, 'SERVER_REBOOT', `(${socket.handshake.address})`, socket.request.user?.username);
       socket.broadcast.to('devs').emit('server-error', error);
     };
   });
@@ -85,7 +88,7 @@ const sockets = (socket: ISocket) => {
   socket.on('stop-server', async () => {
     if (!isDev(socket)) return;
     
-    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username,'-> STOP_SVR_SA');
+    logger.log(LOGGER_PREFIX, 'SERVER_STOP', `(${socket.handshake.address})`, socket.request.user?.username);
     
     try {
       const stdout = await omp.stop()
@@ -100,9 +103,9 @@ const sockets = (socket: ISocket) => {
       statsman.snapshot = 0;
       statsman.tail();
       
-      Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username,'-> STOPED_SVR_SA');
+      logger.log(LOGGER_PREFIX, 'SERVER_STOP_SUCCESS', `(${socket.handshake.address})`, socket.request.user?.username);
     } catch (error: any) {
-      Logger.log('error', error.message);
+      logger.err(LOGGER_PREFIX, 'SERVER_STOP_FAIL', `(${socket.handshake.address})`, socket.request.user?.username);
       socket.broadcast.to('devs').emit('server-error', error);
     };
   });
@@ -110,23 +113,23 @@ const sockets = (socket: ISocket) => {
   socket.on('launch-server', () => {
     if (!isDev(socket)) return;
     
-    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> LAUNCH_SVR_SA');
+    logger.log(LOGGER_PREFIX, 'SERVER_LAUNCH', `(${socket.handshake.address})`, socket.request.user?.username);
 
     io.emit('server-status', ServerStatus.LAUNCHING);
     
     omp.launch()
        .then(() => {
          io.sockets.emit('server-launched');
-         Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> LAUNCHED_SVR_SA');
+         logger.log(LOGGER_PREFIX, 'SERVER_LAUNCH_SUCCESS', `(${socket.handshake.address})`, socket.request.user?.username);
        })
        .catch((error) => {
-         Logger.log('error', error.message);
+        logger.err(LOGGER_PREFIX, 'SERVER_STOP_FAIL', `(${socket.handshake.address})`, socket.request.user?.username);
          socket.broadcast.to('devs').emit('server-error', error);
        });
   });
 
   socket.on('user-action', (action) => {
-    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> SOCKET_USER_ACTION', UserActivity[action]);
+    logger.log(LOGGER_PREFIX, 'USER_ACTION', `(${socket.handshake.address})`, socket.request.user?.username, UserActivity[action]);
     
     socket.data.activity = action;
     io.sockets.emit('user-activity', { 
@@ -140,7 +143,7 @@ const sockets = (socket: ISocket) => {
   });
 
   socket.on('disconnect', (reason) => {
-    Logger.log('default', 'SOCKET │', socket.handshake.address, socket.request.user?.username, '-> DISCONNECT', reason);
+    logger.log(LOGGER_PREFIX, 'USER_DISCONNECT', `(${socket.handshake.address})`, socket.request.user?.username);
     socket.broadcast.to('devs').emit('user-activity', 'offline', reason);
   });
 }

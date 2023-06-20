@@ -1,8 +1,9 @@
 import StatusCodes from 'http-status-codes';
 import { Router, Request, Response, json, NextFunction } from 'express';
 
-import { MSQLPool, SQLQueries } from '@shared/constants';
+import { MSQLPool, SQLQueries, logger } from '@shared/constants';
 import { getAvatarURL } from '@shared/functions';
+import Workgroup from '@enums/workgroup.enum';
 
 const router = Router();
 
@@ -43,6 +44,8 @@ interface Ban {
   banned_to?: Date | null; 
 }
 
+const LOGGER_PREFIX = '[BANS]';
+
 const DEFAULT_QUERY_PARAMS: { [key: string]: number } = {
   page: 0,
   limit: 50,
@@ -76,54 +79,63 @@ async function requestBansFromDB(request: string, params?: any[]): Promise<Ban[]
 
 router.use(limitAndPageQueryParamsCheck);
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: any, res: Response) => {
   
   const { page, limit } = req.body;
 
   try {
+    logger.log(LOGGER_PREFIX, '[GET]', 'BAN_LIST', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
+    
     const banlist: Ban[] = await requestBansFromDB(GET_BANLIST, [limit, page]);
     res.send(banlist);
-  } catch(err) {
-    console.error(err);
+    
+  } catch(err: any) {
+    logger.err(LOGGER_PREFIX, '[GET]', 'BAN_LIST_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `\n::${err.message}::`);
     res.sendStatus(INTERNAL_SERVER_ERROR);
   };
 });
 
-router.get('/cn/:serial', async (req: Request, res: Response) => {
+router.get('/cn/:serial', async (req: any, res: Response) => {
 
   const { page, limit } = req.body;
 
   try {
+    logger.log(LOGGER_PREFIX, '[GET]', 'BAN_LIST_SEARCH_CN', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], req.params.serial);
+    
     const banlist: Ban[] = await requestBansFromDB(BAN_CN_SEARCH, [req.params.serial, limit, page]);
     res.send(banlist);
-  } catch(err) {
-    console.error(err);
+  } catch(err: any) {
+    logger.err(LOGGER_PREFIX, '[GET]', 'BAN_LIST_SEARCH_CN_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], req.params.serial, `::${err.message}::`);
     res.sendStatus(INTERNAL_SERVER_ERROR);
   };
 });
 
-router.get('/ip/:ip', async (req: Request, res: Response) => {
-
+router.get('/ip/:ip', async (req: any, res: Response) => {
+  
   const { page, limit } = req.body;
-
+  
   try {
+    logger.err(LOGGER_PREFIX, '[GET]', 'BAN_LIST_SEARCH_IP', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], req.params.serial, `::${req.params.ip}::`);
+    
     const banlist: Ban[] = await requestBansFromDB(BAN_IP_SEARCH, [req.params.ip, limit, page]);
     res.send(banlist);
-  } catch(err) {
-    console.error(err);
+  } catch(err: any) {
+    logger.err(LOGGER_PREFIX, '[GET]', 'BAN_LIST_SEARCH_IP_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], req.params.serial, `::${err.message}::`);
     res.sendStatus(INTERNAL_SERVER_ERROR);
   };
 });
 
-router.get('/serials', async (req: Request, res: Response) => {
+router.get('/serials', async (req: any, res: Response) => {
   
   const { page, limit } = req.body;
   
   try {
+    logger.log(LOGGER_PREFIX, '[GET]', 'BAN_SEARCH_SERIALS', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `AS:${req.query.as} SS:${req.query.ss}`);
+    
     const banlist: Ban[] = await requestBansFromDB(BAN_SERIALS_SEARCH, [req.params.as, req.params.ss, limit, page]);
     res.send(banlist);
-  } catch(err) {
-    console.error(err);
+  } catch(err: any) {
+    logger.err(LOGGER_PREFIX, '[GET]', 'BAN_SEARCH_SERIALS_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `AS:${req.query.as} SS:${req.query.ss}`, `::${err.message}::`);
     res.sendStatus(INTERNAL_SERVER_ERROR);
   };
 });
@@ -132,14 +144,17 @@ router.get('/admin/:username', (_req: Request, res: Response) => {
   return res.sendStatus(NOT_IMPLEMENTED);
 });
 
-router.get('/user/:username', async (req: Request, res: Response) => {
+router.get('/user/:username', async (req: any, res: Response) => {
   
   const { page, limit } = req.body;
 
   try {
+    logger.log(LOGGER_PREFIX, '[GET]', 'BAN_USER', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `BAN::${req.params.username}`);
+    
     const banlist: Ban[] = await requestBansFromDB(BAN_USERNAME_SEARCH, [req.params.username, limit, page]);
     res.send(banlist);
   } catch(err) {
+    logger.err(LOGGER_PREFIX, '[GET]', 'BAN_USER', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `BAN::${req.params.username}`);
     console.error(err);
     res.sendStatus(INTERNAL_SERVER_ERROR);
   };
@@ -149,16 +164,18 @@ router.get('/user/:username', async (req: Request, res: Response) => {
 
 /**
  * Changes ban date or set it permanent
- */
-router.patch('/ban/:id', json(), async (req: Request, res: Response) => {
+*/
+router.patch('/ban/:id', json(), async (req: any, res: Response) => {
   try {
+    logger.log(LOGGER_PREFIX, '[PATCH]', 'BAN_USER_ID', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `BAN_ID::${req.params.id}`);
     if (!req.body.banned_to) throw CONFLICT;
-
+    
     await sendDBRequest(BAN_CHANGE_DATE, [req.body.banned_to, req.params.id]);
-
+    
     res.sendStatus(OK);
-  } catch(err) {
-    console.error(err);
+  } catch(err: any) {
+    logger.err(LOGGER_PREFIX, '[PATCH]', 'BAN_USER_ID_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `BAN_ID::${req.params.id}`, `::${err.message}::`);
+    
     if (typeof err === 'number') return res.sendStatus(err);
   
     res.sendStatus(INTERNAL_SERVER_ERROR);

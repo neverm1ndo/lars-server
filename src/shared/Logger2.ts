@@ -67,7 +67,10 @@ export class Logger {
     public log(...args: any[]): void {
         const [seconds, minutes, hours, date, month, year]: string[] = this._createNowTimestamp();
 
-        if (this._date !== date) this._switchToTheNextFile();
+        if (this._date !== date) {
+            this._switchToTheNextFile();
+            this._date = date;
+        }
 
         for (let i = 0; i < args.length - 1; i++) {
             args[i] = args[i].toString();
@@ -76,6 +79,8 @@ export class Logger {
         let str: string = [this._formatTimestamp([seconds, minutes, hours, date, month, year]), ...args].join(' ');
             str += EOL;
         
+        process.stdout.write(str);
+        
         this._writeStream.write(str, (err: Error | null | undefined) => {
             if (err) {
                 void this._handleWriteStreamError(err);
@@ -83,5 +88,8 @@ export class Logger {
         });
     }
 
-    
+    public err(...args: any[]): void {
+        this.log('[ERROR]', ...args);
+    }
+
 }

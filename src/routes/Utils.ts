@@ -1,6 +1,6 @@
 import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
-import { Logger } from '@shared/Logger';
+
 import { json } from 'body-parser';
 import Backuper, { BackupAction } from '@backuper';
 import { mkdir, rmdir, move } from 'fs-extra';
@@ -8,6 +8,10 @@ import { unlink } from 'fs/promises';
 
 import { io } from '../index';
 import path from 'path'
+import { logger } from '@shared/constants';
+import Workgroup from '@enums/workgroup.enum';
+
+const LOGGER_PREFIX = '[UTILS]';
 
 const router = Router();
 
@@ -18,7 +22,7 @@ router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Remove
     return res.send(CONFLICT); 
   }
   
-  Logger.log('default', 'DELETE │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> DELETE_FILE', req.query.path, '[', req.originalUrl, ']');
+  logger.log(LOGGER_PREFIX, '[DELETE]', 'FILE', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number], req.query.path);
   
   Backuper.backup(req.query.path, req.user, BackupAction.DELETE)
           .then(() => unlink(req.query.path))
@@ -29,7 +33,7 @@ router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Remove
                         res.status(NOT_FOUND).send(err.message);
                       })
           .catch((err) => {
-            Logger.log('error', 'DELETE_FILE', err.message);
+            logger.err(LOGGER_PREFIX, '[DELETE]', 'FILE', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number], req.query.path);
             res.status(INTERNAL_SERVER_ERROR)
                .end('Backuper error: ' + err.message);
           });
@@ -40,7 +44,7 @@ router.get('/download-file', (req: any, res: any) => { // GET download config fi
     return res.send(CONFLICT); 
   }
 
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> DOWNLOAD_FILE', req.query.path, '[', req.originalUrl, ']');
+  logger.log(LOGGER_PREFIX, '[GET]', 'FILE_DOWNLOAD', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number], req.query.path);
   
   res.sendFile(path.normalize(req.query.path));
 });
@@ -49,7 +53,7 @@ router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
   if (!req.body.path) return res.send(CONFLICT);
   if (req.body.path == '/') return res.send(CONFLICT);
   
-  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> MKDIR', req.body.path, '[', req.originalUrl, ']');
+  logger.log(LOGGER_PREFIX, '[POST]', 'MKDIR', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number], req.body.path);
   
   new Promise<void>((res, rej) => {
     mkdir(decodeURI(req.body.path), (err) => (!!err ? rej(err) : res()));
@@ -61,7 +65,7 @@ router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
     });
   })
   .catch(err => {
-    Logger.log('error', err.message);
+    logger.err(LOGGER_PREFIX, '[POST]', 'MKDIR', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number], req.body.path, err.message);
     res.status(INTERNAL_SERVER_ERROR)
        .send(err);
   });
@@ -73,7 +77,7 @@ router.delete('/rmdir', (req: any, res: any) => { // DELETE delete dir
   const dirPath: string = decodeURI(req.query.path);
   if ([process.env.CFG_DEV_PATH, process.env.CFG_DEFAULT_PATH, process.env.MAPS_PATH].includes(dirPath)) return res.send(CONFLICT);
   
-  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RMDIR', req.query.path, '[', req.originalUrl, ']');
+  logger.log(LOGGER_PREFIX, '[POST]', 'RMDIR', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number], req.query.path);
   
   new Promise<void>((res, rej) => {
     rmdir(dirPath, (err) => (!!err ? rej(err) : res()));
@@ -82,7 +86,7 @@ router.delete('/rmdir', (req: any, res: any) => { // DELETE delete dir
     res.send({ status: OK });
   })
   .catch(err => {
-    Logger.log('error', err.message);
+    logger.log(LOGGER_PREFIX, '[POST]', 'RMDIR', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number], req.query.path, err.message);;
     res.status(INTERNAL_SERVER_ERROR)
        .send(err);
   });
@@ -96,7 +100,7 @@ router.patch('/mvdir', json() ,(req: any, res: any) => { // PATCH move dir
   
   if ([process.env.CFG_DEV_PATH, process.env.CFG_DEFAULT_PATH, process.env.MAPS_PATH].includes(dirPath)) return res.send(CONFLICT);
   
-  Logger.log('default', 'POST │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RMDIR', req.body.path, req.body.dest, '[', req.originalUrl, ']');
+  logger.log(LOGGER_PREFIX, '[POST]', 'MVDIR', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number], dirPath, '::', dirDestPath);
   
   new Promise<void>((res, rej) => {
     move(dirPath, dirDestPath, (err) => !!err ? rej(err) : res());
@@ -105,13 +109,13 @@ router.patch('/mvdir', json() ,(req: any, res: any) => { // PATCH move dir
     res.send({ status: OK });
   })
   .catch(err => {
-    console.error(err);
+    logger.log(LOGGER_PREFIX, '[POST]', 'MVDIR', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number], dirPath, '::', dirDestPath);
     res.status(INTERNAL_SERVER_ERROR).send(err);
   });
 });
 
 router.get('/update-emitter', (req: any, res: any) => { // GET download config file
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> UPDATE_MESSAGE_EMIT');
+  logger.log(LOGGER_PREFIX, '[GET]', 'SOFT_UPDATE_EMIT', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number]);
   io.sockets.emit('update:soft');
   res.sendStatus(OK);
 });

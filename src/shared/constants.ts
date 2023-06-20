@@ -1,6 +1,7 @@
 import { createPool } from 'mysql2';
 import Backuper from '@backuper';
-import { Logger } from './Logger';
+import path from 'path';
+import { Logger } from './Logger2';
 import multer, { Multer, diskStorage} from 'multer';
 import cors from 'cors';
 import { CronJob } from 'cron';
@@ -21,6 +22,8 @@ export const CommonErrors = {
   [ErrorCode.CHILD_PROCESS_IS_NOT_EXISTS]: 'Child process is not exists.',
   [ErrorCode.CHILD_PROCESS_CANT_SERVE]: 'Child process cant serve.',
 } as const;
+
+export const logger: Logger = new Logger(path.resolve(process.cwd(), 'diary'), 'log'); 
 
 export const statsman = new Statsman.OnlineMetric();
 export const omp = new OMPServerControl();
@@ -109,9 +112,9 @@ export const tailOnlineStats = new CronJob('0 */30 * * * *', () => {
 export const rmOldBackups = new CronJob('0 0 0 */1 * *', () => {
   Backuper.removeExpired()
           .then(() => {
-            Logger.log('default', 'CRON', '->' ,'AUTO_CLEAR_OLD_BACKUPS');
+            logger.log('[CRON]', 'AUTO_CLEAR_OLD_BACKUPS');
           }).catch(err => {
-            Logger.log('error', 'CRON_RM_BACKUPS', err.message);
+            logger.log('[CRON]', 'CRON_RM_BACKUPS', err.message);
           });
 }, null, true, 'Europe/Moscow')
 

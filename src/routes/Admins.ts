@@ -1,12 +1,12 @@
 import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
-import { Logger } from '@shared/Logger';
 import { json } from 'express';
 import Workgroup from '@enums/workgroup.enum';
 
 import { Guards } from '@shared/guards';
 
-import { corsOpt, MSQLPool, noAvatarImageUrl, SQLQueries } from '@shared/constants';
+import { corsOpt, MSQLPool, SQLQueries, logger } from '@shared/constants';
+import { getAvatarURL } from '@shared/functions';
 
 const router = Router();
 
@@ -15,32 +15,37 @@ const { CHALLENGER, DEV, ADMIN, CFR, MAPPER, BACKUPER } = Workgroup;
 
 const { GET_ADMIN_LIST, CHANGE_MAIN_GROUP, CHANGE_SECONDARY_GROUP } = SQLQueries;
 
+const LOGGER_PREFIX: string = '[ADMIN]';
+
 router.get('/list', (req: any, res: any) => {
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> ADMIN_LIST [', req.originalUrl, ']');
+  logger.log(LOGGER_PREFIX, '[GET]', 'ADMIN_LIST', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group]);
   MSQLPool.promise()
           .query(GET_ADMIN_LIST, [CHALLENGER, DEV, ADMIN, MAPPER, CFR, BACKUPER])
           .then(([rows]: any[]): void => {   
             for (let user of rows) {
-              user.user_avatar = user.user_avatar ? `https://www.gta-liberty.ru/images/avatars/upload/${user.user_avatar}`
-                                                  : noAvatarImageUrl;
+              user.user_avatar = getAvatarURL(user.user_avatar);
             }
             res.send(rows);
           })
           .catch((err: any): void => {
             res.status(INTERNAL_SERVER_ERROR).send(err.message);
-            Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.username, 'Failed admin list query');
-            Logger.log('error', err);
+            logger.err(LOGGER_PREFIX, '[GET]' ,`(${req.connection.remoteAddress})`, 401, req.user.username, 'Failed admin list query');
+            logger.err(LOGGER_PREFIX, '[GET]', err);
           });
 });
 
 router.patch('/change-group', Guards.developerGuard, json(), corsOpt, (req: any, res: any) => {
-  if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
+  logger.log(LOGGER_PREFIX, '[PATCH]', 'CHANGE_ADMIN_GROUP', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], `{${req.body.username} : ${Workgroup[req.body.group]}}`);
   
-  Logger.log('default', 'PATCH │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CHANGE_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
+  if (!req.body.id && !req.body.group) {
+    logger.err(LOGGER_PREFIX, '[PATCH]', 'CHANGE_ADMIN_GROUP_FAIL', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], `{${req.body.username} : ${Workgroup[req.body.group]}}`, CONFLICT);
+    return res.sendStatus(CONFLICT);
+  }
   
   MSQLPool.promise()
           .query(CHANGE_MAIN_GROUP, [req.body.group, req.body.group, req.body.id])
           .then((): void => {
+            logger.log(LOGGER_PREFIX, '[PATCH]', 'CHANGE_ADMIN_GROUP_SUCCESS', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], `{${req.body.username} : ${Workgroup[req.body.group]}}`);
             res.status(OK)
                .send({ status: 'OK' });
           })
@@ -48,28 +53,31 @@ router.patch('/change-group', Guards.developerGuard, json(), corsOpt, (req: any,
             res.status(INTERNAL_SERVER_ERROR)
                .send(err.message);
             
-               Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.username, `Failed to change ${req.body.username} admin status to ${req.body.group}`)
-               Logger.log('error', err);
+               logger.err('[ADMIN][PATCH]', `[${req.connection.remoteAddress}]`, req.user.username, `{${req.body.username} : ${Workgroup[req.body.group]}} FAIL`, err.code || 0);
+               logger.err('[ADMIN][PATCH]', err);
           });
 });
 
 router.patch('/change-secondary-group', Guards.developerGuard, json(), (req: any, res: any) => {
-  if (!req.body.id && !req.body.group) return res.sendStatus(CONFLICT);
-  
-  Logger.log('default', 'PATCH │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> CHANGE_SECONDARY_ADMIN_GROUP', `${req.body.username} : ${req.body.group}`, '[', req.originalUrl, ']');
+  logger.log(LOGGER_PREFIX, '[PATCH]', 'CHANGE_ADMIN_SECONDARY_GROUP', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], `{${req.body.username} : ${Workgroup[req.body.group]}}`);
+  if (!req.body.id && !req.body.group) {
+    logger.err(LOGGER_PREFIX, '[PATCH]', 'CHANGE_ADMIN_SECONDARY_GROUP_FAIL', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], `{${req.body.username} : ${Workgroup[req.body.group]}}`, CONFLICT);
+    return res.sendStatus(CONFLICT);
+  }
   
   MSQLPool.promise()
           .query(CHANGE_SECONDARY_GROUP, [req.body.id, req.body.group, req.body.id])
           .then((): void => {
+            logger.log(LOGGER_PREFIX, '[PATCH]', 'CHANGE_ADMIN_SECONDARY_GROUP_SUCCESS', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], `{${req.body.username} : ${Workgroup[req.body.group]}}`);
             res.status(OK)
                .send({ status: 'OK' });
           })
           .catch((err: any): void => {
             res.status(INTERNAL_SERVER_ERROR)
                .send(err);
-            
-            Logger.log('error', `[${req.connection.remoteAddress}]`, 401, req.user.username, `Failed to change ${req.body.username} admin status to ${req.body.group}`)
-            Logger.log('error', err);
+
+            logger.err(LOGGER_PREFIX, '[PATCH]', 'CHANGE_ADMIN_SECONDARY_GROUP', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], `{${req.body.username} : ${Workgroup[req.body.group]}} FAIL`, err.code || 0);
+            logger.err('[ADMIN][PATCH]', err);
           });
 });
 

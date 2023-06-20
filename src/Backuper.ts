@@ -2,9 +2,9 @@ import { unlink, readFile, copyFile, stat } from 'fs/promises';
 import path, { join, basename, extname } from 'path';
 import { BACKUP } from '@schemas/backup.schema';
 import { getMimeType, ANSItoUTF8, getAvatarURL } from '@shared/functions';
+import { logger } from '@shared/constants';
 import Workgroup from '@enums/workgroup.enum';
 import crypto from 'crypto';
-import Logger from 'jet-logger';
 
 export enum BackupAction {
   DELETE,
@@ -43,8 +43,7 @@ function makeHash(...args: Array<string | number>): string {
 export default class Backuper {
 
   static handleError<T extends Error>(error: T): void {
-    error.message = '[BACKUPER]' + error.message;
-    Logger.Err(error, true);
+    logger.log('[BACKUPER]', error.message);
   }
   
   /** 

@@ -1,75 +1,92 @@
 import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
-import { Logger } from '@shared/Logger';
+import { logger } from '@shared/constants';
 import { Response } from 'express';
 import { BACKUP } from '@schemas/backup.schema';
 import { Document, CallbackError } from 'mongoose';
 import { stat, Stats } from 'fs';
 
 import Backuper from '@backuper';
+import Workgroup from '@enums/workgroup.enum';
 
 const { OK, INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
 
 const router = Router();
 
+const LOGGER_PREFIX: string = '[BACKUPS]';
+
 router.get('/list', (req: any, res: any) => {
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUPS_LIST');
+  logger.log(LOGGER_PREFIX, '[GET]', 'BACKUPS_LIST', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group]);
+  
   BACKUP.find({})
         .sort({ unix: - 1 })
         .exec((err: CallbackError, data: Document[]) => {
-          if (err) return res.send(INTERNAL_SERVER_ERROR);
+          if (err) {
+            logger.err(LOGGER_PREFIX, '[GET]', 'BACKUPS_LIST_FAIL', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group]);
+            return res.send(INTERNAL_SERVER_ERROR);
+          }
           res.send(data);
         });
 });
 
 router.get('/backup/:hash', (req: any, res: any) => {
+  logger.log(LOGGER_PREFIX, '[GET]', 'BACKUP_FILE', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], req.params.hash || 'no_hash');
+  
   if (!req.params.hash) { 
-    res.status(CONFLICT)
-       .send('Bad request: required parameters missed'); 
-    return;
+    logger.err(LOGGER_PREFIX, '[GET]', 'BACKUP_FILE_FAIL', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], req.params.hash || 'no_hash', CONFLICT);
+    return res.status(CONFLICT)
+              .send('Bad request: required parameters missed');
   }
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> BACKUP_FILE', req.params.hash);
+
   Backuper.getBackupFile(req.params.hash)
           .then((data) => {
             res.status(OK)
                .send(data);
           })
           .catch(err => {
+            logger.err(LOGGER_PREFIX, '[GET]', 'BACKUP_FILE_FAIL', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], req.params.hash, `::${err.message}::`);
             res.status(INTERNAL_SERVER_ERROR)
                .send({ message: err.message });
           });
 });
 
 router.get('/restore/:hash', (req: any, res: Response) => {
+  logger.log(LOGGER_PREFIX, '[GET]', 'BACKUP_FILE_RESTORE', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], req.params.hash || 'no_hash');
+  
   if (!req.params.hash) { 
-    res.status(CONFLICT)
-       .send('Bad request: required parameters missed'); 
-    return;
+    logger.err(LOGGER_PREFIX, '[GET]', 'BACKUP_FILE_RESTORE_FAIL', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], req.params.hash || 'no_hash');
+    return res.status(CONFLICT)
+              .send('Bad request: required parameters missed'); 
   }
+  
   Backuper.restore(req.params.hash)
           .then(() => {
-            Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> RESTORED_BACKUP', req.params.hash);
             res.status(OK)
                .send([]);
           })
           .catch((err) => {
+            logger.err(LOGGER_PREFIX, '[GET]', 'BACKUP_FILE_RESTORE_FAIL', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], req.params.hash);
             res.status(INTERNAL_SERVER_ERROR)
                .send(err.message);
           });
 });
 
 router.delete('/backup/:hash', (req: any, res: Response) => {
+  logger.log(LOGGER_PREFIX, '[DELETE]', 'BACKUP_FILE_DELETE', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], req.params.hash || 'no_hash');
+  
   if (!req.params.hash) { 
-    return res.sendStatus(CONFLICT)
-              .end('Bad request: required parameters missed'); 
+    logger.err(LOGGER_PREFIX, '[DELETE]', 'BACKUP_FILE_DELETE_FAIL', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], req.params.hash || 'no_hash', CONFLICT);
+    return res.status(CONFLICT)
+              .send('Bad request: required parameters missed'); 
   }
+  
   Backuper.remove(req.params.hash)
           .then(() => {
-            Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> REMOVED_BACKUP', req.params.hash);
             res.status(OK)
                .send([]);
           })
           .catch(({ message }) => {
+            logger.err(LOGGER_PREFIX, '[DELETE]', 'BACKUP_FILE_DELETE_FAIL', `(${req.connection.remoteAddress})`, req.user.username, Workgroup[req.user.main_group], req.params.hash);
             res.status(INTERNAL_SERVER_ERROR)
                .send(message);
           });

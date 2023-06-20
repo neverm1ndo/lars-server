@@ -2,18 +2,21 @@ import StatusCodes from 'http-status-codes';
 import { Router, json, Request } from 'express';
 
 import { MSQLPool, SQLQueries } from '@shared/constants';
-import { corsOpt as cors } from '@shared/constants';
+import { corsOpt as cors, logger } from '@shared/constants';
 import passport from 'passport';
 import { Guards } from '@shared/guards';
-import { Logger } from '@shared/Logger';
+
 import { getAvatarURL } from '@shared/functions';
 import { JWT } from '@shared/jwt';
 import { IJwtPayload } from '@interfaces/user';
 import { io } from '../index';
+import Workgroup from '@enums/workgroup.enum';
 
 interface IRequest extends Request {
   session: any;
 }
+
+const LOGGER_PREFIX = '[AUTH]';
 
 const router = Router();
 const { OK, INTERNAL_SERVER_ERROR, CONFLICT, UNAUTHORIZED } = StatusCodes;
@@ -23,9 +26,18 @@ const { GET_USER_BY_NAME } = SQLQueries;
 router.post('/login', cors, json(), (req: any, res: any, next: (err?: any) => any): void => {
   passport.authenticate('local', async (err, user, _info) => {
     try {
-      if (err || !user) return next(new Error('An error occured.'));
+      logger.log(LOGGER_PREFIX, '[POST]', 'LOGIN', `(${req.socket.remoteAddress})`, user.username || 'no_username', Workgroup[req.user!.main_group] || 'no_group');
+      
+      if (err || !user) {
+        logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, user.username || 'no_username', Workgroup[req.user!.main_group], `ERROR_OCCURED::${err.message || 'no_username'}::`);
+        return next(new Error('An error occured.'));
+      }
+      
       req.login(user, { session: true }, async (error: any) => {
-        if (error) return next(error);
+        if (error) {
+          logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `ERROR_OCCURED::${error.message || 'no_username'}::`);
+          return next(error);
+        }
         
         const { main_group, username, secondary_group, user_avatar, user_id } = user;
         
@@ -42,14 +54,15 @@ router.post('/login', cors, json(), (req: any, res: any, next: (err?: any) => an
               avatar: getAvatarURL(user_avatar),
             });
       })
-    } catch (error) {
+    } catch (error: any) {
+      logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `ERROR_OCCURED::${error.message}::`);
       return next(error);
     }
   })(req, res, next);
 });
 
 router.get('/identity', Guards.rejectUnauthorized, cors, (req: any, res: any): void => {
-  res.sendStatus(OK)
+  res.sendStatus(OK);
 });
 
 const reqLogout = function(req: any, res: any, next: (c?: any) => any) {
@@ -59,14 +72,20 @@ const reqLogout = function(req: any, res: any, next: (c?: any) => any) {
   });
 };
 
-router.post('/logout', cors, passport.authenticate('jwt'), reqLogout, ((req: IRequest, res: any) => {
+router.post('/logout', cors, passport.authenticate('jwt'), reqLogout, ((req: any, res: any) => {
   const socketId = req.session.socketId;
+  
+  logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number]);
+  
   if (socketId && io.of("/").sockets.get(socketId)) {
-    console.log(`forcefully closing socket ${socketId}`);
+    logger.err(LOGGER_PREFIX, '[SOCKET]', 'FORCE_CLOSE', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number]);
     io.of("/").sockets.get(socketId)!.disconnect(true);
   };
+  
   req.session.destroy();
-  res.status(OK).send('bye');
+  
+  res.status(OK)
+     .send('bye');
 }));
 
 router.get('/user', Guards.rejectUnauthorized, cors, (req: any, res: any): void => {
@@ -85,9 +104,11 @@ router.get('/user', Guards.rejectUnauthorized, cors, (req: any, res: any): void 
                 });
           })
           .catch((err: any): void => {
+            logger.err(LOGGER_PREFIX, '[GET]', 'USER', err.message);
+            
             res.status(INTERNAL_SERVER_ERROR)
-                .send(err.message);
-            Logger.log('error', 'GET_USER', err);
+               .send(err.message);
+            
           });
 });
 
