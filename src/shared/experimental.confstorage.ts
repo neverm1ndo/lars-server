@@ -19,8 +19,7 @@ const getDestination = (_req: Request, _file: Express.Multer.File, callback: any
 };
 
 const isOutOfPermittedArea = (dirpath: string, user: any): boolean => {
-  if (user.secondary_group === CFR && dirpath !== process.env.CFG_DEFAULT_PATH) return true;
-  return false;
+  return user.secondary_group === CFR && dirpath !== process.env.CFG_DEFAULT_PATH;
 };
 
 class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
