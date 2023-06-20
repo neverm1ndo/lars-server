@@ -1,12 +1,17 @@
 import StatusCodes from 'http-status-codes';
 import { Router } from 'express';
-import { Logger } from '@shared/Logger';
+
 import { LOG_LINE } from '@schemas/logline.schema';
 import { Document, CallbackError } from 'mongoose';
 
 import { parseSearchFilter } from '@shared/functions';
 import { ISearchQuery } from '@interfaces/search';
 import { QueryParser } from '../QueryParser';
+
+import { logger } from '@shared/constants';
+import Workgroup from '@enums/workgroup.enum';
+
+const LOGGER_PREFIX = '[LOGS]';
 
 const router = Router();
 const { INTERNAL_SERVER_ERROR } = StatusCodes;
@@ -102,25 +107,26 @@ const defaultSearchOptions: ISearchOptions = {
 
 const queryParser: QueryParser = new QueryParser();
 
-router.get('/last', (req: any, res: any) => { // GET last lines. Default : 100
+router.get('/last', (req: any, res: any) => {
 
   const query: ISearchOptions = { ...defaultSearchOptions, ...req.query };
         query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
-
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username, `role: ${req.user.main_group}`, '-> LINES', query.lim, query.page,' [', req.originalUrl, ']');
+  
+  logger.log(LOGGER_PREFIX, '[GET]', 'LAST', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user!.main_group], req.query.search);
   
   LOG_LINE.find({ unix: { $gte: query.date.from, $lte: query.date.to }}, [], { sort: { unix : -1 }, limit: query.lim, skip: query.lim * query.page },)
           .where('process').nin(query.filter)
           .exec((err: any, lines: Document[]) => {
             if (err) {
-              Logger.log('error', err);
-              return res.status(INTERNAL_SERVER_ERROR).send(err.message);
+              logger.err(LOGGER_PREFIX, 'LAST_FAIL', req.query ,`::${err.message}::`);
+              return res.status(INTERNAL_SERVER_ERROR)
+                        .send(err.message);
             }
             res.send(lines);
           });
 });
 
-router.get('/search', async (req: any, res: any) => { // GET Search by nickname, ip, serals
+router.get('/search', async (req: any, res: any) => {
   if (!req.query.search) {
     const redirectURL = new URL('/v2/lars/logs/last', `${req.protocol}://${process.env.HOST}`);
           for (let param in req.query) {
@@ -134,7 +140,7 @@ router.get('/search', async (req: any, res: any) => { // GET Search by nickname,
   
   const searchQuery: ISearchQuery = queryParser.parse(req.query.search);
   
-  Logger.log('default', 'GET │', req.connection.remoteAddress, req.user.username,`role: ${req.user.main_group}`, '-> SEARCH', req.query.search);
+  logger.log(LOGGER_PREFIX, '[GET]', 'SEARCH', `(${req.connection.remoteAddress})`, req.user?.username, Workgroup[req.user!.main_group], req.query.search);
   
   const mdbq: MDBRequest = await buildDBRequest(searchQuery, query);
 
@@ -142,7 +148,7 @@ router.get('/search', async (req: any, res: any) => { // GET Search by nickname,
           .where('process').nin(query.filter)
           .exec((err: CallbackError, lines: Document[]) => {
             if (err) {
-              Logger.log('error', 'SEARCH', err);
+              logger.err(LOGGER_PREFIX, 'SEARCH_FAIL', req.query ,`::${err.message}::`);
               return res.status(INTERNAL_SERVER_ERROR).end(err.message);
             }
             res.send(lines);
