@@ -4,7 +4,8 @@ import { Stream } from 'stream';
 import chokidar from 'chokidar';
 import * as path from 'path';
 import bufferSplit from 'buffer-split';
-import { ANSItoUTF8, UTF8toANSI } from '@shared/functions';
+import { ANSItoUTF8 } from '@shared/functions';
+import { EOL } from 'os';
 
 export class Watcher {
 
@@ -64,13 +65,13 @@ export class Watcher {
     
     const now: Date = new Date();
     
-    const [date, month, year] = [
-      now.getDate().toString(), 
-     (now.getMonth() + 1).toString(), 
-      now.getFullYear().toString(),
-    ].map((val: string) => '00'.substring(0, 2 - val.length) + val);
+    const [date, month, year]: string[] = [
+      now.getDate(), 
+      now.getMonth() + 1, 
+      now.getFullYear(),
+    ].map((val: number) => val.toString().padStart(2, '0'));
    
-    let filepath = path.join(process.env.LOGS_PATH!, year, month,`${year}${month}${date}.log`);
+    let filepath: string = path.join(process.env.LOGS_PATH!, year, month,`${year}${month}${date}.log`);
 
     try {
       return await stat(filepath);
@@ -106,7 +107,7 @@ export class Watcher {
       
       if (!data) return stream.destroy();
       
-      const newLines: Buffer[] = bufferSplit(data, Buffer.from('\n'));
+      const newLines: Buffer[] = bufferSplit(data, Buffer.from(EOL));
 
       for (let line of newLines) {
         this._stream.emit('data', line);

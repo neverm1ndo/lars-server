@@ -210,11 +210,6 @@ export const getProcessFromTranslation = <T, K extends keyof T>(processes: T, tr
   return translations.map((t) => processes[t]);
 }
 
-export const parseSearchFilter = (filt: string): Array<Processes> => {
-  const splited: Array<keyof typeof processTranslation> = filt.split(',').filter((f): boolean => processTranslation.hasOwnProperty(f)) as Array<keyof typeof processTranslation>;
-  return getProcessFromTranslation(processTranslation, splited);
-}
-
 export const isWorkGroup = (group?: number | Workgroup): boolean => {
   if (!group) return false;
   return group >= 9 && group <= 13;

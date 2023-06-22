@@ -1,14 +1,24 @@
 import { IGeoData } from './geodata';
 import { IUserData } from './user';
 
+
+export interface IContentTarget {
+  id: number;
+  username: string;
+}
 export interface IContentData {
   time?: string;
   oid?: number;
   op?: string;
-  dm_id?: string;
   weapon?: string;
-  message?: string;
+  dm_id?: string;
   auth?: IUserData;
+  message?: string;
+  numbers?: number[];
+  action?: string;
+  targetType?: string;
+  target?: IContentTarget;
+  props?: any;
 }
 
 export interface ILogLine {

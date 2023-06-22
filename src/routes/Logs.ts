@@ -4,17 +4,21 @@ import { Router } from 'express';
 import { LOG_LINE } from '@schemas/logline.schema';
 import { Document, CallbackError } from 'mongoose';
 
-import { parseSearchFilter } from '@shared/functions';
+// import { parseSearchFilter } from '@shared/functions';
 import { ISearchQuery } from '@interfaces/search';
 import { QueryParser } from '../QueryParser';
 
 import { logger } from '@shared/constants';
 import Workgroup from '@enums/workgroup.enum';
+import { SearchEngine } from 'src/SearchEngine';
+import { ILogLine } from '@interfaces/logline';
 
 const LOGGER_PREFIX = '[LOGS]';
 
 const router = Router();
-const { INTERNAL_SERVER_ERROR } = StatusCodes;
+const { INTERNAL_SERVER_ERROR, CONFLICT } = StatusCodes;
+
+const engine: SearchEngine = new SearchEngine();
 
 interface MDBRequest {
     'geo.ip'?: { 
@@ -110,7 +114,7 @@ const queryParser: QueryParser = new QueryParser();
 router.get('/last', (req: any, res: any) => {
 
   const query: ISearchOptions = { ...defaultSearchOptions, ...req.query };
-        query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
+        query.filter = req.query.filter ? engine.parseSearchFilter(req.query.filter) : [];
   
   logger.log(LOGGER_PREFIX, '[GET]', 'LAST', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user!.main_group], req.query.search);
   
@@ -136,7 +140,7 @@ router.get('/search', async (req: any, res: any) => {
   }
   
   const query: ISearchOptions = { ...defaultSearchOptions, ...req.query };
-        query.filter = req.query.filter ? parseSearchFilter(req.query.filter) : [];
+        query.filter = req.query.filter ? engine.parseSearchFilter(req.query.filter) : [];
   
   const searchQuery: ISearchQuery = queryParser.parse(req.query.search);
   
@@ -153,6 +157,16 @@ router.get('/search', async (req: any, res: any) => {
             }
             res.send(lines);
           });
+});
+
+router.get('/srch', async (req: any, res: any) => {
+  try {
+    const searchResult: ILogLine[] = await engine.search(req.query);
+    res.send(searchResult);
+  } catch(err: unknown) {
+    res.status(CONFLICT)
+       .send(err);
+  }
 });
 
 export default router;

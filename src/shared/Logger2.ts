@@ -34,7 +34,7 @@ export class Logger {
             now.getMinutes(),
             now.getHours(),
             now.getDate(),
-            now .getMonth() + 1,
+            now.getMonth() + 1,
             now.getFullYear(),
         ].map((num: number) => this._padNumber('0', num));
     }

@@ -1,36 +1,47 @@
-import { MSQLPool, SQLQueries } from '@shared/constants';
+import { processTranslation } from '@shared/constants';
 import { QueryParser } from './QueryParser';
 import { ISearchQuery } from '@interfaces/search';
 import { LOG_LINE } from '@schemas/logline.schema';
-import { CallbackError } from 'mongoose';
+import { ILogLine } from '@interfaces/logline';
+import { Processes } from '@enums/processes.enum';
+import { getProcessFromTranslation } from '@shared/functions';
 
-interface DBRequest {
-    'geo.ip'?: { 
-      $in?: string[]; 
-    };
-    'geo.as'?: string;
-    'geo.ss'?: string;
-    cn?: { 
-      $in?: string[];
-    },
-    nickname?: { 
-      $in?: string[];
-    },
-    'content.message'?: string;
-    process?: string;
-    unix: { 
-      $gte?: number;
-      $lte?: number;
-    }
+interface ISearchDBRequestIncludesString {
+  $in?: string[];
+}
+
+interface ISearchDBRequest {
+  geo?: {
+    ip?: ISearchDBRequestIncludesString;
+    as?: string;
+    ss?: string;
+  },
+  cn?: ISearchDBRequestIncludesString,
+  nickname?: ISearchDBRequestIncludesString,
+  content?: {
+    message: string;
+  },
+  process?: string;
+  unix: { 
+    $gte?: number;
+    $lte?: number;
+  }
+}
+
+interface IRawSearchOptions {
+  query: string;
+  filter?: string;
+  lim: number;
+  page: number;
 }
 
 interface ISearchOptions {
     _lim: number;
     _page: number;
     _date: any;
-    filter: string[];
     lim: number;
     page: number;
+    filter: Processes[];
     date: {
       from: number;
       to: number;
@@ -61,8 +72,7 @@ export class SearchEngine {
           from: new Date('Jan 01 2000, 00:00:00').valueOf() / 1000,
           to: Date.now()
         },
-        set date(date: { from: any; to: any }) {
-          const { from, to } = date;
+        set date({ from, to }: { from: any; to: any }) {
           this._date = {
             from: toNumber.call(this._date.from, from),
             to: toNumber.call(this._date.to, to),
@@ -71,43 +81,53 @@ export class SearchEngine {
         get date() { return this._date; }
     };
 
-    public async search(query: string, limit: number, page: number, filter: string[]): Promise<any> {
+    public async search({ query, filter, lim, page }: IRawSearchOptions): Promise<ILogLine[]> {
         try {
             const parsed: ISearchQuery = this.__queryParser.parse(query);
-            
-            const request: DBRequest = await this.__buildDBRequest(parsed);
 
-            return LOG_LINE.find(request, [], { sort: { unix: -1 }, limit, skip: limit*page })
-                            .where('process').nin(filter)
+            const separatedfilter: Processes[] = filter ? this.__separateSearchFilter(filter)
+                                                        : [];
+
+            const options: ISearchOptions = { ...this.__defaultSearvhOptions, ...{ filter: separatedfilter, lim, page }}
+
+            const request: ISearchDBRequest = await this.__buildDBRequest(parsed);
+
+            return LOG_LINE.find<ILogLine>(request, [], { sort: { unix: -1 }, limit: options.lim, skip: options.lim*options.page })
+                            .where('process').nin(options.filter)
                             .exec();
-        } catch(err) {
-            console.error(err);
+        } catch(err: unknown) {
+            throw err;
         }
     }
 
-    private async __buildDBRequest(parsed: ISearchQuery): Promise<DBRequest> {
+    private async __buildDBRequest(parsed: ISearchQuery): Promise<ISearchDBRequest> {
         const { ip, as, ss, nickname, process, cn } = parsed;
-        let request: any = {
-          'geo.ip': { $in: ip },
-          'geo.as': as,
-          'geo.ss': ss,
+        
+        const request: ISearchDBRequest = {
+          geo: {
+            ip: { $in: ip },
+            as,
+            ss,
+          },
+          cn: { $in: cn },
           nickname: { $in: nickname },
           process,
-          'content.message': {$in: cn },
-        //   unix: { $gte: query.date.from, $lte: query.date.to }
+          unix: {},
         };
+        
         try {
-          for (let key in request) {
-            if (!request[key]) {
-              delete request[key];
-              continue;
-            }
-            if (typeof request[key] !== 'object') continue;
-            if (!request[key].$in) delete request[key];
-          }
-          return request as DBRequest;
-        } catch(err) {
+          return request as ISearchDBRequest;
+        } catch(err: unknown) {
           throw err;
         }
+    }
+
+    public parseSearchFilter(filt: string) {
+      return this.__separateSearchFilter(filt);
+    }
+
+    private __separateSearchFilter(filt: string): Array<Processes> {
+      const splited: Array<keyof typeof processTranslation> = filt.split(',').filter((f): boolean => processTranslation.hasOwnProperty(f)) as Array<keyof typeof processTranslation>;
+      return getProcessFromTranslation(processTranslation, splited);
     }
 }
