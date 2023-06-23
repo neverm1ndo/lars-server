@@ -6,6 +6,7 @@
   "helpers": [
     "helpers/**/*.js"
   ],
+  "verboseDeprecations": true,
   "stopSpecOnExpectationFailure": false,
   "random": true
 }

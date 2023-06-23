@@ -37,13 +37,13 @@ jasmine.loadConfig({
 });
 
 // On complete callback function
-jasmine.onComplete((passed: boolean) => {
-    if (passed) {
-        console.info('All tests have passed :)');
-    } else {
-        console.error('At least one test has failed :(');
-    }
-});
+// jasmine.onComplete((passed: boolean) => {
+//     if (passed) {
+//         console.info('All tests have passed :)');
+//     } else {
+//         console.error('At least one test has failed :(');
+//     }
+// });
 
 // Run all or a single unit-test
 if (options.testFile) {
