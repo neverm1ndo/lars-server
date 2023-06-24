@@ -28,8 +28,8 @@ interface ISearchDBRequest {
   }
 }
 
-interface IRawSearchOptions {
-  query: string;
+export interface IRawSearchOptions {
+  q?: string;
   filter?: string;
   lim: number;
   page: number;
@@ -49,48 +49,51 @@ interface ISearchOptions {
   }
 
 function toNumber(this: number, value: any): number {
-    return Number.isNaN(+value) ? +value : this;
+    value = +value;
+    return Number.isNaN(value) ? value : this;
 }
+
+const DEFAULT_SEARCH_OPTIONS: ISearchOptions = {
+    filter: [],
+    _lim: 100,
+    set lim(limit: any) {
+      this._lim = toNumber.call(this._lim, limit);
+    },
+    get lim() { return this._lim },
+    _page: 0,
+    set page(page: any) {
+      this._page = toNumber.call(this._page, page);
+    },
+    get page() { return this._page },
+    _date: {
+      from: new Date('Jan 01 2000, 00:00:00').valueOf() / 1000,
+      to: Date.now()
+    },
+    set date({ from, to }: { from: any; to: any }) {
+      this._date = {
+        from: toNumber.call(this._date.from, from),
+        to: toNumber.call(this._date.to, to),
+      };
+    },
+    get date() { return this._date; }
+};;
 
 export class SearchEngine {
 
     private readonly __queryParser: QueryParser = new QueryParser();
 
-    private readonly __defaultSearvhOptions: ISearchOptions = {
-        filter: [],
-        _lim: 100,
-        set lim(limit: any) {
-          this._lim = toNumber.call(this._lim, limit);
-        },
-        get lim() { return this._lim },
-        _page: 0,
-        set page(page: any) {
-          this._page = toNumber.call(this._page, page);
-        },
-        get page() { return this._page },
-        _date: {
-          from: new Date('Jan 01 2000, 00:00:00').valueOf() / 1000,
-          to: Date.now()
-        },
-        set date({ from, to }: { from: any; to: any }) {
-          this._date = {
-            from: toNumber.call(this._date.from, from),
-            to: toNumber.call(this._date.to, to),
-          };
-        },
-        get date() { return this._date; }
-    };
-
-    public async search({ query, filter, lim, page }: IRawSearchOptions): Promise<ILogLine[]> {
+    public async search({ q, filter, lim, page }: IRawSearchOptions): Promise<ILogLine[]> {
         try {
-            const parsed: ISearchQuery = this.__queryParser.parse(query);
+
+            const parsed: ISearchQuery = q ? this.__queryParser.parse(q)
+                                           : {};
 
             const separatedfilter: Processes[] = filter ? this.__separateSearchFilter(filter)
                                                         : [];
 
-            const options: ISearchOptions = { ...this.__defaultSearvhOptions, ...{ filter: separatedfilter, lim, page }}
+            const options: ISearchOptions = { ...DEFAULT_SEARCH_OPTIONS, ...{ filter: separatedfilter, lim, page }};
 
-            const request: ISearchDBRequest = await this.__buildDBRequest(parsed);
+            const request: ISearchDBRequest = await this.__buildDBRequest(parsed, options.date);
 
             return LOG_LINE.find<ILogLine>(request, [], { sort: { unix: -1 }, limit: options.lim, skip: options.lim*options.page })
                             .where('process').nin(options.filter)
@@ -100,22 +103,29 @@ export class SearchEngine {
         }
     }
 
-    private async __buildDBRequest(parsed: ISearchQuery): Promise<ISearchDBRequest> {
+    private async __buildDBRequest(parsed: ISearchQuery, dates: { from: any, to: any }): Promise<ISearchDBRequest> {
         const { ip, as, ss, nickname, process, cn } = parsed;
         
         const request: ISearchDBRequest = {
-          geo: {
-            ip: { $in: ip },
-            as,
-            ss,
-          },
-          cn: { $in: cn },
+          geo: {},
           nickname: { $in: nickname },
-          process,
-          unix: {},
+          unix: {
+            $gte: dates.from,
+            $lte: dates.to,
+          },
         };
-        
+
         try {
+          
+          if (ip) request.geo!.ip = { $in: ip };
+          if (as) request.geo!.as = as;
+          if (ss) request.geo!.ss = ss;
+          if (cn) request.cn = { $in: cn };
+          
+          if (!nickname) delete request.nickname;
+          if (process) request.process = process;
+          if (!ip && !as && !ss) delete request.geo;
+
           return request as ISearchDBRequest;
         } catch(err: unknown) {
           throw err;
