@@ -33,6 +33,8 @@ export interface IRawSearchOptions {
   filter?: string;
   lim: number;
   page: number;
+  from?: number;
+  to?: number;
 }
 
 interface ISearchOptions {
@@ -82,7 +84,7 @@ export class SearchEngine {
 
     private readonly __queryParser: QueryParser = new QueryParser();
 
-    public async search({ q, filter, lim, page }: IRawSearchOptions): Promise<ILogLine[]> {
+    public async search({ q, filter, lim, page, from, to }: IRawSearchOptions): Promise<ILogLine[]> {
         try {
 
             const parsed: ISearchQuery = q ? this.__queryParser.parse(q)
@@ -92,6 +94,9 @@ export class SearchEngine {
                                                         : [];
 
             const options: ISearchOptions = { ...DEFAULT_SEARCH_OPTIONS, ...{ filter: separatedfilter, lim, page }};
+            
+            if (from) options.date.from = from;
+            if (to) options.date.to = to;
 
             const request: ISearchDBRequest = await this.__buildDBRequest(parsed, options.date);
 
