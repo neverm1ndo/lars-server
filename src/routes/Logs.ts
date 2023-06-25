@@ -3,7 +3,7 @@ import { Router } from 'express';
 
 import { logger } from '@shared/constants';
 import Workgroup from '@enums/workgroup.enum';
-import { IRawSearchOptions, SearchEngine } from 'src/SearchEngine';
+import { IRawSearchOptions, SearchEngine } from '../SearchEngine';
 import { ILogLine } from '@interfaces/logline';
 
 const LOGGER_PREFIX = '[LOGS]';
