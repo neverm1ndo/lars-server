@@ -50,6 +50,7 @@ router.get('/map-file', (req: any, res: any) => { // GET Files(maps) tree
 
 router.post('/upload-map', upmap.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
   logger.log(LOGGER_PREFIX, '[POST]', 'MAP_FILE_UPLOAD', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group as number]);
+  TreeNode.clearCache();
   res.sendStatus(OK);
 });
 

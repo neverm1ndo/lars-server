@@ -4,6 +4,8 @@ import { join, normalize } from 'path';
 
 const exclusions: string[] = JSON.parse(process.env.CFG_EXCLUDE!);
 
+const __cache: Map<string, TreeNode> = new Map();
+
 export class TreeNode {
   public hasChildren?: boolean;
   public path: string;
@@ -24,7 +26,17 @@ export class TreeNode {
     return false;
   }
 
+  public static clearCache(rootPath?: string) {
+    rootPath ? __cache.delete(rootPath)
+             : __cache.clear();
+  }
+
   public static async buildTree(rootPath: string, nodeName: string): Promise<TreeNode> {
+
+    const cached: TreeNode | undefined = __cache.get(rootPath);
+
+    if (cached) return cached;
+
     const root = new TreeNode(rootPath, nodeName);
           root.expanded = true;
 
@@ -60,6 +72,8 @@ export class TreeNode {
         });
       }
     }
+
+    __cache.set(rootPath, root);
 
     return root;
   }

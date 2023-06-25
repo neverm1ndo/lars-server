@@ -89,6 +89,7 @@ router.post('/save-config', upcfg.fields([{ name: 'file', maxCount: 1 }]), (req:
 
 router.post('/upload-file', upfile.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
   logger.log(LOGGER_PREFIX, '[POST]', 'CONFIG_FILE_UPLOAD', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
+  TreeNode.clearCache();
   res.sendStatus(OK);
 });
 

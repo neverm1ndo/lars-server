@@ -10,6 +10,7 @@ import { io } from '../index';
 import path from 'path'
 import { logger } from '@shared/constants';
 import Workgroup from '@enums/workgroup.enum';
+import { TreeNode } from '@shared/fs.treenode';
 
 const LOGGER_PREFIX = '[UTILS]';
 
@@ -27,6 +28,7 @@ router.delete('/delete-file', json(), (req: any, res: any) => { // DELETE Remove
   Backuper.backup(req.query.path, req.user, BackupAction.DELETE)
           .then(() => unlink(req.query.path))
                       .then(() => {
+                        TreeNode.clearCache();
                         res.send({ status: 'deleted' });
                       })
                       .catch((err) => {
@@ -59,6 +61,7 @@ router.post('/mkdir', json(), (req: any, res: any) => { // POST make new dir
     mkdir(decodeURI(req.body.path), (err) => (!!err ? rej(err) : res()));
   })
   .then(() => {
+    TreeNode.clearCache();
     res.send({ 
       status: OK, 
       path: decodeURI(req.body.path)
@@ -83,6 +86,7 @@ router.delete('/rmdir', (req: any, res: any) => { // DELETE delete dir
     rmdir(dirPath, (err) => (!!err ? rej(err) : res()));
   })
   .then(() => {
+    TreeNode.clearCache();
     res.send({ status: OK });
   })
   .catch(err => {
@@ -106,6 +110,7 @@ router.patch('/mvdir', json() ,(req: any, res: any) => { // PATCH move dir
     move(dirPath, dirDestPath, (err) => !!err ? rej(err) : res());
   })
   .then(() => {
+    TreeNode.clearCache();
     res.send({ status: OK });
   })
   .catch(err => {
