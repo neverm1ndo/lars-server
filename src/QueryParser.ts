@@ -58,7 +58,7 @@ export class QueryParser {
             ],
             "Q_TXT": [
                 ["Q_LIST EOF", "return $1;"],
-                ["STRING EOF", "return $1;"],
+                ["STRING EOF", "return { nickname: [$1] };"],
             ],
             "Q_LIST": [
                 ["Q_OP : Q_VALUE", "$$ = { [$Q_OP]: $Q_VALUE };"],

@@ -14,6 +14,14 @@ describe('query parser suite', function() {
         });
     });
     
+    it('should parse only nickname if parser returns an error', function() {
+        
+        const query: string = 'Neverm1ndo';
+        const res = parser.parse(query);
+
+        expect(res).toEqual({ nickname: ['Neverm1ndo'] });
+    });
+    
     it('should parse cn query array', function() {
         
         const query: string = 'cn:L1HUXYLPSJNDKA8IQQK8L51UW2L44X,L1HUXYLPSJNDKA8IQQK8L51UW2L442';
