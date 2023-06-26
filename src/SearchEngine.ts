@@ -11,11 +11,9 @@ interface ISearchDBRequestIncludesString {
 }
 
 interface ISearchDBRequest {
-  geo?: {
-    ip?: ISearchDBRequestIncludesString;
-    as?: string;
-    ss?: string;
-  },
+  'geo.ip'?: ISearchDBRequestIncludesString;
+  'geo.as'?: string;
+  'geo.ss'?: string;
   cn?: ISearchDBRequestIncludesString,
   nickname?: ISearchDBRequestIncludesString,
   content?: {
@@ -100,6 +98,8 @@ export class SearchEngine {
 
             const request: ISearchDBRequest = await this.__buildDBRequest(parsed, options.date);
 
+            console.log(request);
+
             return LOG_LINE.find<ILogLine>(request, [], { sort: { unix: -1 }, limit: options.lim, skip: options.lim*options.page })
                             .where('process').nin(options.filter)
                             .exec();
@@ -112,7 +112,6 @@ export class SearchEngine {
         const { ip, as, ss, nickname, process, cn } = parsed;
         
         const request: ISearchDBRequest = {
-          geo: {},
           nickname: { $in: nickname },
           unix: {
             $gte: dates.from,
@@ -122,14 +121,13 @@ export class SearchEngine {
 
         try {
           
-          if (ip) request.geo!.ip = { $in: ip };
-          if (as) request.geo!.as = as;
-          if (ss) request.geo!.ss = ss;
+          if (ip) request['geo.ip'] = { $in: ip };
+          if (as) request['geo.as'] = as;
+          if (ss) request['geo.ss'] = ss;
           if (cn) request.cn = { $in: cn };
           
           if (!nickname) delete request.nickname;
           if (process) request.process = process;
-          if (!ip && !as && !ss) delete request.geo;
 
           return request as ISearchDBRequest;
         } catch(err: unknown) {

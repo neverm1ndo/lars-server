@@ -32,6 +32,16 @@ describe('query parser suite', function() {
         });
     });
 
+    it('should parse ip', function() {
+        
+        const query: string = 'ip:127.0.0.1';
+        const res = parser.parse(query);
+        
+        expect(res).toEqual({
+            ip: ['127.0.0.1']
+        });
+    });
+
     it('should parse serials as(5) ss', function() {
         
         const query: string = 's:12345*L1HUXYLPSJNDKA8IQQK8L51UW2L442L51UW2L442';
