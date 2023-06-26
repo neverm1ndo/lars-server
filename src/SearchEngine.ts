@@ -6,11 +6,11 @@ import { ILogLine } from '@interfaces/logline';
 import { Processes } from '@enums/processes.enum';
 import { getProcessFromTranslation } from '@shared/functions';
 
-interface ISearchDBRequestIncludesString {
+type ISearchDBRequestIncludesString = {
   $in?: string[];
 }
 
-interface ISearchDBRequest {
+type ISearchDBRequest = {
   'geo.ip'?: ISearchDBRequestIncludesString;
   'geo.as'?: string;
   'geo.ss'?: string;
@@ -36,22 +36,32 @@ export interface IRawSearchOptions {
 }
 
 interface ISearchOptions {
-    _lim: number;
-    _page: number;
-    _date: any;
-    lim: number;
-    page: number;
-    filter: Processes[];
-    date: {
-      from: number;
-      to: number;
-    }
+  _lim: number;
+  _page: number;
+  _date: any;
+  lim: number;
+  page: number;
+  filter: Processes[];
+  date: {
+    from: number;
+    to: number;
   }
+}
+
+type IBuilderParamsKeyname = Omit<ISearchDBRequest, 'unix' | 'content'>;
+
+interface IBuilderParams {
+  keyname: keyof IBuilderParamsKeyname;
+  value: string | string[] | undefined;
+}
+
 
 function toNumber(this: number, value: any): number {
     value = +value;
     return Number.isNaN(value) ? value : this;
 }
+
+const INITIAL_DATE: Date = new Date('Jan 01 2000, 00:00:00');
 
 const DEFAULT_SEARCH_OPTIONS: ISearchOptions = {
     filter: [],
@@ -66,7 +76,7 @@ const DEFAULT_SEARCH_OPTIONS: ISearchOptions = {
     },
     get page() { return this._page },
     _date: {
-      from: new Date('Jan 01 2000, 00:00:00').valueOf() / 1000,
+      from: INITIAL_DATE.valueOf() / 1000,
       to: Date.now()
     },
     set date({ from, to }: { from: any; to: any }) {
@@ -98,8 +108,6 @@ export class SearchEngine {
 
             const request: ISearchDBRequest = await this.__buildDBRequest(parsed, options.date);
 
-            console.log(request);
-
             return LOG_LINE.find<ILogLine>(request, [], { sort: { unix: -1 }, limit: options.lim, skip: options.lim*options.page })
                             .where('process').nin(options.filter)
                             .exec();
@@ -111,8 +119,7 @@ export class SearchEngine {
     private async __buildDBRequest(parsed: ISearchQuery, dates: { from: any, to: any }): Promise<ISearchDBRequest> {
         const { ip, as, ss, nickname, process, cn } = parsed;
         
-        const request: ISearchDBRequest = {
-          nickname: { $in: nickname },
+        let request: ISearchDBRequest = {
           unix: {
             $gte: dates.from,
             $lte: dates.to,
@@ -120,14 +127,26 @@ export class SearchEngine {
         };
 
         try {
-          
-          if (ip) request['geo.ip'] = { $in: ip };
-          if (as) request['geo.as'] = as;
-          if (ss) request['geo.ss'] = ss;
-          if (cn) request.cn = { $in: cn };
-          
-          if (!nickname) delete request.nickname;
-          if (process) request.process = process;
+
+          const params: IBuilderParams[] = [
+            { keyname: 'geo.ip', value: ip },
+            { keyname: 'geo.as', value: as },
+            { keyname: 'geo.ss', value: ss },
+            { keyname: 'cn',     value: cn },
+            { keyname: 'nickname', value: nickname },
+          ];
+
+          for (let { keyname, value } of params) {
+
+            if (!value) continue;
+
+            if (Array.isArray(value)) {
+              request = { ...request, ...{ [keyname]: { $in: value } }};
+              continue;
+            }
+
+            request[keyname] = value;
+          }
 
           return request as ISearchDBRequest;
         } catch(err: unknown) {
