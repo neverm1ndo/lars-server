@@ -6,16 +6,16 @@ import { ILogLine } from '@interfaces/logline';
 import { Processes } from '@enums/processes.enum';
 import { getProcessFromTranslation } from '@shared/functions';
 
-type ISearchDBRequestIncludesString = {
+type SearchDBRequestIncludesString = {
   $in?: string[];
 }
 
-type ISearchDBRequest = {
-  'geo.ip'?: ISearchDBRequestIncludesString;
+type SearchDBRequest = {
+  'geo.ip'?: SearchDBRequestIncludesString;
   'geo.as'?: string;
   'geo.ss'?: string;
-  cn?: ISearchDBRequestIncludesString,
-  nickname?: ISearchDBRequestIncludesString,
+  cn?: SearchDBRequestIncludesString,
+  nickname?: SearchDBRequestIncludesString,
   content?: {
     message: string;
   },
@@ -48,7 +48,7 @@ interface ISearchOptions {
   }
 }
 
-type IBuilderParamsKeyname = Omit<ISearchDBRequest, 'unix' | 'content'>;
+type IBuilderParamsKeyname = Omit<SearchDBRequest, 'unix' | 'content'>;
 
 interface IBuilderParams {
   keyname: keyof IBuilderParamsKeyname;
@@ -106,7 +106,7 @@ export class SearchEngine {
             if (from) options.date.from = from;
             if (to) options.date.to = to;
 
-            const request: ISearchDBRequest = await this.__buildDBRequest(parsed, options.date);
+            const request: SearchDBRequest = await this.__buildDBRequest(parsed, options.date);
 
             return LOG_LINE.find<ILogLine>(request, [], { sort: { unix: -1 }, limit: options.lim, skip: options.lim*options.page })
                             .where('process').nin(options.filter)
@@ -116,10 +116,10 @@ export class SearchEngine {
         }
     }
 
-    private async __buildDBRequest(parsed: ISearchQuery, dates: { from: any, to: any }): Promise<ISearchDBRequest> {
+    private async __buildDBRequest(parsed: ISearchQuery, dates: { from: any, to: any }): Promise<SearchDBRequest> {
         const { ip, as, ss, nickname, process, cn } = parsed;
         
-        let request: ISearchDBRequest = {
+        let request: SearchDBRequest = {
           unix: {
             $gte: dates.from,
             $lte: dates.to,
@@ -148,7 +148,7 @@ export class SearchEngine {
             request[keyname] = value;
           }
 
-          return request as ISearchDBRequest;
+          return request as SearchDBRequest;
         } catch(err: unknown) {
           throw err;
         }
