@@ -20,11 +20,11 @@ export class QueryParser {
      *      cn:<cn,...> - search by cn
      * 
      * Experimental filtering:
-     *      bans:<nickname | ip | cn | as*ss> - search bans only
+     *      ban:<nickname | ip | cn | as*ss> - search bans only
      *      ac: - show anti-cheat responses only
-     *      admin:<nickname,...> - show admin actions
+     *      adm:<nickname,...> - show admin actions
      *      daterange:<unix*unix> - show a certain period of time
-     *      message:<any string> - find specific string in messages
+     *      msg:<any string> - find specific string in messages
      *      cli:<client version>
      *      gun:<gun_id> - show kills with specific gun
      *      dev: - show info for mod developers
@@ -35,10 +35,19 @@ export class QueryParser {
             "rules": [
                 ["\\s+", "/* skip whitespace */"],
                 ["\\&", "return '&';"],
+                ["[0-9]{10}", "return 'UNIX';"],
                 ["(ip)\\b", "return 'OP_IP';"],
                 ["(nickname|nn)\\b", "return 'OP_NN';"],
                 ["(serial|s)\\b", "return 'OP_SRL';"],
                 ["(cn)\\b", "return 'OP_CN';"],
+                ["(ban)\\b", "return 'OP_BAN';"],
+                ["(ac)\\b", "return 'OP_AC';"],
+                ["(adm)\\b", "return 'OP_ADM';"],
+                ["(daterange)\\b", "return 'OP_DATERANGE';"],
+                ["(msg)\\b", "return 'OP_MSG';"],
+                ["(cli)\\b", "return 'OP_CLI';"],
+                ["(gun)\\b", "return 'OP_GUN';"],
+                ["(dev)\\b", "return 'OP_DEV';"],
                 ["^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", "return 'IP_ADDR'"],
                 ["\\*", "return '*';"],
                 ["\\,", "return ',';"],
@@ -50,7 +59,7 @@ export class QueryParser {
                 ["[0-9a-zA-Z_\\.\\/\\-]+", "return 'STRING';"],
             ],
         },
-        "tokens": "STRING AS SS CN IP_ADDR OP_IP OP_NN OP_SRL OP_CN & * , : EOF",
+        "tokens": "STRING UNIX AS SS CN IP_ADDR OP_IP OP_NN OP_SRL OP_CN & * , : EOF",
         "start": "Q_TXT",
         "bnf": {
             "expressions": [
@@ -58,20 +67,37 @@ export class QueryParser {
             ],
             "Q_TXT": [
                 ["Q_LIST EOF", "return $1;"],
+                // ["OP_DEV : EOF", "return { dev: true };"],
                 ["STRING EOF", "return { nickname: [$1] };"],
             ],
             "Q_LIST": [
+                ["Q_EMPTY_VALUE", "$$ = $Q_EMPTY_VALUE;"],
                 ["Q_OP : Q_VALUE", "$$ = { [$Q_OP]: $Q_VALUE };"],
+                ["Q_EMPTY_VALUE Q_LIST",  "$$ = { ...$Q_EMPTY_VALUE, ...$Q_LIST };"],
                 ["Q_OP : Q_VALUE & Q_LIST", "$$ = { [$Q_OP]: $Q_VALUE, ...$Q_LIST };"],
             ],
+            "Q_EMPTY_VALUE": [
+                ["Q_OP :", "$$ = { [$Q_OP]: '1' };"],
+            ],
             "Q_OP": [
+                /** Main keywords */
                 ["OP_NN" , "$$ = 'nickname';"],
                 ["OP_IP" , "$$ = 'ip';"],
                 ["OP_CN" , "$$ = 'cn';"],
                 ["OP_SRL", "$$ = 'srl';"],
+                /** Experimental keywords */
+                ["OP_BAN", "$$ = 'ban';"],
+                ["OP_AC" , "$$ = 'ac';"],
+                ["OP_ADM", "$$ = 'adm';"],
+                ["OP_DATERANGE", "$$ = 'daterange';"],
+                ["OP_MSG", "$$ = 'msg';"],
+                ["OP_CLI", "$$ = 'cli';"],
+                ["OP_GUN", "$$ = 'gun';"],
+                ["OP_DEV", "$$ = 'dev';"],
             ],
             "Q_VALUE": [
                 ["AS * SS", "return { as: $AS, ss: $SS };"],
+                ["UNIX * UNIX", "return { from: $1, to: $3 };"],
                 ["Q_ARR"  , "$$ = $Q_ARR;"],
             ],
             "Q_ARR": [

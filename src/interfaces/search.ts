@@ -7,4 +7,9 @@ export interface ISearchQuery {
   as?: string;
   ss?: string;
   cn?: string[];
+  dev?: boolean;
+  adm?: string[];
+  msg?: string;
+  cli?: string[];
+  gun?: string[];
 }

@@ -10,15 +10,15 @@ type SearchDBRequestIncludesString = {
   $in?: string[];
 }
 
-type SearchDBRequest = {
+export type SearchDBRequest = {
   'geo.ip'?: SearchDBRequestIncludesString;
   'geo.as'?: string;
   'geo.ss'?: string;
-  cn?: SearchDBRequestIncludesString,
-  nickname?: SearchDBRequestIncludesString,
-  content?: {
-    message: string;
-  },
+  'geo.cli'?: string;
+  cn?: SearchDBRequestIncludesString;
+  nickname?: SearchDBRequestIncludesString;
+  'content.message'?: string;
+  'content.weapon'?: string;
   process?: string;
   unix: { 
     $gte?: number;
@@ -61,7 +61,26 @@ function toNumber(this: number, value: any): number {
     return Number.isNaN(value) ? value : this;
 }
 
-const INITIAL_DATE: Date = new Date('Jan 01 2000, 00:00:00');
+const ADMIN_ACTIONS: Processes[] = [
+  Processes.SPECTATE_CHANGE,
+  Processes.SPECTATE_ENTER,
+  Processes.SPECTATE_LEAVE,
+  Processes.AUTH_CORRECT_ADM,
+  Processes.CN_BAN_HAND,
+  Processes.DISCONNECT_BAN,
+  Processes.DISCONNECT_KICK,
+  Processes.DISCONNECT_KICKBAN,
+];
+
+const DEV_ACTIONS: Processes[] = [
+  Processes.DEV_CLICKMAP,
+  Processes.DEV_KEYLOG,
+  Processes.DEV_VEH_ADD,
+  Processes.DEV_VEH_RM,
+  Processes.DEV_WEAP,
+];
+
+export const INITIAL_DATE: Date = new Date('Jan 01 2000, 00:00:00');
 
 const DEFAULT_SEARCH_OPTIONS: ISearchOptions = {
     filter: [],
@@ -117,7 +136,7 @@ export class SearchEngine {
     }
 
     private async __buildDBRequest(parsed: ISearchQuery, dates: { from: any, to: any }): Promise<SearchDBRequest> {
-        const { ip, as, ss, nickname, process, cn } = parsed;
+        const { ip, as, ss, nickname, process, cn, dev, cli, gun, msg, adm } = parsed;
         
         let request: SearchDBRequest = {
           unix: {
@@ -132,10 +151,18 @@ export class SearchEngine {
             { keyname: 'geo.ip', value: ip },
             { keyname: 'geo.as', value: as },
             { keyname: 'geo.ss', value: ss },
+            { keyname: 'geo.cli', value: cli },
             { keyname: 'cn',     value: cn },
+            { keyname: 'content.message', value: msg },
+            { keyname: 'content.weapon', value: gun },
             { keyname: 'nickname', value: nickname },
+            { keyname: 'process', value: process },
           ];
 
+          if (adm) params.push({ keyname: 'process', value: ADMIN_ACTIONS });
+
+          if (dev) params.push({ keyname: 'process', value: DEV_ACTIONS })
+          
           for (let { keyname, value } of params) {
 
             if (!value) continue;
