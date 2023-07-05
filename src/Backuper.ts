@@ -30,7 +30,17 @@ interface BackupNote {
   }
 }
 
-const TWO_WEEKS = 604800000;
+const LOG_MESSAGES = {
+  CREATE     : 'BACKUPER_CREATE_BACKUP',
+  NOT_EXISTS : 'BACKUP_IS_NOT_EXISTS',
+};
+
+const TWO_WEEKS: number = 604800000;
+
+const ALLOWED_BINARY_MIMES: string[] = [
+  'application/x-sharedlib',
+  'application/octet-stream',
+];
 
 /**
 * Generates hashcode for backups
@@ -43,7 +53,7 @@ function makeHash(...args: Array<string | number>): string {
 export default class Backuper {
 
   static handleError<T extends Error>(error: T): void {
-    logger.log('[BACKUPER]', error.message);
+    logger.err('[BACKUPER]', error.message);
   }
   
   /** 
@@ -70,23 +80,23 @@ export default class Backuper {
      */
     const isBinary: boolean = ((mime: string | false): boolean => {
       if (!mime) return false;
-      switch (mime) {
-        case 'application/x-sharedlib': return true;
-        case 'application/octet-stream': return true;
-        default: return false;
-      }
+      return ALLOWED_BINARY_MIMES.includes(mime);
     })(mime);
+
+    const creationDate: Date = new Date(unix);
+    const expirationDate: Date = new Date(unix + TWO_WEEKS);
+    const avatar: string = getAvatarURL(user.user_avatar);
     
-    let backup = new BACKUP({
+    const backup = new BACKUP({
       unix,
-      date: new Date(unix),
+      date: creationDate,
       hash,
-      expires: new Date(unix + TWO_WEEKS),
+      expires: expirationDate,
       action,
       user: {
         nickname: user.username,
         group_id: user.main_group,
-        avatar: getAvatarURL(user.user_avatar),
+        avatar,
       },
       file: {
         path,
@@ -98,7 +108,7 @@ export default class Backuper {
     
     return stat(path).then(() => copyFile(path, join(process.env.BACKUPS_PATH!, hash)))
                      .then(() => {
-                        console.log('BACKUPER_CREATE_BACKUP', path);
+                        console.log(LOG_MESSAGES.CREATE, path);
                         backup.save();
                      }).catch((err) => err.syscall == 'stat' ? console.log('BACKUPER_SKIP_NEW_FILE', path)
                                                              : console.error(err));
@@ -112,8 +122,8 @@ export default class Backuper {
   static async restore(hash: string): Promise<void> {
     return BACKUP.findOne<BackupNote>({ hash })
                  .then((backup) => {
-                  if (!backup) throw 'no backup';
-                  return backup;
+                    if (!backup) throw LOG_MESSAGES.NOT_EXISTS;
+                    return backup;
                  })
                  .then((backup) => {
                     const backupFilePath: string = path.join(process.env.BACKUPS_PATH!, backup.hash);
@@ -129,7 +139,7 @@ export default class Backuper {
     
     const unlinkShchedule: Promise<unknown> = BACKUP.find<BackupNote>({ expires: { $lte: now }}, [])
           .then((notes) => {
-            if (!notes) throw 'no backup';
+            if (!notes) throw LOG_MESSAGES.NOT_EXISTS;
             return notes;
           })
           .then((notes) => {
