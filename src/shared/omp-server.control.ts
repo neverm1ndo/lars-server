@@ -179,8 +179,7 @@ export class OMPServerControl {
       const subprocess = this.__subprocesses.get('omp');
       
       if (subprocess) {
-        subprocess.kill();
-        return;
+        return void(subprocess.kill());
       }
 
       const pid = this.__getProcessPIDbyName(this.__serverName);
@@ -191,8 +190,7 @@ export class OMPServerControl {
     } catch (error) {
       this._stdout(LOG_MESSAGES.STOP_ERR, error);
     } finally {
-      this.__subprocesses.delete('stop');
-      this.__subprocesses.delete('omp');
+      this.__subprocesses.clear();
       this._stdout(LOG_MESSAGES.STOPED)
     }
   }
