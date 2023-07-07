@@ -72,8 +72,12 @@ export class Logger {
             this._date = date;
         }
 
-        for (let i = 0; i < args.length - 1; i++) {
-            args[i] = args[i].toString();
+        try {
+            for (let i = 0; i < args.length - 1; i++) {
+                args[i] = args[i].toString();
+            }
+        } catch(err) {
+            console.error(err);
         }
 
         let str: string = [this._formatTimestamp([seconds, minutes, hours, date, month, year]), ...args].join(' ');
