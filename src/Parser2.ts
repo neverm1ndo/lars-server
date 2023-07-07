@@ -49,8 +49,8 @@ export class Parser2 {
                 // common login
                 ["LOGStatic GEOText", "return { ...$LOGStatic, geo: $GEOText };"],
                 // user auth
-                ["LOGStatic MESSAGE GEOText", "return { ...$LOGStatic, content: { auth: { username: $MESSAGE.message }, ...$LOGContent}, geo: $GEOText };"],
-                ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: $LOGContent, geo: $GEOText };"],
+                ["LOGStatic MESSAGE GEOText", "return { ...$LOGStatic, content: { auth: { username: $MESSAGE }}, geo: $GEOText };"],
+                // ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: $LOGContent, geo: $GEOText };"],
                 // with content
                 ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent };"],
                 // ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent, geo: $GEOText };"],
