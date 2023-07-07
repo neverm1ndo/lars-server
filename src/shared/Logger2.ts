@@ -93,6 +93,13 @@ export class Logger {
     }
 
     public err(...args: any[]): void {
+        for (let i = 0; i < args.length - 1; i++) {
+            let arg = args[i];
+            if (arg instanceof Error) {
+                arg = arg.message + EOL + arg.stack;
+            }
+            args[i] = arg.toString();
+        }
         this.log('[ERROR]', ...args);
     }
 
