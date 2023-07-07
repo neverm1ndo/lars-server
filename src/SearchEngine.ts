@@ -152,7 +152,7 @@ export class SearchEngine {
             { keyname: 'geo.as', value: as },
             { keyname: 'geo.ss', value: ss },
             { keyname: 'geo.cli', value: cli },
-            { keyname: 'cn',     value: cn },
+            { keyname: 'content.message', value: cn },
             { keyname: 'content.message', value: msg },
             { keyname: 'content.weapon', value: gun },
             { keyname: 'nickname', value: nickname },
