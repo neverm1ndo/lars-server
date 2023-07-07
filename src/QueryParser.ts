@@ -38,7 +38,7 @@ export class QueryParser {
                 ["[0-9]{10}", "return 'UNIX';"],
                 ["(ip)\\b", "return 'OP_IP';"],
                 ["(nickname|nn)\\b", "return 'OP_NN';"],
-                ["(serial|s)\\b", "return 'OP_SRL';"],
+                ["(serial|s(rl)?)\\b", "return 'OP_SRL';"],
                 ["(cn)\\b", "return 'OP_CN';"],
                 ["(ban)\\b", "return 'OP_BAN';"],
                 ["(ac)\\b", "return 'OP_AC';"],
