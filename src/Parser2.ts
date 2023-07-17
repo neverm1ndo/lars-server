@@ -31,12 +31,11 @@ export class Parser2 {
                 ["[0-9A-Z]{40}", "return 'SS';"],
                 ["{int}{frac}?\\b", "return 'NUMBER';"],
                 ["\'(?:\\\\[\"bfnrt/\\\\]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\'", "yytext = yytext.substr(1,yyleng-2); return 'MESSAGE';"],
-                ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+", "return 'STRING';"],
-                ["\\b", "return 'EOW';"],
+                ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+\\b", "return 'STRING';"],
                 ["$", "return 'EOF';"],
             ],
         },
-        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI SS NUMBER MESSAGE STRING < / > { } ( ) , : EOF EOW",
+        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI SS NUMBER MESSAGE STRING < / > { } ( ) , : EOF",
         "start": "LOGText",
         "bnf": {
             "expressions": [
@@ -45,7 +44,7 @@ export class Parser2 {
             ],
             "LOGStatic": [
                 ["UNIX DATE LOGProcess STRING LOGUserId", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $STRING.trim(), id: $LOGUserId };"],
-                ["UNIX DATE LOGProcess STRING EOW", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $STRING.trim(), id: undefined };"],
+                ["UNIX DATE LOGProcess STRING", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $STRING.trim(), id: undefined };"],
             ],
             "LOGText": [
                 // common login
