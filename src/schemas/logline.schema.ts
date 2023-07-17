@@ -5,7 +5,7 @@ const logShema = new Schema({
   date: { type: Date, required: true },
   process: { type: String, required: true },
   nickname: { type: String, required: true },
-  id: { type: Number, required: true },
+  id: { type: Number },
   content: {
     time: { type: String },
     oid: { type: Number },

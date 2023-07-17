@@ -43,7 +43,8 @@ export class Parser2 {
                 ["GEOText EOF", "return $1"],
             ],
             "LOGStatic": [
-                ["UNIX DATE LOGProcess STRING LOGUserId", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $STRING.trim(), id: $LOGUserId };"]
+                ["UNIX DATE LOGProcess STRING LOGUserId", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $STRING.trim(), id: $LOGUserId };"],
+                ["UNIX DATE LOGProcess STRING", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $STRING.trim(), id: undefined };"],
             ],
             "LOGText": [
                 // common login
