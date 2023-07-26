@@ -31,11 +31,12 @@ export class Parser2 {
                 ["[0-9A-Z]{40}", "return 'SS';"],
                 ["{int}{frac}?\\b", "return 'NUMBER';"],
                 ["\'(?:\\\\[\"bfnrt/\\\\]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\'", "yytext = yytext.substr(1,yyleng-2); return 'MESSAGE';"],
-                ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+\\b", "return 'STRING';"],
+                ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+", "return 'STRING';"],
+                ["[a-zA-Za-яА-Я0-9_\[\]@#\$\(\)\\!|\.]{1,18}?(?=\\s)\\b", "return 'NICKNAME';"],
                 ["$", "return 'EOF';"],
             ],
         },
-        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI SS NUMBER MESSAGE STRING < / > { } ( ) , : EOF",
+        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI SS NUMBER MESSAGE STRING NICKNAME < / > { } ( ) , : EOF",
         "start": "LOGText",
         "bnf": {
             "expressions": [
@@ -45,16 +46,15 @@ export class Parser2 {
             "LOGStatic": [
                 ["UNIX DATE LOGProcess STRING LOGUserId", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $STRING.trim(), id: $LOGUserId };"],
                 ["UNIX DATE LOGProcess STRING", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $STRING.trim(), id: undefined };"],
+                // ["UNIX DATE LOGProcess NICKNAME", "$$ = { unix: parseInt($UNIX) , date: new Date($UNIX*1000), process: $LOGProcess, nickname: $NICKNAME.trim(), id: undefined };"],
             ],
             "LOGText": [
                 // common login
                 ["LOGStatic GEOText", "return { ...$LOGStatic, geo: $GEOText };"],
                 // user auth
                 ["LOGStatic MESSAGE GEOText", "return { ...$LOGStatic, content: { auth: { username: $MESSAGE }}, geo: $GEOText };"],
-                // ["LOGStatic LOGContent GEOText", "return { ...$LOGStatic, content: $LOGContent, geo: $GEOText };"],
                 // with content
                 ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent };"],
-                // ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent, geo: $GEOText };"],
                 ["LOGStatic GEOElement", "return { ...$LOGStatic, content: { props: $GEOElement }};"],
                 ["LOGStatic GEOElement MESSAGE", "return { ...$LOGStatic, content: { props: $GEOElement , message: $MESSAGE }};"],
                 ["LOGStatic", "return $$;"]
@@ -75,7 +75,6 @@ export class Parser2 {
                 ["LOGContentNumberTuple", "$$ = { numbers: $1 };"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim() }};"],
-                // ["STRING STRING LOGUserId", "$$ = { action: $1, target: { id: $3, username: $2.trim() }};"],
                 ["STRING LOGUserId STRING", "$$ = { targetType: $3, target: { id: $2, username: $1.trim() }};"],
                 ["STRING LOGUserId MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, message: $MESSAGE };"], // kills deaths kicks bans
             ],

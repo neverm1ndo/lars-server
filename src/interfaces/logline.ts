@@ -26,7 +26,7 @@ export interface ILogLine {
   date: Date;
   process: string;
   nickname?: string;
-  id: number;
+  id?: number;
   geo?: IGeoData;
   content?: IContentData;
   multiplier?: number;
