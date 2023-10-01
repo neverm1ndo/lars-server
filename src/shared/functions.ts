@@ -2,7 +2,7 @@ import md5 from 'md5';
 
 import iconv from 'iconv-lite';
 import { logger } from './constants';
-import { processTranslation, statsman, MSQLPool, SQLQueries, noAvatarImageUrl } from '@shared/constants';
+import { processTranslation, MSQLPool, SQLQueries, noAvatarImageUrl } from '@shared/constants';
 import { IContentData, ILogLine } from '@interfaces/logline';
 import { Document } from 'mongoose';
 import { LOG_LINE } from '@schemas/logline.schema';
@@ -97,13 +97,13 @@ export const watch = (): void => {
            });
   };
 
-  const _updateStatistics = async (logLine: ILogLine): Promise<void> => {
-      statsman.update(logLine)
-              .then(() => {
-                io.sockets.emit('server-online', statsman.snapshot);
-              })
-              .catch(() => {});
-              broadcastProcessNotification(logLine);
+  const _updateStatistics = (logLine: ILogLine) => {
+      // statsman.update(logLine)
+      //         .then(() => {
+      //           io.sockets.emit('server-online', statsman.snapshot);
+      //         })
+      //         .catch(() => {});
+      //         broadcastProcessNotification(logLine);
   };
 
   watcher.overwatch()

@@ -5,6 +5,7 @@ import { Response } from 'express';
 import { BACKUP } from '@schemas/backup.schema';
 import { Document, CallbackError } from 'mongoose';
 import { stat, Stats } from 'fs';
+import { TreeNode } from '@shared/fs.treenode';
 
 import Backuper from '@backuper';
 import Workgroup from '@enums/workgroup.enum';
@@ -40,6 +41,7 @@ router.get('/backup/:hash', (req: any, res: any) => {
 
   Backuper.getBackupFile(req.params.hash)
           .then((data) => {
+            TreeNode.clearCache();
             res.status(OK)
                .send(data);
           })

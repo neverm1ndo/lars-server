@@ -1,7 +1,7 @@
 import Workgroup from '@enums/workgroup.enum';
 import { Socket } from 'socket.io';
 import { io } from '../index';
-import { omp, statsman, logger } from '@shared/constants';
+import { omp, logger } from '@shared/constants';
 import { getAvatarURL } from '@shared/functions';
 import { ISocket } from '@interfaces/httpio.enum';
 
@@ -75,8 +75,8 @@ const sockets = (socket: ISocket) => {
       socket.broadcast.to('devs').emit('server-rebooted');
       io.sockets.emit('server-status', ServerStatus.LIVE);
       
-      statsman.snapshot = 0;
-      statsman.tail();
+      // statsman.snapshot = 0;
+      // statsman.tail();
       
       logger.log(LOGGER_PREFIX, 'SERVER_REBOOT_SUCCESS', `(${socket.handshake.address})`, socket.request.user?.username);
     } catch(error: any) {
@@ -100,8 +100,8 @@ const sockets = (socket: ISocket) => {
         group_id: socket.data.main_group 
       });
       
-      statsman.snapshot = 0;
-      statsman.tail();
+      // statsman.snapshot = 0;
+      // statsman.tail();
       
       logger.log(LOGGER_PREFIX, 'SERVER_STOP_SUCCESS', `(${socket.handshake.address})`, socket.request.user?.username);
     } catch (error: any) {

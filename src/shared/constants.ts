@@ -9,7 +9,7 @@ import experimentalStorage from '@shared/experimental.confstorage';
 import { OMPServerControl } from '@shared/omp-server.control';
 
 import { Processes } from '@enums/processes.enum';
-import Statsman from '../Statsman';
+import { OnlineMetric } from 'src/Metrics';
 import { ErrorCode } from '@enums/error.codes.enum';
 
 export const paramMissingError = 'One or more of the required parameters was missing.';
@@ -25,7 +25,7 @@ export const CommonErrors = {
 
 export const logger: Logger = new Logger(path.resolve(process.cwd(), 'diary'), 'log'); 
 
-export const statsman = new Statsman.OnlineMetric();
+export const onlineMetric: OnlineMetric = new OnlineMetric();
 export const omp = new OMPServerControl();
 
 export const SQLQueries: { [key: string]: any } = {
@@ -87,9 +87,8 @@ const mapStorage = diskStorage({
     cb(null, req.body.path?req.body.path:process.env.MAPS_PATH!)
   },
   filename: function (_req: any, file: any, cb) {
-    console.log(file)
     cb(null, file.originalname)
-  }
+  },
 });
 
 const confStorage = diskStorage({
@@ -105,8 +104,8 @@ export const upmap : Multer =  multer({ storage: mapStorage });
 export const upcfg : Multer =  multer({ storage: experimentalConfigFileStorage });
 export const upfile: Multer =  multer({ storage: confStorage });
 
-export const tailOnlineStats = new CronJob('0 */30 * * * *', () => {
-  statsman.tail();
+export const tailOnlineStats = new CronJob('0 */60 * * * *', () => {
+  onlineMetric.tail('online');
 });
 
 export const rmOldBackups = new CronJob('0 0 0 */1 * *', () => {
