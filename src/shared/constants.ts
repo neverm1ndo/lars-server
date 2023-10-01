@@ -9,7 +9,7 @@ import experimentalStorage from '@shared/experimental.confstorage';
 import { OMPServerControl } from '@shared/omp-server.control';
 
 import { Processes } from '@enums/processes.enum';
-import { OnlineMetric } from 'src/Metrics';
+import { OnlineMetric } from '../Metrics';
 import { ErrorCode } from '@enums/error.codes.enum';
 
 export const paramMissingError = 'One or more of the required parameters was missing.';
