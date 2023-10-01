@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import StatusCodes from 'http-status-codes';
 
-import { OnlineMetric, OnlineMetricChart } from 'src/Metrics';
+import { OnlineMetric, OnlineMetricChart } from '../Metrics';
 import { logger } from '@shared/constants';
 import Workgroup from '@enums/workgroup.enum';
 
