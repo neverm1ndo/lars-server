@@ -4,7 +4,7 @@ import https from 'https';
 import { readFileSync } from 'fs';
 import sockets, { wrap } from './routes/Sockets';
 import { Server } from 'socket.io';
-import { socketCORS } from '@shared/constants';
+import { socketCORS, logger } from '@shared/constants';
 import passport from 'passport';
 import { IHttpsOptions, ISocket } from '@interfaces/httpio.enum';
 
@@ -33,5 +33,21 @@ export const io: Server = new Server(server, { cors: socketCORS, path: '/notifie
                sockets(socket);
              });
 
-server.listen(process.env.HTTPS_PORT, () => { console.log('HTTPS LARS NODE listening on port', process.env.HTTPS_PORT) });
-app.listen(process.env.HTTP_PORT, () => { console.log('HTTP LARS NODE listening on port', process.env.HTTP_PORT)})
+logger.log(
+  'START LARS SERVER\n',
+  `⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣤⣤⣤⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀
+  ⠀⠀⠀⠀⢀⣤⣾⣿⣿⣿⣿⣿⣿⡿⢿⣿⣷⣄⡀⠀⠀⠀⠀
+  ⠀⠀⠀⣴⣿⣿⣿⣿⣿⣿⣿⠟⠁⠀⢸⣿⣿⣿⣿⣦⠀⠀⠀gta-liberty.ru
+  ⠀⠀⣾⣿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⢻⣿⣿⣿⣿⣧⠀⠀
+  ⠀⣸⣿⣿⣿⡿⠉⣿⠃⠀⠀⠀⠀⠀⠀⠀⠻⣿⣿⣿⣿⣇  ██       █████  ██████  ███████ 
+  ⠀⣿⣿⣿⣿⠁⠀⠻⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⣿⣿⣿⡇ ██      ██   ██ ██   ██ ██ 
+  ⠀⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⣾⣧⠀⠀⠀⠀⢸⣿⣿⣿⣿⡇ ██      ███████ ██████  ███████
+  ⠀⢹⣿⣿⣿⡆⠀⠀⢠⣦⣼⣿⣿⣇⠀⠀⠀⣼⣿⣿⣿⡇  ██      ██   ██ ██   ██      ██
+  ⠀⠀⢿⣿⣿⣿⣄⠀⠈⢿⣿⣿⣿⠇⠀⢠⣾⣿⣿⣿⡟⠀⠀ ███████ ██   ██ ██   ██ ███████
+  ⠀⠀⠀⠻⣿⣿⣿⠀⠀⠀⠈⠉⠁⠀⠀⢸⣿⣿⣿⠏⠀⠀⠀ 
+  ⠀⠀⠀⠀⠈⠛⢿⣧⣄⠀⠀⠀⠀⢀⣤⣿⡿⠋⠁⠀⠀⠀⠀ version v${process.env.npm_package_version}
+  ⠀⠀⠀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀ pid     ${process.pid}`,
+  '\n'
+);
+server.listen(process.env.HTTPS_PORT, () => { logger.log('[LARS_NODE]', 'HTTPS PORT:', process.env.HTTPS_PORT) });
+app.listen(process.env.HTTP_PORT, () => { logger.log('[LARS_NODE]', 'HTTP  PORT:', process.env.HTTP_PORT)});

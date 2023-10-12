@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import StatusCodes from 'http-status-codes';
 
-import { OnlineMetric, OnlineMetricChart } from '../Metrics';
-import { logger } from '@shared/constants';
+import { OnlineMetricChart } from '../Metrics';
+import { logger, onlineMetric } from '@shared/constants';
 import Workgroup from '@enums/workgroup.enum';
 
 const router = Router();
 
 const { NOT_IMPLEMENTED, NOT_FOUND } = StatusCodes;
 
-const online: OnlineMetric = new OnlineMetric();
+// const online: OnlineMetric = new OnlineMetric();
 
 type MetricPeriod = 'day' | 'week' | 'month' | 'year';
 
@@ -17,7 +17,7 @@ function getOnlineChart(period: MetricPeriod): Promise<OnlineMetricChart | null>
   switch (period) {
     case 'day': {
       const date: Date = new Date();
-      return online.getDailyOnlineChart(date);
+      return onlineMetric.getDailyOnlineChart(date);
     }
     // case 'week': {
 

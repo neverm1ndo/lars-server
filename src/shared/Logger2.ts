@@ -84,6 +84,8 @@ export class Logger {
             str += EOL;
         
         process.stdout.write(str);
+
+        str = str.replace(/[^\x20-\x7E]/g, ''); // removes escape codes
         
         this._writeStream.write(str, (err: Error | null | undefined) => {
             if (err) {

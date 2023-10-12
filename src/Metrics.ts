@@ -4,6 +4,8 @@ import { logger, omp } from '@shared/constants';
 
 import { STAT } from '@schemas/stat.schema';
 import { UpdateResult } from 'mongodb';
+import { EOL } from 'os';
+import { isObject } from 'lodash';
 
 export interface OnlineMetricChart {
   data: number[];
@@ -55,8 +57,19 @@ export class OnlineMetric extends Statsman.Metric {
 
     public onInit(): void { 
       this._getServerOnline()
-          .then(({ players }: ServerGameMode) => {
-            this.snapshot.online = players.online;
+          .then((gameMode: ServerGameMode) => {
+            logger.log(
+              '[METRICS]','[SRV_GAME_MODE]', 'Got game mode data:\n',
+                                             ...Object.entries(gameMode)
+                                                      .map(([key, val]) => {
+                                                        if (!isObject(val)) return [key, val];
+                                                        val = Object.values(val)
+                                                                    .join('/');
+                                                        return [key, val];
+                                                      })
+                                                      .map(([key, val]) => '\t'.repeat(6) + key + ': ' + val + EOL)
+            );
+            this.snapshot.online = gameMode.players.online;
           })
           .catch((err: any) => {
             logger.err(err);
