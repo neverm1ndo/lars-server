@@ -20,18 +20,20 @@ const server: https.Server = https.createServer(httpsOptions , app);
 
 export const io: Server = new Server(server, { cors: socketCORS, path: '/notifier/' });
              
-             io.use(wrap(sessionMiddleware));
-             io.use(wrap(passport.authenticate('jwt')));
-             io.use(wrap(passport.initialize()));
-             io.use(wrap(passport.session()));
+[
+  sessionMiddleware,
+  passport.authenticate('jwt'),
+  passport.initialize(),
+  passport.session(),
+].forEach((middlware) => io.use(wrap(middlware)));
              
-             io.use((socket: any, next) => {
-              socket.request.user ? next() 
-                                  : next(new Error('Unauthorized'));
-             });
-             io.on('connection', (socket: ISocket) => {
-               sockets(socket);
-             });
+io.use((socket: any, next: any) => {
+  socket.request.user ? next() 
+                      : next(new Error('Unauthorized'));
+});
+io.on('connection', (socket: ISocket) => {
+  sockets(socket);
+});
 
 logger.log(
   'START LARS SERVER\n',
