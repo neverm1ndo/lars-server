@@ -3,10 +3,7 @@
  */
 import path from 'path';
 import fs from 'fs/promises';
-import Logger from 'jet-logger';
 import { ExecException, exec } from 'child_process';
-
-// Setup logger
 
 const config = {
     env: 'pre-start/env/',
