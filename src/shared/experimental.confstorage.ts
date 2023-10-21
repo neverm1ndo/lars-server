@@ -1,18 +1,22 @@
 import type { Request } from 'express';
 
-import { pipeline, Transform } from 'stream';
+import { pipeline, Transform, TransformCallback, Readable } from 'stream';
 import { join, dirname } from 'path';
 import Backuper, { BackupAction } from '@backuper';
 
-import fs from 'fs';
-import { access } from 'fs/promises';
+import fs, { WriteStream } from 'fs';
 import multer from "multer";
 
 import { UTF8toANSI } from './functions';
 
 import Workgroup from '@enums/workgroup.enum';
+import { logger } from './constants';
 
 const { CFR } = Workgroup;
+
+const ERROR = {
+  OUT_OF_PERMITTED_AREA: new Error('File destination is out of permitted area'),
+};
 
 const getDestination = (_req: Request, _file: Express.Multer.File, callback: any) => {
   callback(null, process.env.CFG_DEFAULT_PATH);
@@ -30,35 +34,69 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
     this._getDestination = _options.destination || getDestination;
   }
 
+  private readonly _encondingTransform: Transform = new Transform({
+                                                          transform: (chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) => {
+                                                            callback(null, UTF8toANSI(chunk));
+                                                          }
+                                                        });
+  private readonly _bypass: Transform = new Transform({
+                                          transform: (chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) => {
+                                            callback(null, chunk);
+                                          }
+                                        });
+
   _handleFile(req: Request,
             file: Express.Multer.File,
             callback: (error?: any, info?: Partial<Express.Multer.File>) => void): void {
-    this._getDestination(req, file, function (err: any, path: any) {
-      if (err) return callback(err);
-      const filepath: string = join(path, file.originalname);
-      access(dirname(filepath))
-            .then(() => Backuper.backup(filepath, req.user, BackupAction.CHANGE))
-            .then(() => {
-              if (isOutOfPermittedArea(dirname(filepath), req.user)) callback(new Error('File is out of permitted area'));
-              const writeStream = fs.createWriteStream(filepath);
-              const transformEncoding = new Transform({
-                transform: (chunk: Buffer, _encoding: BufferEncoding, callback) => {
-                  callback(null, UTF8toANSI(chunk));
-                }
-              });
-              const outStream = pipeline(file.stream, transformEncoding, writeStream, (err: NodeJS.ErrnoException | null) => {
-                callback(err);
-              });
-              outStream.on('error', callback);
-              outStream.on('finish', () => callback(null, { path, size: writeStream.bytesWritten }));
-            })
-            .catch((err) => {
-              callback(err); // Backuper error
-            })
-            .catch((err) => {
-              callback(err); // Access error
-            });
+    this._getDestination(req, file, async (err: any, path: any) => {
+      
+      try {
+        if (err) throw err;
+        
+        const filepath: string = join(path, file.originalname);
+
+        /**
+         * Checks destination path access
+         */
+        await fs.promises.access(path);
+
+        /*
+        * Create backup note in DB
+        * Save file as hashed backup
+        */
+        const backupNote = await Backuper.backup(filepath, req.user, BackupAction.CHANGE);
+
+
+        const targetDir: string = dirname(filepath);
+        if (isOutOfPermittedArea(targetDir, req.user)) throw ERROR.OUT_OF_PERMITTED_AREA;
+
+
+        const writeStream: WriteStream = fs.createWriteStream(filepath);
+
+        const streamPipeline: WriteStream = this._createWriteStreamPipeline(file.stream, writeStream, !backupNote.file.binary, callback); 
+              streamPipeline.on('error', (err) => callback(err));
+              streamPipeline.on('finish', () => callback(null, { path, size: writeStream.bytesWritten }));
+      } catch(err) {
+        logger.err(err);
+        callback(err);
+      }
     });
+  }
+
+  private _createWriteStreamPipeline(
+      fileStream: Readable, 
+      writeStream: WriteStream, 
+      encoded: boolean, 
+      callback: (error?: any, info?: Partial<Express.Multer.File>) => void
+    ): WriteStream {
+    
+      const pipe: [Readable, Transform, WriteStream] = [
+        fileStream,
+        encoded ? this._encondingTransform : this._bypass,
+        writeStream,
+      ];
+
+      return pipeline<WriteStream>(...pipe, callback); 
   }
 
   _removeFile(_req: Request,

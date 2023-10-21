@@ -12,7 +12,7 @@ const LOGGER_PREFIX = '[CONFIGS]';
 
 const router = Router();
 
-const { OK, INTERNAL_SERVER_ERROR, CONFLICT, NOT_FOUND } = StatusCodes;
+const { OK, INTERNAL_SERVER_ERROR, CONFLICT, NOT_FOUND, MOVED_PERMANENTLY } = StatusCodes;
 const { DEV } = Workgroup;
 
 router.get('/config-files-tree', async (req: any, res: any) => { // GET Files(configs) and directories tree
@@ -82,15 +82,19 @@ router.get('/file-info', (req: any, res: any) => { // GET stat of file
               });
 });
 
-router.post('/save-config', upcfg.fields([{ name: 'file', maxCount: 1 }]), (req: any, res: any) => {
-  logger.log(LOGGER_PREFIX, '[POST]', 'CONFIG_FILE_SAVE', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
+router.post('/save-file', upcfg.fields([{ name: 'file', maxCount: 1 }]), (req: any, res: any) => {
+  // logger.log(LOGGER_PREFIX, '[POST]', 'CONFIG_FILE_SAVE', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
+  TreeNode.clearCache();
   res.sendStatus(OK);
 });
 
 router.post('/upload-file', upfile.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
-  logger.log(LOGGER_PREFIX, '[POST]', 'CONFIG_FILE_UPLOAD', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
-  TreeNode.clearCache();
-  res.sendStatus(OK);
+  
+  return res.sendStatus(MOVED_PERMANENTLY);
+  
+  // logger.log(LOGGER_PREFIX, '[POST]', 'CONFIG_FILE_UPLOAD', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
+  // TreeNode.clearCache();
+  // res.sendStatus(OK);
 });
 
 export default router;

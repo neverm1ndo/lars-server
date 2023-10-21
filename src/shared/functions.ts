@@ -160,7 +160,7 @@ export const getRandomInt = () => {
     return Math.floor(Math.random() * 1_000_000_000_000);
 };
 
-export const getMimeType = (path: string): string | false => {
+export const getMimeType = (path: string): string => {
   let splited = path.split('.');
   
   if (!splited) return '*/*';
@@ -175,7 +175,7 @@ export const getMimeType = (path: string): string | false => {
   }
   const mime = lookup(path);
   if (!mime) return '*/*';
-  return lookup(path);
+  return mime;
 }
 
 

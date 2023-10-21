@@ -75,19 +75,21 @@ export const SQLQueries: { [key: string]: any } = {
 
 const experimentalConfigFileStorage = experimentalStorage({
   destination: function (req: any, _file: any, cb: any) {
-    cb(null, req.body.path?req.body.path:process.env.CFG_DEFAULT_PATH!)
+    cb(null, req.body.path ? req.body.path
+                           : process.env.CFG_DEFAULT_PATH!
+      );
   },
   filename: function (_req: any, file: any, cb: any) {
-    cb(null, file.originalname)
+    cb(null, file.originalname);
   }
 });
 
 const mapStorage = diskStorage({
   destination: function (req: any, _file: any, cb) {
-    cb(null, req.body.path?req.body.path:process.env.MAPS_PATH!)
+    cb(null, req.body.path?req.body.path:process.env.MAPS_PATH!);
   },
   filename: function (_req: any, file: any, cb) {
-    cb(null, file.originalname)
+    cb(null, file.originalname);
   },
 });
 

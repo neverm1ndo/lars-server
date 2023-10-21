@@ -62,7 +62,7 @@ export default class Backuper {
    * @param action - action that initiated backup
    * @returns {Promise<void>} - promise of function execution
    */
-  static async backup(path: string, user: any, action: BackupAction): Promise<void> {
+  static async backup(path: string, user: any, action: BackupAction): Promise<BackupNote> {
     const ext: string = extname(path);
     
     const [filename, unix]: [string, number] = [
@@ -86,8 +86,8 @@ export default class Backuper {
     const creationDate: Date = new Date(unix);
     const expirationDate: Date = new Date(unix + TWO_WEEKS);
     const avatar: string = getAvatarURL(user.user_avatar);
-    
-    const backup = new BACKUP({
+
+    const backupDocument: BackupNote = {
       unix,
       date: creationDate,
       hash,
@@ -104,14 +104,22 @@ export default class Backuper {
         mime,
         binary: isBinary,
       }
-    });
+    };
     
-    return stat(path).then(() => copyFile(path, join(process.env.BACKUPS_PATH!, hash)))
-                     .then(() => {
-                        console.log(LOG_MESSAGES.CREATE, path);
-                        backup.save();
-                     }).catch((err) => err.syscall == 'stat' ? console.log('BACKUPER_SKIP_NEW_FILE', path)
-                                                             : console.error(err));
+    const backup = new BACKUP(backupDocument);
+
+    try {
+      await stat(path)
+      await copyFile(path, join(process.env.BACKUPS_PATH!, hash));
+      
+      backup.save();
+
+      return backupDocument;
+
+    } catch (err: any) {
+      throw err.syscall == 'stat' ? console.log('BACKUPER_SKIP_NEW_FILE', path)
+                                  : console.error(err);
+    }
   }
  
   /**
