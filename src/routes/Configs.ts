@@ -83,18 +83,16 @@ router.get('/file-info', (req: any, res: any) => { // GET stat of file
 });
 
 router.post('/save-file', upcfg.fields([{ name: 'file', maxCount: 1 }]), (req: any, res: any) => {
-  // logger.log(LOGGER_PREFIX, '[POST]', 'CONFIG_FILE_SAVE', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
+  logger.log(LOGGER_PREFIX, '[POST]', 'CONFIG_FILE_SAVE', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
   TreeNode.clearCache();
   res.sendStatus(OK);
 });
 
 router.post('/upload-file', upfile.fields([{ name: 'file', maxCount: 10 }]), (req: any, res: any) => { // POST Rewrite changed config(any) file
   
-  return res.sendStatus(MOVED_PERMANENTLY);
-  
-  // logger.log(LOGGER_PREFIX, '[POST]', 'CONFIG_FILE_UPLOAD', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
-  // TreeNode.clearCache();
-  // res.sendStatus(OK);
+  logger.log(LOGGER_PREFIX, '[POST]', 'CONFIG_FILE_UPLOAD', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group]);
+  TreeNode.clearCache();
+  res.sendStatus(OK);
 });
 
 export default router;
