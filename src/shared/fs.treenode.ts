@@ -6,11 +6,18 @@ const exclusions: string[] = JSON.parse(process.env.CFG_EXCLUDE!);
 
 const __cache: Map<string, TreeNode> = new Map();
 
+enum TreeNodeType {
+  DIR = 'dir',
+  FILE = 'file',
+};
+
+const { DIR, FILE } = TreeNodeType;
+
 export class TreeNode {
   public hasChildren?: boolean;
   public path: string;
   public items: Array<TreeNode> = [];
-  public type: string = 'file';
+  public type: TreeNodeType = FILE;
   public name: string = 'configs';
   public expanded?: boolean = false;
 
@@ -60,14 +67,14 @@ export class TreeNode {
           const nodeStats: Stats = await stat(childNode.path);
 
           if (nodeStats.isDirectory()) {
-            childNode.type = 'dir';
+            childNode.type = DIR;
             stack.push(childNode);
           }
         }
 
         currentNode.items = currentNode.items.sort((a, b) => {
-          if (a.type == 'dir' && b.type == 'file') return -1;
-          if (a.type == 'file' && b.type == 'dir') return 1;
+          if (a.type === DIR && b.type === FILE) return -1;
+          if (a.type === FILE && b.type === DIR) return 1;
           return 0;
         });
       }
