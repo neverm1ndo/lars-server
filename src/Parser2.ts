@@ -31,12 +31,13 @@ export class Parser2 {
                 ["[0-9A-Z]{40}", "return 'SS';"],
                 ["{int}{frac}?\\b", "return 'NUMBER';"],
                 ["\'(?:\\\\[\"bfnrt/\\\\]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\'", "yytext = yytext.substr(1,yyleng-2); return 'MESSAGE';"],
+                ["из\\b", "return 'WITH'"],
                 ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+", "return 'STRING';"],
                 ["[a-zA-Za-яА-Я0-9_\[\]@#\$\(\)\\!|\.]{1,18}?(?=\\s)\\b", "return 'NICKNAME';"],
                 ["$", "return 'EOF';"],
             ],
         },
-        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI SS NUMBER MESSAGE STRING NICKNAME < / > { } ( ) , : EOF",
+        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI SS NUMBER MESSAGE STRING NICKNAME WITH < / > { } ( ) , : EOF",
         "start": "LOGText",
         "bnf": {
             "expressions": [
@@ -75,8 +76,9 @@ export class Parser2 {
                 ["LOGContentNumberTuple", "$$ = { numbers: $1 };"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim() }};"],
+                ["STRING LOGUserId WITH MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, message: $MESSAGE };"], // kills deaths
                 ["STRING LOGUserId STRING", "$$ = { targetType: $3, target: { id: $2, username: $1.trim() }};"],
-                ["STRING LOGUserId MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, message: $MESSAGE };"], // kills deaths kicks bans
+                ["STRING LOGUserId MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, message: $MESSAGE };"], // kicks bans
             ],
             "LOGContentTime": [
                 ["TIME", "$$ = { time: $1 };"], // afk pause time

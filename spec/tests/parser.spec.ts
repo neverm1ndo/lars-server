@@ -1,5 +1,6 @@
 import { ILogLine } from '@interfaces/logline';
 import { Parser2 } from 'src/Parser2';
+import { lines } from 'spec/support/dummies';
 
 describe('log line parser suite', function() {
 
@@ -12,8 +13,10 @@ describe('log line parser suite', function() {
         secondary_group: 2,
     };
 
+
+
     it('should parse auth log line', function() {
-        const line = "1688587991 20230705T231311 <auth/incorrect> Dummy (0) 'Dummy' {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}";
+        const line = lines.auth.correct;
 
         const clearly_parsed: ILogLine = {
             unix: 1688587991,
@@ -45,7 +48,7 @@ describe('log line parser suite', function() {
     });
 
     it('should parse connect rejection line without player id', function() {
-        const line = "1688587991 20230705T231311 <auth/incorrect> DummyDummyDummyDum {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}";
+        const line = lines.auth.incorrect;
 
         const clearly_parsed: ILogLine = {
             unix: 1688587991,
@@ -70,7 +73,7 @@ describe('log line parser suite', function() {
     });
 
     it('should parse cn response line without player id', function() {
-        const line = "1688587991 20230705T231311 <cn/response> [Dummy]_DummyDummy L1HUXYLPSJNDKA8IQQK8L51UW2L44X";
+        const line = lines.no_id.cn;
 
         const clearly_parsed: ILogLine = {
             unix: 1688587991,
@@ -85,10 +88,29 @@ describe('log line parser suite', function() {
 
         const parsed = parser.parse(Buffer.from(line));
 
-        console.log(parsed)
-
         expect(parsed).toEqual(clearly_parsed);
     });
 
+    it('should parse kill line', function() {
+        const line = lines.kill.weapon;
 
+        const clearly_parsed: ILogLine = {
+            unix: 1688587991,
+            date: new Date(1688587991000),
+            process: '<any/process>',
+            nickname: 'Dummy',
+            id: 1,
+            content: {
+                op: 'Dummy2',
+                oid: 0,
+                message: 'Silenced 9mm'
+            },
+        };
+
+        const buffer = Buffer.from(line);
+
+        const parsed = parser.parse(buffer);
+
+        expect(parsed).toEqual(clearly_parsed);
+    });
 });

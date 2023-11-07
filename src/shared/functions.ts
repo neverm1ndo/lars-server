@@ -98,12 +98,7 @@ export const watch = (): void => {
   };
 
   const _updateStatistics = (logLine: ILogLine) => {
-      // statsman.update(logLine)
-      //         .then(() => {
-      //           io.sockets.emit('server-online', statsman.snapshot);
-      //         })
-      //         .catch(() => {});
-      //         broadcastProcessNotification(logLine);
+      broadcastProcessNotification(logLine);
   };
 
   watcher.overwatch()
