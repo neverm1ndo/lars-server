@@ -7,6 +7,9 @@ export const lines = {
         cn: '1688587991 20230705T231311 <cn/response> [Dummy]_DummyDummy L1HUXYLPSJNDKA8IQQK8L51UW2L44X',
     },
     kill: {
-        weapon: "1688587991 20230705T231311 <any/process> Dummy (1) Dummy2 (0) with 'Silenced 9mm'",
+        weapon: "1688587991 20230705T231311 <any/process> Dummy (1) Dummy2 (0) из 'Silenced 9mm'",
+    },
+    any_message: {
+        with: "1688587991 20230705T231311 <any/process> Dummy (1) 'из Silenced 9mm'"
     }
 };

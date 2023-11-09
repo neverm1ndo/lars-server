@@ -1,6 +1,6 @@
 import { QueryParser } from "src/QueryParser";
 
-xdescribe('query parser suite', function() {
+describe('query parser suite', function() {
     
     const parser: QueryParser = new QueryParser();
     
