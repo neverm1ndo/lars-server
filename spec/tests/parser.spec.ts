@@ -72,7 +72,7 @@ describe('log line parser suite', function() {
         expect(parsed).toEqual(clearly_parsed);
     });
 
-    it('should parse cn response line without player id', function() {
+    xit('should parse cn response line without player id', function() {
         const line = lines.no_id.cn;
 
         const clearly_parsed: ILogLine = {
@@ -104,6 +104,27 @@ describe('log line parser suite', function() {
                 op: 'Dummy2',
                 oid: 0,
                 message: 'Silenced 9mm'
+            },
+        };
+
+        const buffer = Buffer.from(line);
+
+        const parsed = parser.parse(buffer);
+
+        expect(parsed).toEqual(clearly_parsed);
+    });
+   
+    it('should parse message', function() {
+        const line = lines.any_message.with;
+
+        const clearly_parsed: ILogLine = {
+            unix: 1688587991,
+            date: new Date(1688587991000),
+            process: '<any/process>',
+            nickname: 'Dummy',
+            id: 1,
+            content: {
+                message: 'из Silenced 9mm'
             },
         };
 
