@@ -6,6 +6,7 @@ import * as path from 'path';
 import bufferSplit from 'buffer-split';
 import { ANSItoUTF8 } from '@shared/functions';
 import { EOL } from 'os';
+import { logger } from '@shared/constants';
 
 export class Watcher {
 
@@ -24,6 +25,9 @@ export class Watcher {
     this._getLastLogFileStat()
         .then((stats: Stats) => {
           this._bytes = stats.size === 0 ? 0 : stats.size;
+        })
+        .catch((err) => {
+          logger.err('[WATCHER]', err);
         });
    
     this._fsWatcher.on('change', (path, stats) => this._fsWatcherHandler(path, stats));
