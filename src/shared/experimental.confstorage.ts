@@ -34,17 +34,6 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
     this._getDestination = _options.destination || getDestination;
   }
 
-  private readonly _encondingTransform: Transform = new Transform({
-                                                          transform: (chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) => {
-                                                            callback(null, UTF8toANSI(chunk));
-                                                          }
-                                                        });
-  private readonly _bypass: Transform = new Transform({
-                                          transform: (chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) => {
-                                            callback(null, chunk);
-                                          }
-                                        });
-
   _handleFile(req: Request,
             file: Express.Multer.File,
             callback: (error?: any, info?: Partial<Express.Multer.File>) => void): void {
@@ -89,10 +78,21 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
       encoded: boolean, 
       callback: (error?: any, info?: Partial<Express.Multer.File>) => void
     ): WriteStream {
-    
+      const transform = encoded ?
+                        new Transform({
+                          transform: (chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) => {
+                            callback(null, UTF8toANSI(chunk));
+                          }
+                        }):
+                        new Transform({
+                          transform: (chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) => {
+                            callback(null, chunk);
+                          }
+                        });
+
       const pipe: [Readable, Transform, WriteStream] = [
         fileStream,
-        encoded ? this._encondingTransform : this._bypass,
+        transform,
         writeStream,
       ];
 
