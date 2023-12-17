@@ -159,15 +159,17 @@ export class OMPServerControl {
       this._stdout(LOG_MESSAGES.LAUNCHED)
 
       const subprocess = this.__subprocesses.get('omp');
-      
-      subprocess?.once('close', async (code) => {
-        this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
-        if (subprocess.killed) {
-          return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
-        }
-        this._stdout(LOG_MESSAGES.RELAUNCH_REASON, code);
-        await this.launch();
-      });
+
+      for (let event of ['close', 'exit']) {
+        subprocess?.once(event, async (code) => {
+          this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
+          if (subprocess.killed) {
+            return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
+          }
+          this._stdout(LOG_MESSAGES.RELAUNCH_REASON, code);
+          await this.launch();
+        });
+      }
 
     } catch (error) {
       this._stdout(LOG_MESSAGES.LAUNCH_ERR, error);
