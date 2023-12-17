@@ -24,6 +24,7 @@ const LOG_MESSAGES = {
   SERVER_IS_DOWN  : 'Server is down',
   KILLING         : 'Killing',
   KILLED          : 'Killed',
+  EXIT            : 'Exit',
   LAUNCHING       : 'Launching server child process',
   LAUNCHED        : 'Launched',
   LAUNCH_ERR      : 'Launch error',
@@ -160,16 +161,20 @@ export class OMPServerControl {
 
       const subprocess = this.__subprocesses.get('omp');
 
-      for (let event of ['close', 'exit']) {
-        subprocess?.once(event, async (code) => {
-          this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
-          if (subprocess.killed) {
-            return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
-          }
-          this._stdout(LOG_MESSAGES.RELAUNCH_REASON, code);
-          await this.launch();
-        });
-      }
+      subprocess?.once('close', async (code) => {
+        this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
+        if (subprocess.killed) {
+          return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
+        }
+        this._stdout(LOG_MESSAGES.RELAUNCH_REASON, code);
+        await this.launch();
+      });
+
+      subprocess?.once('exit', async (code) => {
+        this._stdout(LOG_MESSAGES.EXIT, code);
+
+        await this.launch();
+      });
 
     } catch (error) {
       this._stdout(LOG_MESSAGES.LAUNCH_ERR, error);
