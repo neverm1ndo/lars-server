@@ -1,7 +1,7 @@
 import md5 from 'md5';
 
 import iconv from 'iconv-lite';
-import { logger } from './constants';
+import { logger, ALLOWED_BINARY_MIMES } from './constants';
 import { processTranslation, MSQLPool, SQLQueries, noAvatarImageUrl } from '@shared/constants';
 import { IContentData, ILogLine } from '@interfaces/logline';
 import { Document } from 'mongoose';
@@ -209,3 +209,11 @@ export const isWorkGroup = (group?: number | Workgroup): boolean => {
   if (!group) return false;
   return group >= 9 && group <= 13;
 }
+
+/**
+ * @returns {boolean} true if file is binary
+ */
+export function isBinary (mime: string | false): boolean {
+  if (!mime) return false;
+  return ALLOWED_BINARY_MIMES.includes(mime);
+};

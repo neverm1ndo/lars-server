@@ -1,7 +1,7 @@
 import { unlink, readFile, copyFile, stat } from 'fs/promises';
 import path, { join, basename, extname } from 'path';
 import { BACKUP } from '@schemas/backup.schema';
-import { getMimeType, ANSItoUTF8, getAvatarURL } from '@shared/functions';
+import { getMimeType, ANSItoUTF8, getAvatarURL, isBinary } from '@shared/functions';
 import { logger } from '@shared/constants';
 import Workgroup from '@enums/workgroup.enum';
 import crypto from 'crypto';
@@ -37,11 +37,6 @@ const LOG_MESSAGES = {
 
 const TWO_WEEKS: number = 604800000;
 
-const ALLOWED_BINARY_MIMES: string[] = [
-  'application/x-sharedlib',
-  'application/octet-stream',
-];
-
 /**
 * Generates hashcode for backups
 */
@@ -73,16 +68,7 @@ export default class Backuper {
     const hash: string = makeHash(filename, unix);
     
     const mime = getMimeType(ext);
-    
-    /**
-     * IIFE checks mime type of file
-     * @returns {boolean} true if file is binary
-     */
-    const isBinary: boolean = ((mime: string | false): boolean => {
-      if (!mime) return false;
-      return ALLOWED_BINARY_MIMES.includes(mime);
-    })(mime);
-
+  
     const creationDate: Date = new Date(unix);
     const expirationDate: Date = new Date(unix + TWO_WEEKS);
     const avatar: string = getAvatarURL(user.user_avatar);
@@ -102,7 +88,7 @@ export default class Backuper {
         path,
         name: filename + ext,
         mime,
-        binary: isBinary,
+        binary: isBinary(mime),
       }
     };
     
@@ -184,3 +170,4 @@ export default class Backuper {
     return readFile(filepath).then((buffer: Buffer) => ANSItoUTF8(buffer))
   }
 }
+

@@ -153,6 +153,11 @@ export const socketCORS = {
 
 export const corsOpt = cors(CORSoptions);
 
+export const ALLOWED_BINARY_MIMES: string[] = [
+  'application/x-sharedlib',
+  'application/octet-stream',
+];
+
 export const processTranslation = {
   ammoEnt: Processes.AMMO_ENTER,
   ammoLeav: Processes.AMMO_LEAVE,

@@ -7,10 +7,11 @@ import Backuper, { BackupAction } from '@backuper';
 import fs, { WriteStream } from 'fs';
 import multer from "multer";
 
-import { UTF8toANSI } from './functions';
+import { UTF8toANSI, isBinary } from './functions';
 
 import Workgroup from '@enums/workgroup.enum';
 import { logger } from './constants';
+import { chunk } from 'lodash';
 
 const { CFR } = Workgroup;
 
@@ -39,36 +40,41 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
             callback: (error?: any, info?: Partial<Express.Multer.File>) => void): void {
     this._getDestination(req, file, async (err: any, path: any) => {
       
+      const filepath: string = join(path, file.originalname);
+      
       try {
         if (err) throw err;
-        
-        const filepath: string = join(path, file.originalname);
-
         /**
          * Checks destination path access
          */
         await fs.promises.access(path);
 
-        /*
-        * Create backup note in DB
-        * Save file as hashed backup
-        */
-        const backupNote = await Backuper.backup(filepath, req.user, BackupAction.CHANGE);
-
-
         const targetDir: string = dirname(filepath);
         if (isOutOfPermittedArea(targetDir, req.user)) throw ERROR.OUT_OF_PERMITTED_AREA;
-
-
-        const writeStream: WriteStream = fs.createWriteStream(filepath);
-
-        const streamPipeline: WriteStream = this._createWriteStreamPipeline(file.stream, writeStream, !backupNote.file.binary, callback); 
-              streamPipeline.on('error', (err) => callback(err));
-              streamPipeline.on('finish', () => callback(null, { path, size: writeStream.bytesWritten }));
+      
       } catch(err) {
         logger.err(err);
         callback(err);
       }
+
+      try {
+        /*
+        * Create backup note in DB
+        * Save file as hashed backup
+        */
+        await Backuper.backup(filepath, req.user, BackupAction.CHANGE);
+      } catch(err) {
+        logger.err(err);
+      }
+
+      console.log(file.mimetype);
+      const isFileBinary = isBinary(file.mimetype);
+
+      const writeStream: WriteStream = fs.createWriteStream(filepath);
+
+      const streamPipeline: WriteStream = this._createWriteStreamPipeline(file.stream, writeStream, !isFileBinary, callback); 
+            streamPipeline.on('error', (err) => callback(err));
+            streamPipeline.on('finish', () => callback(null, { path, size: writeStream.bytesWritten }));
     });
   }
 
@@ -78,17 +84,7 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
       encoded: boolean, 
       callback: (error?: any, info?: Partial<Express.Multer.File>) => void
     ): WriteStream {
-      const transform = encoded ?
-                        new Transform({
-                          transform: (chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) => {
-                            callback(null, UTF8toANSI(chunk));
-                          }
-                        }):
-                        new Transform({
-                          transform: (chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) => {
-                            callback(null, chunk);
-                          }
-                        });
+      const transform = this.__createTransform(encoded);
 
       const pipe: [Readable, Transform, WriteStream] = [
         fileStream,
@@ -97,6 +93,14 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
       ];
 
       return pipeline<WriteStream>(...pipe, callback); 
+  }
+
+  private __createTransform(encoded: boolean): Transform {
+    return new Transform({
+      transform: (chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) => {
+        callback(null, encoded ? UTF8toANSI(chunk): chunk);
+      }
+    });
   }
 
   _removeFile(_req: Request,
