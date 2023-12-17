@@ -157,12 +157,13 @@ export class OMPServerControl {
 
       if (!awake) throw new Error(CommonErrors[ErrorCode.CHILD_PROCESS_CANT_SERVE]);
 
-      this._stdout(LOG_MESSAGES.LAUNCHED)
+      this._stdout(LOG_MESSAGES.LAUNCHED);
 
       const subprocess = this.__subprocesses.get('omp');
 
       subprocess?.once('close', async (code) => {
         this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
+        subprocess.removeAllListeners();
         if (subprocess.killed) {
           return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
         }
@@ -170,9 +171,9 @@ export class OMPServerControl {
         await this.launch();
       });
 
-      subprocess?.once('exit', async (code) => {
+      subprocess?.on('exit', async (code) => {
         this._stdout(LOG_MESSAGES.EXIT, code);
-
+        subprocess.removeAllListeners();
         await this.launch();
       });
 
