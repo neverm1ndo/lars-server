@@ -52,6 +52,7 @@ export class Parser2 {
             "LOGText": [
                 // common login
                 ["LOGStatic GEOText", "return { ...$LOGStatic, geo: $GEOText };"],
+                ["LOGStatic { GEOElementList }", "return { ...$LOGStatic, content: $GEOElementList };"],
                 // user auth
                 ["LOGStatic MESSAGE GEOText", "return { ...$LOGStatic, content: { auth: { username: $MESSAGE }}, geo: $GEOText };"],
                 // with content
@@ -124,12 +125,14 @@ export class Parser2 {
     };
 
     private _engine;
+    private _encode = true; 
 
     
-    constructor() {
+    constructor(encode?: boolean) {
         this._engine = new (require('jison')).Parser(this._grammar, {
             type: "slr",
         });
+        if (encode !== undefined) this._encode = encode;
     }
     
     private _toUTF8(value: string | Buffer): string {
@@ -144,6 +147,6 @@ export class Parser2 {
 
     public parse(input: Buffer): ILogLine {
         const utf8: string = this._toUTF8(input).replace(/\r?\n|\r/g, '');
-        return this._engine.parse(utf8) as ILogLine;
+        return this._engine.parse(this._encode ? utf8 : input.toString()) as ILogLine;
     }
 }

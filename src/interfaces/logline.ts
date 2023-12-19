@@ -19,6 +19,7 @@ export interface IContentData {
   targetType?: string;
   target?: IContentTarget;
   props?: any;
+  cn?: string;
 }
 
 export interface ILogLine {

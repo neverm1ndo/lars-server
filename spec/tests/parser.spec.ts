@@ -4,7 +4,7 @@ import { lines } from 'spec/support/dummies';
 
 describe('log line parser suite', function() {
 
-    const parser: Parser2 = new Parser2();
+    const parser: Parser2 = new Parser2(false);
 
     const fake_user_data = {
         id: 121,
@@ -72,18 +72,18 @@ describe('log line parser suite', function() {
         expect(parsed).toEqual(clearly_parsed);
     });
 
-    xit('should parse cn response line without player id', function() {
+    it('should parse cn response line without player id', function() {
         const line = lines.no_id.cn;
 
         const clearly_parsed: ILogLine = {
             unix: 1688587991,
             date: new Date(1688587991000),
-            process: '<auth/incorrect>',
+            process: '<cn/response>',
             nickname: '[Dummy]_DummyDummy',
             id: undefined,
             content: {
-                message: 'L1HUXYLPSJNDKA8IQQK8L51UW2L44X'
-            },
+                cn: 'L1HUXYLPSJNDKA8IQQK8L51UW2L44X'
+            }
         };
 
         const parsed = parser.parse(Buffer.from(line));
