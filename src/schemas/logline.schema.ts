@@ -33,6 +33,7 @@ const logShema = new Schema({
     props: {
       type: Schema.Types.Mixed
     },
+    cn: { type: String }
   },
   geo: {
     country: { type: String },
