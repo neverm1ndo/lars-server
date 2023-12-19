@@ -91,6 +91,25 @@ describe('log line parser suite', function() {
         expect(parsed).toEqual(clearly_parsed);
     });
 
+    it('should parse cn response line with player id', function() {
+        const line = lines.cn;
+
+        const clearly_parsed: ILogLine = {
+            unix: 1688587991,
+            date: new Date(1688587991000),
+            process: '<cn/response>',
+            nickname: '[Dummy]_DummyDummy',
+            id: 0,
+            content: {
+                cn: 'L1HUXYLPSJNDKA8IQQK8L51UW2L44X'
+            }
+        };
+
+        const parsed = parser.parse(Buffer.from(line));
+
+        expect(parsed).toEqual(clearly_parsed);
+    });
+
     it('should parse kill line', function() {
         const line = lines.kill.weapon;
 
