@@ -18,6 +18,7 @@ export type SearchDBRequest = {
   cn?: SearchDBRequestIncludesString;
   nickname?: SearchDBRequestIncludesString;
   'content.message'?: string;
+  'content.cn'?: string;
   'content.weapon'?: string;
   process?: string;
   unix: { 
@@ -152,7 +153,7 @@ export class SearchEngine {
             { keyname: 'geo.as', value: as },
             { keyname: 'geo.ss', value: ss },
             { keyname: 'geo.cli', value: cli },
-            { keyname: 'content.message', value: cn },
+            { keyname: 'content.cn', value: cn },
             { keyname: 'content.message', value: msg },
             { keyname: 'content.weapon', value: gun },
             { keyname: 'nickname', value: nickname },
