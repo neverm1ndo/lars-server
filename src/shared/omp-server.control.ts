@@ -174,6 +174,10 @@ export class OMPServerControl {
       subprocess?.on('exit', async (code) => {
         this._stdout(LOG_MESSAGES.EXIT, code);
         subprocess.removeAllListeners();
+        if (subprocess.killed) {
+          this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
+          return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
+        }
         await this.launch();
       });
 
