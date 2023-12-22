@@ -10,8 +10,7 @@ import multer from "multer";
 import { UTF8toANSI, isBinary } from './functions';
 
 import Workgroup from '@enums/workgroup.enum';
-import { logger } from './constants';
-import { chunk } from 'lodash';
+import { logger } from './constants'; 
 
 const { CFR } = Workgroup;
 
@@ -67,7 +66,6 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
         logger.err(err);
       }
 
-      console.log(file.mimetype);
       const isFileBinary = isBinary(file.mimetype);
 
       const writeStream: WriteStream = fs.createWriteStream(filepath);
