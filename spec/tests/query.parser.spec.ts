@@ -67,7 +67,7 @@ describe('query parser suite', function() {
     it('should parse multi query', function() {
         
         const test = {
-            nickname: ['Neverm1ndo', 'nmnd'],
+            nickname: ['[clan]Neverm1ndo', 'nmnd'],
             ip: ['127.0.0.1', '0.0.0.0']
         }
 
