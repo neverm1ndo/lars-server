@@ -56,7 +56,7 @@ export class QueryParser {
                 ["[0-9]{4,5}", "return 'AS';"],
                 ["[0-9A-Z]{40}\\b", "return 'SS';"],
                 ["[0-9A-Z]{30}\\b", "return 'CN';"],
-                ["[0-9a-zA-Z_\\.\\/\\-\\[\\]\\@\\#\\$\\(\\)\\!\\|]+", "return 'STRING';"],
+                ["[0-9a-zA-ZА-Яа-я_\\.\\/\\-\\[\\]\\@\\#\\$\\(\\)\\!\\|]+", "return 'STRING';"],
             ],
         },
         "tokens": "STRING UNIX AS SS CN IP_ADDR OP_IP OP_NN OP_SRL OP_CN & * , : EOF",
