@@ -67,15 +67,14 @@ describe('query parser suite', function() {
     it('should parse multi query', function() {
         
         const test = {
-            nickname: ['[clan]Neverm1ndo', 'nmnd'],
+            nickname: ['[clan]Neverm1ndo', 'nmnd', '.0231[clan]|Ник'],
             ip: ['127.0.0.1', '0.0.0.0']
         }
 
-        const query: string = ((test: any): string => {
-           return Object.keys(test).map((key: string) => {
-                return key + ':' + test[key].join(','); 
-            }).join('&');
-        })(test);
+        const query: string = ((test: any): string => Object.keys(test)
+                                                            .map((key: string) => key + ':' + test[key].join(','))
+                                                            .join('&')
+                            )(test);
         
         const res = parser.parse(query);
         
