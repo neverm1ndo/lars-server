@@ -34,7 +34,7 @@ export const cookieExtractor = function(req: IRequest) {
 export const watch = (): void => {
   const parser: Parser2 = new Parser2();
   const watcher: Watcher = new Watcher();
-  const { GET_USER_BY_NAME } = SQLQueries;
+  const { GET_PLAYER_BY_NAME } = SQLQueries;
   
   let _dbDocument: Document;
   let _last: ILogLine;
@@ -54,7 +54,7 @@ export const watch = (): void => {
     if (_isContentAuth(logLine.content)) {
       try {
         const [rows]: any[] = await MSQLPool.promise()
-                                            .query(GET_USER_BY_NAME, [logLine.content!.auth!.username]);
+                                            .query(GET_PLAYER_BY_NAME, [logLine.content!.auth!.username]);
         const [user] = rows;
 
         const { main_group, username, secondary_group, user_avatar, user_id } = user;
