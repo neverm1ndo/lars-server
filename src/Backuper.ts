@@ -27,6 +27,7 @@ interface BackupNote {
     name: string;
     mime: string;
     binary: boolean;
+    bytes?: number;
   }
 }
 
@@ -92,10 +93,13 @@ export default class Backuper {
       }
     };
     
-    const backup = new BACKUP(backupDocument);
-
+    
     try {
-      await stat(path)
+      const fileStat = await stat(path);
+      backupDocument.file.bytes = fileStat.size;
+      
+      const backup = new BACKUP(backupDocument);
+
       await copyFile(path, join(process.env.BACKUPS_PATH!, hash));
       
       backup.save();
