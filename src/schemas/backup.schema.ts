@@ -15,7 +15,8 @@ const backupSchema = new Schema ({
     path: String,
     name: String,
     mime: String,
-    binary: Boolean
+    binary: Boolean,
+    bytes: Number
   }
 });
 
