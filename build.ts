@@ -19,7 +19,7 @@ const config = {
         cwd: './'
     },
     postbuild: {
-        peg: (name: string) => `pegjs -o ${path.join('./dist/parser/', name, name + '.parser.js')} --cache --trace ./src/parser/grammar/${name}.grammar.pegjs`,
+        peg: (name: string) => `pegjs -o ${path.join('./dist/parser/', name, name + '.parser.js')} --cache --trace ./src/parser/${name}/grammar/${name}.grammar.pegjs`,
     },
 };
 
@@ -33,7 +33,8 @@ const CONSOLE_MESSAGE = {
         SUCCESS: (fin: number, start: number) => `${color.green('OK!')}\n\t${color.blue('Assembled in')} ${color.yellow(duration(fin - start))}`
     },
     POST_BUILD: {
-        PEG_GEN: (curr?: number, all?: number) => `Generating parsers ${curr ?? 0}/${all ?? 0}`
+        PEG_GEN: (curr?: number, all?: number) => `Generating parsers ${curr ?? 0}/${all ?? 0}`,
+        PEG_GEN_SUCCESS: (curr?: number, all?: number) => `Successfully generated ${curr ?? 0}/${all ?? 0} parsers`
     },
     get: function(field: string, ...args: unknown[]) {
         const message = get(this, field);
@@ -107,7 +108,10 @@ process.stdout.write(`\x1b[36m
         for (let grammar of grammars) {
             console.info(CONSOLE_MESSAGE.get('POST_BUILD.PEG_GEN', current++, grammars.length));
             await execCmd(config.postbuild.peg(grammar), { cwd: config.build.cwd });
+            await fs.copyFile(path.join('./dist/parser/', grammar, grammar + '.parser.js'), path.join('./src/parser/', grammar, grammar + '.parser.js'));
         }
+
+        console.info(CONSOLE_MESSAGE.get('POST_BUILD.PEG_GEN_SUCCESS', current, grammars.length));
 
    } catch(err) {
         console.error(err);
