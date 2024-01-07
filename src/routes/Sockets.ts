@@ -31,7 +31,7 @@ export enum UserActivity {
 const isDev = (socket: ISocket): boolean => {
   if (socket.request.user?.main_group !== DEV) return false; 
   return true;
-}
+};
 
 export const wrap = (middleware: any) => (socket: Socket, next: any) => middleware(socket.request, {}, next);
 
@@ -75,9 +75,6 @@ const sockets = (socket: ISocket) => {
       socket.broadcast.to('devs').emit('server-rebooted');
       io.sockets.emit('server-status', ServerStatus.LIVE);
       
-      // statsman.snapshot = 0;
-      // statsman.tail();
-      
       logger.log(LOGGER_PREFIX, 'SERVER_REBOOT_SUCCESS', `(${socket.handshake.address})`, socket.request.user?.username);
     } catch(error: any) {
       logger.err(LOGGER_PREFIX, 'SERVER_REBOOT', `(${socket.handshake.address})`, socket.request.user?.username);
@@ -91,17 +88,15 @@ const sockets = (socket: ISocket) => {
     logger.log(LOGGER_PREFIX, 'SERVER_STOP', `(${socket.handshake.address})`, socket.request.user?.username);
     
     try {
-      const stdout = await omp.stop()
+      const stdout = await omp.stop();
       
       io.sockets.emit('server-stoped', stdout);
       io.sockets.emit('server-status', ServerStatus.OFFLINE);
-      socket.broadcast.emit('alert:server-stoped', { 
-        username: socket.data.username, 
-        group_id: socket.data.main_group 
+      io.sockets.emit('alert:server-stoped', { 
+        username: socket.request.user?.username, 
+        user_avatar: getAvatarURL(socket.request.user?.user_avatar!),
+        group_id: socket.request.user?.main_group,
       });
-      
-      // statsman.snapshot = 0;
-      // statsman.tail();
       
       logger.log(LOGGER_PREFIX, 'SERVER_STOP_SUCCESS', `(${socket.handshake.address})`, socket.request.user?.username);
     } catch (error: any) {
