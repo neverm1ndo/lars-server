@@ -1,7 +1,13 @@
 export const lines = {
     auth: {
-        correct: "1688587991 20230705T231311 <auth/incorrect> Dummy (0) 'Dummy' {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}",
-        incorrect: "1688587991 20230705T231311 <auth/incorrect> DummyDummyDummyDum {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}",
+        correct: {
+            regular: "1688587991 20230705T231311 <auth/correct> Dummy (0) 'Dummy' {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}",
+            admin: "1688587991 20230705T231311 <auth/correct/admin> Dummy (0) id:121 'Dummy' {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}",
+        },
+        incorrect: {
+            regular: "1688587991 20230705T231311 <auth/incorrect> DummyDummyDummyDum (0) 'Dummy' {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}",
+            no_id:  "1688587991 20230705T231311 <auth/incorrect> DummyDummyDummyDum {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}",
+        }
     },
     cn: '1688587991 20230705T231311 <cn/response> [Dummy]_DummyDummy (0) {cn:L1HUXYLPSJNDKA8IQQK8L51UW2L44X}',
     no_id: {
@@ -12,5 +18,11 @@ export const lines = {
     },
     any_message: {
         with: "1688587991 20230705T231311 <any/process> Dummy (1) 'из Silenced 9mm'"
+    },
+    afk: {
+        time: "1688587991 20230705T231311 <any/process> Dummy (1) '2 часа 3 минуты 34 секунды'"
+    },
+    dev: {
+        tp: "1688587991 20230705T231311 <any/process> Dummy (1) 532.501 -592.966 123.0"
     }
 };

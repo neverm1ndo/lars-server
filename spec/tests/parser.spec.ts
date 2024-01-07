@@ -15,14 +15,14 @@ describe('log line parser suite', function() {
 
 
 
-    it('should parse auth log line', function() {
-        const line = lines.auth.correct;
+    it('should parse incorrect auth log line', function() {
+        const line = lines.auth.incorrect.regular;
 
         const clearly_parsed: ILogLine = {
             unix: 1688587991,
             date: new Date(1688587991000),
             process: '<auth/incorrect>',
-            nickname: 'Dummy',
+            nickname: 'DummyDummyDummyDum',
             id: 0,
             content: {
                 auth: {
@@ -43,12 +43,77 @@ describe('log line parser suite', function() {
 
         const parsed = parser.parse(Buffer.from(line));
               ((parsed.content as any).auth as any) = { ...parsed.content?.auth, ...fake_user_data };
+        
+        expect(parsed).toEqual(clearly_parsed);
+    });
+
+    it('should parse correct auth log line', function() {
+        const line = lines.auth.correct.regular;
+
+        const clearly_parsed: ILogLine = {
+            unix: 1688587991,
+            date: new Date(1688587991000),
+            process: '<auth/correct>',
+            nickname: 'Dummy',
+            id: 0,
+            content: {
+                auth: {
+                    ...fake_user_data,
+                    username: 'Dummy'
+                },
+            },
+            geo: {
+                country: 'Russia',
+                cc: 'RU',
+                ip: '127.0.0.1',
+                as: 8359, 
+                ss: '5ADDEE08F89984DEE0D8CED489A59F0D95448C84', 
+                org: 'ANY_ORG', 
+                cli: '0.3.7',
+            }
+        };
+
+        const parsed = parser.parse(Buffer.from(line));
+              ((parsed.content as any).auth as any) = { ...parsed.content?.auth, ...fake_user_data };
+
+        expect(parsed).toEqual(clearly_parsed);
+    });
+
+    it('should parse correct admin auth log line', function() {
+        const line = lines.auth.correct.admin;
+
+        const clearly_parsed: ILogLine = {
+            unix: 1688587991,
+            date: new Date(1688587991000),
+            process: '<auth/correct/admin>',
+            nickname: 'Dummy',
+            id: 0,
+            content: {
+                auth: {
+                    ...fake_user_data,
+                    username: 'Dummy',
+                    id: 121
+                },
+            },
+            geo: {
+                country: 'Russia',
+                cc: 'RU',
+                ip: '127.0.0.1',
+                as: 8359, 
+                ss: '5ADDEE08F89984DEE0D8CED489A59F0D95448C84', 
+                org: 'ANY_ORG', 
+                cli: '0.3.7',
+            }
+        };
+
+        const parsed = parser.parse(Buffer.from(line));
+              ((parsed.content as any).auth as any) = { ...parsed.content?.auth, ...fake_user_data };
 
         expect(parsed).toEqual(clearly_parsed);
     });
 
     it('should parse connect rejection line without player id', function() {
-        const line = lines.auth.incorrect;
+        const line = lines.auth.incorrect.no_id;
 
         const clearly_parsed: ILogLine = {
             unix: 1688587991,
@@ -144,6 +209,48 @@ describe('log line parser suite', function() {
             id: 1,
             content: {
                 message: 'из Silenced 9mm'
+            },
+        };
+
+        const buffer = Buffer.from(line);
+
+        const parsed = parser.parse(buffer);
+
+        expect(parsed).toEqual(clearly_parsed);
+    });
+
+    it('should parse afk time', function() {
+        const line = lines.afk.time;
+
+        const clearly_parsed: ILogLine = {
+            unix: 1688587991,
+            date: new Date(1688587991000),
+            process: '<any/process>',
+            nickname: 'Dummy',
+            id: 1,
+            content: {
+                message: '2 часа 3 минуты 34 секунды'
+            },
+        };
+
+        const buffer = Buffer.from(line);
+
+        const parsed = parser.parse(buffer);
+
+        expect(parsed).toEqual(clearly_parsed);
+    });
+
+    it('should parse afk time', function() {
+        const line = lines.dev.tp;
+
+        const clearly_parsed: ILogLine = {
+            unix: 1688587991,
+            date: new Date(1688587991000),
+            process: '<any/process>',
+            nickname: 'Dummy',
+            id: 1,
+            content: {
+                numbers: [532.501, -592.966, 123.0]
             },
         };
 

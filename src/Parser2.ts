@@ -16,7 +16,7 @@ export class Parser2 {
                 ["\\s+", "/* skip whitespace */"],
                 ["[0-9]{10}", "return 'UNIX';"],
                 ["[0-9]{8}T[0-9]{6}", "return 'DATE';"],
-                ["[0-9]+\\s(мин(ут)?ы?а?)(\\sи\\s[0-9]+\\s(секунды?а?))?", "return 'TIME';"],
+                ["[0-9]+\\s(час(ов)?a?)\\,\\s[0-9]+\\s(мин(ут)?ы?а?)(\\sи\\s[0-9]+\\s(секунды?а?))?", "return 'TIME';"],
                 ["(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)", "return 'IP_ADDRESS'"],
                 [",", "return ',';"],
                 ["\\{", "return '{';"],
@@ -55,6 +55,7 @@ export class Parser2 {
                 ["LOGStatic { GEOElementList }", "return { ...$LOGStatic, content: $GEOElementList };"],
                 // user auth
                 ["LOGStatic MESSAGE GEOText", "return { ...$LOGStatic, content: { auth: { username: $MESSAGE }}, geo: $GEOText };"],
+                ["LOGStatic GEOElement MESSAGE GEOText", "return { ...$LOGStatic, content: { auth: { username: $MESSAGE, ...$GEOElement }}, geo: $GEOText };"],
                 // with content
                 ["LOGStatic LOGContent", "return { ...$LOGStatic, content: $LOGContent };"],
                 ["LOGStatic GEOElement", "return { ...$LOGStatic, content: { props: $GEOElement }};"],
