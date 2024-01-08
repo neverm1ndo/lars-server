@@ -39,6 +39,8 @@ const LOG_MESSAGES = {
 export class OMPServerControl {
 
   private readonly __serverName: string = 'omp-server';
+
+  private preventReboot: boolean = false;
   
   private __subprocesses: Map<string, ChildProcess> = new Map();
 
@@ -145,6 +147,8 @@ export class OMPServerControl {
       detached: true,
     };
 
+    this.preventReboot = false;
+
     try {
       this._stdout(LOG_MESSAGES.LAUNCHING);
       const pid: number | null = await this.__getProcessPIDbyName(this.__serverName);
@@ -164,7 +168,7 @@ export class OMPServerControl {
       subprocess?.once('close', async (code) => {
         this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
         subprocess.removeAllListeners();
-        if (subprocess.killed) {
+        if (subprocess.killed || this.preventReboot) {
           return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
         }
         this._stdout(LOG_MESSAGES.RELAUNCH_REASON, code);
@@ -174,7 +178,7 @@ export class OMPServerControl {
       subprocess?.on('exit', async (code) => {
         this._stdout(LOG_MESSAGES.EXIT, code);
         subprocess.removeAllListeners();
-        if (subprocess.killed) {
+        if (subprocess.killed || this.preventReboot) {
           this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
           return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
         }
@@ -188,6 +192,7 @@ export class OMPServerControl {
 
   public async stop(): Promise<void> {
     try {
+      this.preventReboot = true;
       const subprocess = this.__subprocesses.get('omp');
       
       if (subprocess) {
