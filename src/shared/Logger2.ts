@@ -100,9 +100,11 @@ export class Logger {
             if (arg instanceof Error) {
                 arg = arg.message + EOL + arg.stack;
             }
-            args[i] = arg.toString();
+            if (arg[i]) {
+                args[i] = arg.toString();
+            }
         }
-        this.log('[ERROR]', ...args);
+        this.log('[ERROR]', ...args.filter((arg) => arg));
     }
 
 }
