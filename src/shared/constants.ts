@@ -37,7 +37,7 @@ export const SQLQueries: { [key: string]: any } = {
   CHANGE_MAIN_GROUP: 'UPDATE phpbb_user_group, phpbb_users SET phpbb_user_group.group_id = ?, phpbb_users.group_id = ? WHERE phpbb_user_group.user_id = phpbb_users.user_id AND phpbb_users.user_id = ?;',
   CHANGE_SECONDARY_GROUP: 'UPDATE phpbb_user_group INNER JOIN (SELECT MAX(group_id) as group_id FROM phpbb_user_group WHERE group_id BETWEEN 9 AND 14 AND user_id = ? GROUP BY user_id) AS secondary_group SET phpbb_user_group.group_id = ? WHERE phpbb_user_group.group_id = secondary_group.group_id AND user_id = ?',
   
-  GET_BANLIST: 'SELECT * FROM phpbb_samp_bans INNER JOIN (SELECT username AS admin_username, user_id, user_avatar AS admin_avatar FROM phpbb_users) AS admin_user ON phpbb_samp_bans.admin_id = admin_user.user_id LEFT JOIN (SELECT username AS banned_username, user_id FROM phpbb_users) AS banned_user ON phpbb_samp_bans.user_id = banned_user.user_id',
+  GET_BANLIST: 'SELECT * FROM phpbb_samp_bans INNER JOIN (SELECT username AS admin_username, user_id, user_nickname, user_avatar AS admin_avatar FROM phpbb_users) AS admin_user ON phpbb_samp_bans.admin_id = admin_user.user_id LEFT JOIN (SELECT username AS banned_username, user_id FROM phpbb_users) AS banned_user ON phpbb_samp_bans.user_id = banned_user.user_id',
   
   get __banlist() {
     return this.GET_BANLIST;
@@ -52,6 +52,9 @@ export const SQLQueries: { [key: string]: any } = {
   
   get BAN_IP_SEARCH(): string {
     return this.__BAN_SEARCH_BY('ip');
+  },
+  get BAN_NICKNAME_SEARCH(): string {
+    return this.__BAN_SEARCH_BY('user_nickname');
   },
   get BAN_CN_SEARCH(): string {
     return this.__BAN_SEARCH_BY('serial_cn');
