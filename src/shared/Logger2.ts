@@ -95,6 +95,7 @@ export class Logger {
     }
 
     public err(...args: any[]): void {
+        args = args.filter((arg) => arg);
         for (let i = 0; i < args.length - 1; i++) {
             let arg = args[i];
             if (arg instanceof Error) {
@@ -104,7 +105,7 @@ export class Logger {
                 args[i] = arg.toString();
             }
         }
-        this.log('[ERROR]', ...args.filter((arg) => arg));
+        this.log('[ERROR]', ...args);
     }
 
 }
