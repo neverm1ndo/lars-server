@@ -169,7 +169,7 @@ export class OMPServerControl {
         this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
         subprocess.removeAllListeners();
         if (subprocess.killed || this.preventReboot) {
-          return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
+          return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT, 'Restart prevented:', this.preventReboot);
         }
         this._stdout(LOG_MESSAGES.RELAUNCH_REASON, code);
         await this.launch();
@@ -179,7 +179,7 @@ export class OMPServerControl {
         this._stdout(LOG_MESSAGES.EXIT, code);
         subprocess.removeAllListeners();
         if (subprocess.killed || this.preventReboot) {
-          this._stdout(LOG_MESSAGES.KILLED, subprocess.killed);
+          this._stdout(LOG_MESSAGES.KILLED, subprocess.killed, this.preventReboot);
           return this._stdout(LOG_MESSAGES.RELAUNCH_ABORT);
         }
         await this.launch();
