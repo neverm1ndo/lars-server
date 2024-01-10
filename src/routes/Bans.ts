@@ -40,8 +40,8 @@ interface Ban {
   admin_id: number;
   admin_avatar: string;
   admin_username: string;
-  banned_from: Date;
-  banned_to?: Date | null; 
+  banned_from: number;
+  banned_to?: number | null; 
 }
 
 const LOGGER_PREFIX = '[BANS]';
@@ -50,6 +50,10 @@ const DEFAULT_QUERY_PARAMS: { [key: string]: number } = {
   page: 0,
   limit: 50,
 } as const;
+
+function dateNormalize(value: number) {
+  return value * 1000;
+}
 
 function limitAndPageQueryParamsCheck(req: Request, res: Response, next: NextFunction) {  
   if (req.query.p)   req.body.page  = Number.parseInt(req.query.p as string);
@@ -64,6 +68,10 @@ function limitAndPageQueryParamsCheck(req: Request, res: Response, next: NextFun
 function transformDBResponseBeforeSend([rows]: any[]): Ban[] {
   return (rows as Ban[]).map((ban: Ban) => {
     ban.admin_avatar = getAvatarURL(ban.admin_avatar);
+    ban.banned_from = dateNormalize(ban.banned_from);
+    if (ban.banned_to) {
+      ban.banned_to = dateNormalize(ban.banned_to);
+    }
     return ban;
   });
 }
@@ -151,7 +159,8 @@ router.get('/user/:username', async (req: any, res: Response) => {
   try {
     logger.log(LOGGER_PREFIX, '[GET]', 'BAN_USER', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `BAN::${req.params.username}`);
     
-    const banlist: Ban[] = await requestBansFromDB(BAN_USERNAME_SEARCH, [req.params.username, limit, page]);
+    const banlist: Ban[] = (await requestBansFromDB(BAN_USERNAME_SEARCH, [req.params.username, limit, page]));
+
     res.send(banlist);
   } catch(err) {
     logger.err(LOGGER_PREFIX, '[GET]', 'BAN_USER', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `BAN::${req.params.username}`);
