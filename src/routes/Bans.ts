@@ -115,12 +115,12 @@ router.get('/ip/:ip', async (req: any, res: Response) => {
   const { page, limit } = req.body;
   
   try {
-    logger.err(LOGGER_PREFIX, '[GET]', 'BAN_LIST_SEARCH_IP', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], req.params.serial, `::${req.params.ip}::`);
+    logger.log(LOGGER_PREFIX, '[GET]', 'BAN_LIST_SEARCH_IP', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], req.params.ip);
     
     const banlist: Ban[] = await requestBansFromDB(BAN_IP_SEARCH, [req.params.ip, limit, page]);
     res.send(banlist);
   } catch(err: any) {
-    logger.err(LOGGER_PREFIX, '[GET]', 'BAN_LIST_SEARCH_IP_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], req.params.serial, `::${err.message}::`);
+    logger.err(LOGGER_PREFIX, '[GET]', 'BAN_LIST_SEARCH_IP_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], req.params.ip, `::${err.message}::`);
     res.sendStatus(INTERNAL_SERVER_ERROR);
   };
 });
