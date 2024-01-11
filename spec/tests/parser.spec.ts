@@ -13,8 +13,6 @@ describe('log line parser suite', function() {
         secondary_group: 2,
     };
 
-
-
     it('should parse incorrect auth log line', function() {
         const line = lines.auth.incorrect.regular;
 
@@ -220,7 +218,13 @@ describe('log line parser suite', function() {
     });
 
     it('should parse afk time', function() {
-        const line = lines.afk.time;
+        const logLines = lines.afk.time;
+
+        const expectedMessages = [
+            '2 часа 3 минуты 34 секунды',
+            '3 минуты 34 секунды',
+            '34 секунды',
+        ];
 
         const clearly_parsed: ILogLine = {
             unix: 1688587991,
@@ -228,19 +232,19 @@ describe('log line parser suite', function() {
             process: '<any/process>',
             nickname: 'Dummy',
             id: 1,
-            content: {
-                message: '2 часа 3 минуты 34 секунды'
-            },
+            content: {},
         };
 
-        const buffer = Buffer.from(line);
+        logLines.forEach((line, index) => {            
+            const buffer = Buffer.from(line);
+            const parsed = parser.parse(buffer);
 
-        const parsed = parser.parse(buffer);
-
-        expect(parsed).toEqual(clearly_parsed);
+            clearly_parsed.content!.time = expectedMessages[index];
+            expect(parsed).toEqual(clearly_parsed);
+        });
     });
 
-    it('should parse afk time', function() {
+    it('should parse coord position', function() {
         const line = lines.dev.tp;
 
         const clearly_parsed: ILogLine = {

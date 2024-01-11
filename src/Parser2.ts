@@ -16,7 +16,7 @@ export class Parser2 {
                 ["\\s+", "/* skip whitespace */"],
                 ["[0-9]{10}", "return 'UNIX';"],
                 ["[0-9]{8}T[0-9]{6}", "return 'DATE';"],
-                ["[0-9]+\\s(час(ов)?a?)\\,\\s[0-9]+\\s(мин(ут)?ы?а?)(\\sи\\s[0-9]+\\s(секунды?а?))?", "return 'TIME';"],
+                ["((час|секунд|минут)(а|ы|ов)?)", "return 'TIME';"],
                 ["(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)", "return 'IP_ADDRESS'"],
                 [",", "return ',';"],
                 ["\\{", "return '{';"],
@@ -32,12 +32,13 @@ export class Parser2 {
                 ["{int}{frac}?\\b", "return 'NUMBER';"],
                 ["\'(?:\\\\[\"bfnrt/\\\\]|\\\\u[a-fA-F0-9]{4}|[^\"\\\\])*\'", "yytext = yytext.substr(1,yyleng-2); return 'MESSAGE';"],
                 ["из", "return 'WITH'"],
+                ["и", "return 'AND'"],
                 ["(?=.*[a-zA-Zа-яА-Я])(?=.*[0-9])[a-zA-Zа-яА-Я0-9\\_\\!\\?\\.\\-\\s\\[\\]\\|]+|[a-zA-Zа-яА-Я_\\.\\-]+", "return 'STRING';"],
                 ["[a-zA-Za-яА-Я0-9_\[\]@#\$\(\)\\!|\.]{1,18}?(?=\\s)\\b", "return 'NICKNAME';"],
                 ["$", "return 'EOF';"],
             ],
         },
-        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI SS NUMBER MESSAGE STRING NICKNAME WITH < / > { } ( ) , : EOF",
+        "tokens": "UNIX DATE TIME IP_ADDRESS COUNTRY CLI SS NUMBER MESSAGE STRING NICKNAME WITH AND < / > { } ( ) , : EOF",
         "start": "LOGText",
         "bnf": {
             "expressions": [
@@ -82,9 +83,17 @@ export class Parser2 {
                 ["STRING LOGUserId STRING", "$$ = { targetType: $3, target: { id: $2, username: $1.trim() }};"],
                 ["STRING LOGUserId MESSAGE", "$$ = { op: $1.trim(), oid: $LOGUserId, message: $MESSAGE };"], // kicks bans
             ],
+            "TimeExpression": [
+                ['TimeExpressionUnit','$$ = $1'],
+                ['TimeExpressionUnit , TimeExpression', "$$ = [$1, $3].join(' ')"],
+            ],
+            "TimeExpressionUnit": [
+                ['NUMBER TIME', "$$ = [$NUMBER, $TIME].join(' ')"],
+                ['NUMBER TIME AND NUMBER TIME', "$$ = [$1, $2, $4, $5].join(' ');"]
+            ],
             "LOGContentTime": [
-                ["TIME", "$$ = { time: $1 };"], // afk pause time
-                ["TIME MESSAGE", "$$ = { time: $1, message: $2 };"], // hand mutes
+                ["TimeExpression", "$$ = { time: $$ };"], // afk pause time
+                ["TimeExpression MESSAGE", "$$ = { time: $1, message: $2 };"], // hand mutes
             ],
             "LOGContentNumberTuple": [
                 ["NUMBER", "$$ = [parseFloat($1)];"],

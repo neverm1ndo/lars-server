@@ -20,7 +20,11 @@ export const lines = {
         with: "1688587991 20230705T231311 <any/process> Dummy (1) 'из Silenced 9mm'"
     },
     afk: {
-        time: "1688587991 20230705T231311 <any/process> Dummy (1) '2 часа 3 минуты 34 секунды'"
+        time: [
+            "1688587991 20230705T231311 <any/process> Dummy (1) 2 часа, 3 минуты и 34 секунды",
+            "1688587991 20230705T231311 <any/process> Dummy (1) 3 минуты и 34 секунды",
+            "1688587991 20230705T231311 <any/process> Dummy (1) 34 секунды"
+        ]
     },
     dev: {
         tp: "1688587991 20230705T231311 <any/process> Dummy (1) 532.501 -592.966 123.0"
