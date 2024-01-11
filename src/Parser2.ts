@@ -139,10 +139,10 @@ export class Parser2 {
 
     
     constructor(encode?: boolean) {
-        // this._engine = new (require('jison')).Parser(this._grammar, {
-        //     type: "slr",
-        // });
-        this._engine = require('./parser/log/log.parser.js');
+        this._engine = new (require('jison')).Parser(this._grammar, {
+            type: "slr",
+        });
+        // this._engine = require('./parser/log/log.parser.js');
         if (encode !== undefined) this._encode = encode;
     }
     
