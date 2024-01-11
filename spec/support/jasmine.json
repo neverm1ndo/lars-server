@@ -4,9 +4,9 @@
     "**/*[sS]pec.ts"
   ],
   "helpers": [
-    "helpers/**/*.js"
+    "helpers/**/*.ts"
   ],
   "verboseDeprecations": true,
   "stopSpecOnExpectationFailure": false,
-  "random": true
+  "random": false
 }

@@ -33,6 +33,9 @@ jasmine.loadConfig({
     spec_files: [
         './tests/**/*.spec.ts',
     ],
+    helpers: [
+        './helpers/**/*.ts'
+    ],
     stopSpecOnExpectationFailure: false,
 });
 

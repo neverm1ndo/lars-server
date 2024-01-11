@@ -2,7 +2,7 @@ import md5 from 'md5';
 
 import iconv from 'iconv-lite';
 import { logger, ALLOWED_BINARY_MIMES } from './constants';
-import { processTranslation, MSQLPool, SQLQueries, noAvatarImageUrl } from '@shared/constants';
+import { MSQLPool, SQLQueries, noAvatarImageUrl } from '@shared/constants';
 import { IContentData, ILogLine } from '@interfaces/logline';
 import { Document } from 'mongoose';
 import { LOG_LINE } from '@schemas/logline.schema';

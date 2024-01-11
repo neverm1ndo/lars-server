@@ -74,8 +74,8 @@ export class Parser2 {
                 ["( NUMBER )", "$$ = parseInt($2);"]
             ],
             "LOGContent": [
-                ["MESSAGE", "$$ = { message: $1 };"], // common message
                 ["LOGContentTime", "$$ = $1;"],
+                ["MESSAGE", "$$ = { message: $1 };"], // common message
                 ["LOGContentNumberTuple", "$$ = { numbers: $1 };"],
                 ["LOGContentStringTuple", "$$ = { message: $1.join(' ') };"],
                 ["STRING LOGUserId", "$$ = { target: { id: $2, username: $1.trim() }};"],
@@ -139,9 +139,10 @@ export class Parser2 {
 
     
     constructor(encode?: boolean) {
-        this._engine = new (require('jison')).Parser(this._grammar, {
-            type: "slr",
-        });
+        // this._engine = new (require('jison')).Parser(this._grammar, {
+        //     type: "slr",
+        // });
+        this._engine = require('./parser/log/log.parser.js');
         if (encode !== undefined) this._encode = encode;
     }
     
@@ -160,3 +161,5 @@ export class Parser2 {
         return this._engine.parse(this._encode ? utf8 : input.toString()) as ILogLine;
     }
 }
+
+new Parser2();
