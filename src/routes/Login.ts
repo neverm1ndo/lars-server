@@ -22,16 +22,16 @@ const { GET_USER_BY_NAME } = SQLQueries;
 router.post('/login', cors, json(), (req: any, res: any, next: (err?: any) => any): void => {
   passport.authenticate('local', async (err, user, _info) => {
     try {
-      logger.log(LOGGER_PREFIX, '[POST]', 'LOGIN', `(${req.socket.remoteAddress})`, user.username || 'no_username', Workgroup[req.user!.main_group] || 'no_group');
+      logger.log(LOGGER_PREFIX, '[POST]', 'LOGIN', `(${req.socket.remoteAddress})`, user?.username || 'no_username', Workgroup[req.user?.main_group] || 'no_group');
       
       if (err || !user) {
-        logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, user.username || 'no_username', Workgroup[req.user!.main_group], `ERROR_OCCURED::${err.message || 'no_username'}::`);
+        logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, user?.username || 'no_username', Workgroup[req.user?.main_group], `ERROR_OCCURED::${err.message || 'no_username'}::`);
         return next(new Error('An error occured.'));
       }
       
       req.login(user, { session: true }, async (error: any) => {
         if (error) {
-          logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `ERROR_OCCURED::${error.message || 'no_username'}::`);
+          logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group], `ERROR_OCCURED::${error.message || 'no_username'}::`);
           return next(error);
         }
         
@@ -51,7 +51,7 @@ router.post('/login', cors, json(), (req: any, res: any, next: (err?: any) => an
             });
       })
     } catch (error: any) {
-      logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, req.user.username, Workgroup[req.user!.main_group], `ERROR_OCCURED::${error.message}::`);
+      logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group], `ERROR_OCCURED::${error.message}::`);
       return next(error);
     }
   })(req, res, next);
