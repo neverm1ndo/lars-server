@@ -1,3 +1,5 @@
+import { disconnect } from "process";
+
 export const lines = {
     auth: {
         correct: {
@@ -8,6 +10,9 @@ export const lines = {
             regular: "1688587991 20230705T231311 <auth/incorrect> DummyDummyDummyDum (0) 'Dummy' {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}",
             no_id:  "1688587991 20230705T231311 <auth/incorrect> DummyDummyDummyDum {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}",
         }
+    },
+    disconnect: {
+        ban: "1688587991 20230705T231311 <disconnect/ban> Dummy (0) Администратор Admin (2) 'test' {Russia, cc:RU, ip:127.0.0.1, as:8359, ss:5ADDEE08F89984DEE0D8CED489A59F0D95448C84, org:ANY_ORG, cli:0.3.7}"
     },
     cn: '1688587991 20230705T231311 <cn/response> [Dummy]_DummyDummy (0) {cn:L1HUXYLPSJNDKA8IQQK8L51UW2L44X}',
     no_id: {

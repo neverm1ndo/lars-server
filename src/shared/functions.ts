@@ -217,3 +217,5 @@ export function isBinary (mime: string | false): boolean {
   if (!mime) return false;
   return ALLOWED_BINARY_MIMES.includes(mime);
 };
+
+export const isDevEnv = () => process.env.NODE_ENV! === 'development' || process.env.NODE_ENV! === 'test'; 

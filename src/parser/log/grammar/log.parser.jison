@@ -91,6 +91,13 @@ log_body
                 content: $log_content
             }
         }
+    | log_content geo_text
+        {
+            $$ = {
+                content: $log_content,
+                geo: $geo_text
+            }
+        }
     | geo_element
         {
             $$ = {

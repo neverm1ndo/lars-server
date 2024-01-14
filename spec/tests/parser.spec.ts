@@ -1,6 +1,6 @@
 import { ILogLine } from '@interfaces/logline';
 import { Parser2 } from 'src/Parser2';
-import { lines } from 'spec/support/dummies';
+import { lines } from 'spec/mocks/dummies';
 
 describe('log line parser suite', function() {
 
@@ -12,6 +12,18 @@ describe('log line parser suite', function() {
         main_group: 2,
         secondary_group: 2,
     };
+
+    const fake_geo_data = {
+        geo: {
+            country: 'Russia',
+            cc: 'RU',
+            ip: '127.0.0.1',
+            as: 8359, 
+            ss: '5ADDEE08F89984DEE0D8CED489A59F0D95448C84', 
+            org: 'ANY_ORG', 
+            cli: '0.3.7',
+        }
+    }
 
     it('should parse incorrect auth log line', function() {
         const line = lines.auth.incorrect.regular;
@@ -60,15 +72,7 @@ describe('log line parser suite', function() {
                     username: 'Dummy'
                 },
             },
-            geo: {
-                country: 'Russia',
-                cc: 'RU',
-                ip: '127.0.0.1',
-                as: 8359, 
-                ss: '5ADDEE08F89984DEE0D8CED489A59F0D95448C84', 
-                org: 'ANY_ORG', 
-                cli: '0.3.7',
-            }
+            ...fake_geo_data
         };
 
         const parsed = parser.parse(Buffer.from(line));
@@ -93,15 +97,7 @@ describe('log line parser suite', function() {
                     id: 121
                 },
             },
-            geo: {
-                country: 'Russia',
-                cc: 'RU',
-                ip: '127.0.0.1',
-                as: 8359, 
-                ss: '5ADDEE08F89984DEE0D8CED489A59F0D95448C84', 
-                org: 'ANY_ORG', 
-                cli: '0.3.7',
-            }
+            ...fake_geo_data
         };
 
         const parsed = parser.parse(Buffer.from(line));
@@ -119,15 +115,7 @@ describe('log line parser suite', function() {
             process: '<auth/incorrect>',
             nickname: 'DummyDummyDummyDum',
             id: undefined,
-            geo: {
-                country: 'Russia',
-                cc: 'RU',
-                ip: '127.0.0.1',
-                as: 8359, 
-                ss: '5ADDEE08F89984DEE0D8CED489A59F0D95448C84', 
-                org: 'ANY_ORG', 
-                cli: '0.3.7',
-            }
+            ...fake_geo_data
         };
 
         const parsed = parser.parse(Buffer.from(line));
@@ -256,6 +244,30 @@ describe('log line parser suite', function() {
             content: {
                 numbers: [532.501, -592.966, 123.0]
             },
+        };
+
+        const buffer = Buffer.from(line);
+
+        const parsed = parser.parse(buffer);
+
+        expect(parsed).toEqual(clearly_parsed);
+    });
+
+    it('should parse ban disconnect', function() {
+        const line = lines.disconnect.ban;
+
+        const clearly_parsed: ILogLine = {
+            unix: 1688587991,
+            date: new Date(1688587991000),
+            process: '<disconnect/ban>',
+            nickname: 'Dummy',
+            id: 0,
+            content: {
+                op: "Администратор Admin",
+                oid: 2,
+                message: 'test'
+            },
+            ...fake_geo_data
         };
 
         const buffer = Buffer.from(line);
