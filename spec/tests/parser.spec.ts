@@ -90,7 +90,12 @@ describe('log line parser suite', function() {
             process: '<connection/connect>',
             nickname: 'Dummy',
             id: 0,
-            ...fake_geo_data
+            // ...fake_geo_data
+            geo: {
+                country: "Russia",
+                cc: 'RU',
+                ip: '5.166.153.249'
+            }
         };
 
         const parsed = parser.parse(Buffer.from(line));

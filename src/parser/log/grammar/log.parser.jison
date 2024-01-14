@@ -218,6 +218,8 @@ geo_text
 geo_value
     : geo_country_object
         { $$ = $1 }
+    | geo_object_no_country
+        { $$ = $1 }
     ;
 
 geo_element
@@ -233,7 +235,7 @@ geo_element_value
     | serial_ss
         { $$ = $serial_ss }
     | string
-        { $$ = $string.trim() }
+        { $$ = trim($string) }
     | cli
         { $$ = $cli }
     | number
@@ -256,8 +258,8 @@ geo_country_object
     : '{' string ',' geo_element_list '}'
         {
             $$ = {
-                country: $2,
-                ...$4
+                country: $string,
+                ...$geo_element_list
             }
         }
     ;
