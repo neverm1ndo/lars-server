@@ -211,14 +211,10 @@ geo_value
         { $$ = $1 }
     ;
 
-geo_element_name
-    : string
-    ;
-
 geo_element
-    : geo_element_name ':' geo_element_value
-        { $$ = { [$geo_element_name]: $3 } }
-    | geo_element_name ':' geo_text
+    : string ':' geo_element_value
+        { $$ = { [$string]: $3 } }
+    | string ':' geo_text
         { $$ = $3 }
     ;
 
