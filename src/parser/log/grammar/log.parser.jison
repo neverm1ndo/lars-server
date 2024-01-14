@@ -62,6 +62,8 @@ log_body
         { $$ = { geo: $geo_country_object } }
     | geo_object_no_country 
         { $$ = { content: $geo_object_no_country } }
+    | geo_text
+        { $$ = { geo: $geo_text } }
     | message geo_text
         { 
             $$ = { 

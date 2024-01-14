@@ -80,6 +80,23 @@ describe('log line parser suite', function() {
 
         expect(parsed).toEqual(clearly_parsed);
     });
+ 
+    it('should parse connection line', function() {
+        const line = lines.connect;
+
+        const clearly_parsed: ILogLine = {
+            unix: 1688587991,
+            date: new Date(1688587991000),
+            process: '<connection/connect>',
+            nickname: 'Dummy',
+            id: 0,
+            ...fake_geo_data
+        };
+
+        const parsed = parser.parse(Buffer.from(line));
+
+        expect(parsed).toEqual(clearly_parsed);
+    });
 
     it('should parse correct admin auth log line', function() {
         const line = lines.auth.correct.admin;
