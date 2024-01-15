@@ -64,6 +64,8 @@ log_body
         { $$ = { content: $geo_object_no_country } }
     | geo_text
         { $$ = { geo: $geo_text } }
+    | editor_body
+        { $$ = { content: { editor: $editor_body  }} }
     | message geo_text
         { 
             $$ = { 
@@ -261,5 +263,12 @@ geo_country_object
                 country: $string,
                 ...$geo_element_list
             }
+        }
+    ;
+
+editor_body
+    : geo_element_list '(' geo_element_list ')'
+        {
+            $$ = Object.assign($1, $3)
         }
     ;

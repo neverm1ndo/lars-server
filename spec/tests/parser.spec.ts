@@ -90,12 +90,7 @@ describe('log line parser suite', function() {
             process: '<connection/connect>',
             nickname: 'Dummy',
             id: 0,
-            // ...fake_geo_data
-            geo: {
-                country: "Russia",
-                cc: 'RU',
-                ip: '5.166.153.249'
-            }
+            ...fake_geo_data
         };
 
         const parsed = parser.parse(Buffer.from(line));
@@ -298,4 +293,30 @@ describe('log line parser suite', function() {
 
         expect(parsed).toEqual(clearly_parsed);
     });
+    
+    it('should parse editor enter', function() {
+            const line = lines.editor.enter;
+    
+            const clearly_parsed: ILogLine = {
+                unix: 1688587991,
+                date: new Date(1688587991000),
+                process: '<editor/enter>',
+                nickname: 'Dummy',
+                id: 0,
+                content: {
+                    editor: {
+                        editor_id: 2,
+                        g: 'owner',
+                        players: 1,
+                        visitors: 0
+                    }
+                },
+            };
+    
+            const buffer = Buffer.from(line);
+    
+            const parsed = parser.parse(buffer);
+    
+            expect(parsed).toEqual(clearly_parsed);
+        });
 });

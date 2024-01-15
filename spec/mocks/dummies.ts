@@ -34,5 +34,8 @@ export const lines = {
     },
     dev: {
         tp: "1688587991 20230705T231311 <any/process> Dummy (1) 532.501 -592.966 123.0"
+    },
+    editor: {
+        enter: "1688587991 20230705T231311 <editor/enter> Dummy (0) editor_id: 2, g: owner (players: 1, visitors: 0)"
     }
 };

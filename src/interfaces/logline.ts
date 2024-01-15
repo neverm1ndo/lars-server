@@ -6,6 +6,13 @@ export interface IContentTarget {
   id: number;
   username: string;
 }
+
+export interface IContentEditor {
+  editor_id: number;
+  g: string;
+  players: number;
+  visitors: number;
+}
 export interface IContentData {
   time?: string;
   oid?: number;
@@ -20,6 +27,7 @@ export interface IContentData {
   target?: IContentTarget;
   props?: any;
   cn?: string;
+  editor?: IContentEditor;
 }
 
 export interface ILogLine {
