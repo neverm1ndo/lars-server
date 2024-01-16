@@ -1,4 +1,4 @@
-# ![logo](https://raw.githubusercontent.com/neverm1ndo/libertylogs/master/docs/logo.png) LARS
+# ![logo](https://raw.githubusercontent.com/neverm1ndo/libertylogs/master/docs/logo_60x60.png) LARS
 **LARS** - программа для чтения логов, записи и изменения конфигурационных файлов, загрузчик и просмотрщик карт игрового сервера.
 
 Серверная часть анализирует логи игрового сервера, собирает статистику и предоставляет API для клиентской части.
@@ -16,4 +16,4 @@
 * Express
 * MongoDB (Mongoose)
 * MySQL (nodejs dep)
-
+* Jison (YACC & Lex)
