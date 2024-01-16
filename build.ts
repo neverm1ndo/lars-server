@@ -20,7 +20,7 @@ const config = {
         cwd: './'
     },
     postbuild: {
-        jison: (name: string) => `jison ${['jison', 'jisonlex'].map((ext) => path.join('./src/parser/', name, 'grammar', name + '.parser.' + ext)).join(' ')} -o ${path.join('./dist/parser', name, name + '.parser.js')}`,
+        jison: (name: string) => `jison ${['jison', 'jisonlex'].map((ext) => path.join('./src/parser/', name, name + '.parser.' + ext)).join(' ')} -o ${path.join('./dist/parser', name, name + '.parser.js')}`,
     },
     parser: {
         grammars: ['log']
