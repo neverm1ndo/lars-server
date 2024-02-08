@@ -36,7 +36,7 @@ const LOG_MESSAGES = {
   NOT_EXISTS : 'BACKUP_IS_NOT_EXISTS',
 };
 
-const TWO_WEEKS: number = 604800000;
+const LIFETIME: number = Number(process.env.BACKUP_LIFETIME!);
 
 /**
 * Generates hashcode for backups
@@ -71,7 +71,7 @@ export default class Backuper {
     const mime = getMimeType(ext);
   
     const creationDate: Date = new Date(unix);
-    const expirationDate: Date = new Date(unix + TWO_WEEKS);
+    const expirationDate: Date = new Date(unix + LIFETIME);
     const avatar: string = getAvatarURL(user.user_avatar);
 
     const backupDocument: BackupNote = {
