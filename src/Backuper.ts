@@ -112,7 +112,7 @@ export default class Backuper {
       await Backuper.prepareBackupFile(
         path,
         destinationPath,
-        createGzip({ level: COMPRESSION_LEVEL })
+        isNeedToCompress ? createGzip({ level: COMPRESSION_LEVEL }) : undefined
       );
 
       if (isNeedToCompress) {
