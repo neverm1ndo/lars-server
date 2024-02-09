@@ -1,10 +1,13 @@
 import { unlink, readFile, copyFile, stat } from 'fs/promises';
+import fs from 'fs';
+import { pipeline } from 'stream';
 import path, { join, basename, extname } from 'path';
 import { BACKUP } from '@schemas/backup.schema';
 import { getMimeType, ANSItoUTF8, getAvatarURL, isBinary } from '@shared/functions';
 import { logger } from '@shared/constants';
 import Workgroup from '@enums/workgroup.enum';
 import crypto from 'crypto';
+import { Gunzip, Gzip, createGunzip, createGzip } from 'zlib';
 
 export enum BackupAction {
   DELETE,
@@ -28,6 +31,7 @@ interface BackupNote {
     mime: string;
     binary: boolean;
     bytes?: number;
+    compressed?: number;
   }
 }
 
@@ -37,6 +41,7 @@ const LOG_MESSAGES = {
 };
 
 const LIFETIME: number = Number(process.env.BACKUP_LIFETIME!);
+const COMPRESSION_LEVEL: number = Number(process.env.BACKUP_COMPRESSION_LEVEL!) || 1;
 
 /**
 * Generates hashcode for backups
@@ -95,15 +100,29 @@ export default class Backuper {
     
     
     try {
-      const fileStat = await stat(path);
-      backupDocument.file.bytes = fileStat.size;
-      
+      const { size } = await stat(path);
+
+      const destinationPath = join(process.env.BACKUPS_PATH!, hash);
+
+      const sizeThreshold = Number(process.env.BACKUP_SIZE_THRESHOLD!);
+      backupDocument.file.bytes = size;
+
+      const isNeedToCompress = size >= sizeThreshold;
+
+      await Backuper.prepareBackupFile(
+        path,
+        destinationPath,
+        createGzip({ level: COMPRESSION_LEVEL })
+      );
+
+      if (isNeedToCompress) {
+        const { size } = await stat(destinationPath);
+        backupDocument.file.compressed = size;
+      }
+
       const backup = new BACKUP(backupDocument);
-
-      await copyFile(path, join(process.env.BACKUPS_PATH!, hash));
-      
       backup.save();
-
+      
       return backupDocument;
 
     } catch (err: any) {
@@ -117,15 +136,21 @@ export default class Backuper {
    * @param {string} hash - files hash
    * @returns {Promise<void>}
    */
-  static async restore(hash: string): Promise<void> {
+  static async restore(hash: string): Promise<unknown> {
     return BACKUP.findOne<BackupNote>({ hash })
                  .then((backup) => {
                     if (!backup) throw LOG_MESSAGES.NOT_EXISTS;
+                    
                     return backup;
                  })
                  .then((backup) => {
                     const backupFilePath: string = path.join(process.env.BACKUPS_PATH!, backup.hash);
-                    return copyFile(backupFilePath, backup.file.path);
+
+                    return Backuper.prepareBackupFile(
+                      backupFilePath,
+                      backup.file.path,
+                      backup.file.compressed ? createGunzip({ level: COMPRESSION_LEVEL }) : undefined
+                    );
                  });
   };
   
@@ -138,11 +163,12 @@ export default class Backuper {
     const unlinkShchedule: Promise<unknown> = BACKUP.find<BackupNote>({ expires: { $lte: now }}, [])
           .then((notes) => {
             if (!notes) throw LOG_MESSAGES.NOT_EXISTS;
+            
             return notes;
           })
-          .then((notes) => {
-            return Promise.all(notes.map((note) => unlink(path.join(process.env.BACKUPS_PATH!, note.hash))));
-          });
+          .then((notes) => 
+            Promise.all(notes.map((note) => unlink(path.join(process.env.BACKUPS_PATH!, note.hash))))
+          );
     
     const deleteBackupNotes = BACKUP.deleteMany({ expires: { $lte: new Date() }}, [])
                                     .exec();
@@ -172,6 +198,25 @@ export default class Backuper {
     const filepath: string = path.join(process.env.BACKUPS_PATH!, hash);
 
     return readFile(filepath).then((buffer: Buffer) => ANSItoUTF8(buffer))
+  }
+
+  static async prepareBackupFile(source: string, destination: string, transform?: Gzip | Gunzip) {
+    const readStream = fs.createReadStream(source);
+    const writeStream = fs.createWriteStream(destination);
+
+    const stream = (() => {
+      if (transform) {
+        return pipeline(readStream, transform, writeStream, () => {});
+      }
+  
+      return readStream.pipe(writeStream);
+    })();
+
+    return new Promise((resolve, reject) => {
+      stream.on('finish', resolve);
+      stream.on('end', resolve);
+      stream.on('error', reject)
+    });
   }
 }
 

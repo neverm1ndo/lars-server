@@ -16,8 +16,9 @@ const backupSchema = new Schema ({
     name: String,
     mime: String,
     binary: Boolean,
-    bytes: Number
+    bytes: Number,
+    compressed: Number
   }
 });
 
-export const BACKUP = model( 'Backup', backupSchema);
+export const BACKUP = model('Backup', backupSchema);
