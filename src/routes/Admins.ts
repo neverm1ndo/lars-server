@@ -30,17 +30,17 @@ router.get('/list', async (req: any, res: any) => {
       const adminIndex = acc.findIndex(({ user_id }) => curr.user_id === user_id);
 
       if (adminIndex !== -1) {
-        (acc[adminIndex].prefrences as Set<number>).add(curr.secondary_group);
+        (acc[adminIndex].permissions as Set<number>).add(curr.secondary_group || 2);
       } else {
-        if (!curr.prefrences) {
-          curr.prefrences = new Set(curr.main_group !== curr.secondary_group ? [curr.secondary_group] : []);
+        if (!curr.permissions) {
+          curr.permissions = new Set(curr.main_group !== curr.secondary_group! ? [curr.secondary_group!] : []);
         }
         acc.push(curr);
       }
 
       return acc;
     }, []).map((admin) => {
-      admin.prefrences = Array.from(admin.prefrences as Set<number>);
+      admin.permissions = Array.from(admin.permissions as Set<number>);
       admin.user_avatar = getAvatarURL(admin.user_avatar);
 
       return admin;

@@ -21,6 +21,7 @@ import 'express-async-errors';
 // import { Logger } from '@shared/Logger';
 import { watch, isWorkGroup, checkPassword } from '@shared/functions';
 import { IDBUser, IJwtPayload } from '@interfaces/user';
+import { AdminUserData, LoginAdminUserData } from '@entities/admin.entity';
 
 const app: Express = express();
 
@@ -80,14 +81,19 @@ const localStrategyOptions: ILocalStrategyOptions = {
 
 const localStrategy: LocalStrategy = new LocalStrategy(localStrategyOptions, async (email: string, password: string, done: any) => {
   try {
-    const [user]: IDBUser[] = await MSQLPool.promise()
+    const rawUser: any[] = await MSQLPool.promise()
                                             .query(GET_USER, [email])
                                             .then(([rows]: any) => rows);
-    if (!user) {
+    if (!rawUser.length) {
       return done(null, false, { message: 'User not found' });
     }
+
+    const permissions: number[] = Array.from(new Set(rawUser.map((user) => user.secondary_group!)));
     
-    const { main_group, user_password } = user;
+    const [user] = rawUser;
+    const { user_password, main_group } = user;
+
+    user.permissions = permissions;
     
     if (!checkPassword(password, user_password)) {
       return done(null, false, { message: 'Wrong password' });

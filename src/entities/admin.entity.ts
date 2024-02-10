@@ -3,6 +3,11 @@ export interface AdminUserData {
     username: string;
     user_avatar: string;
     main_group: number;
-    secondary_group: number;
-    prefrences?: number[] | Set<number>;
+    secondary_group?: number;
+    permissions: number[] | Set<number>;
+    user_email?: string;
+}
+
+export interface LoginAdminUserData extends AdminUserData {
+    user_password: string;
 }

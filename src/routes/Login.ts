@@ -25,24 +25,25 @@ router.post('/login', cors, json(), (req: any, res: any, next: (err?: any) => an
       logger.log(LOGGER_PREFIX, '[POST]', 'LOGIN', `(${req.socket.remoteAddress})`, user?.username || 'no_username', Workgroup[req.user?.main_group] || 'no_group');
       
       if (err || !user) {
-        logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, user?.username || 'no_username', Workgroup[req.user?.main_group], `ERROR_OCCURED::${err.message || 'no_username'}::`);
+        logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, user?.username || 'no_username', Workgroup[req.user?.main_group], `ERROR_OCCURED::${err?.message || 'no_username'}::`);
         return next(new Error('An error occured.'));
       }
-      
+
       req.login(user, { session: true }, async (error: any) => {
         if (error) {
           logger.err(LOGGER_PREFIX, '[POST]', 'LOGIN_FAIL', `(${req.socket.remoteAddress})`, req.user?.username, Workgroup[req.user?.main_group], `ERROR_OCCURED::${error.message || 'no_username'}::`);
           return next(error);
         }
-        
-        const { main_group, username, secondary_group, user_avatar, user_id } = user;
+
+        const { main_group, username, permissions, user_avatar, user_id } = user;
         
         const payload: IJwtPayload = {
           id: user_id,
           username,
           main_group,
-          secondary_group,
+          permissions
         };
+
         res.status(OK)
             .send({
               ...payload,

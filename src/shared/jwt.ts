@@ -22,13 +22,13 @@ export namespace JWT {
      */
     export const verifyToken = async (token: string): Promise<IJwtPayload | null> => {
         return new Promise((resolve, reject) => {
-            jwt.verify(token, app.get('secret'), (err: any, { id, username, main_group, secondary_group }: any) => {
+            jwt.verify(token, app.get('secret'), (err: any, { id, username, main_group, permissions }: any) => {
                 if (err) return reject(err);
                 resolve({
                     id,
                     username,
                     main_group,
-                    secondary_group,
+                    permissions,
                 });
             });
         });
