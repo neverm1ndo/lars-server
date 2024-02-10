@@ -26,7 +26,7 @@ import { AdminUserData, LoginAdminUserData } from '@entities/admin.entity';
 const app: Express = express();
 
 const { BAD_REQUEST, NOT_FOUND } = StatusCodes;
-const { GET_USER_BY_NAME, GET_USER } = SQLQueries;
+const { GET_USER_BY_ID, GET_USER } = SQLQueries;
 
 /**
  * Express middlewares
@@ -61,9 +61,15 @@ const jwtStrategyOptions: JWTStrategyOptions = {
 
 const jwtStrategy = new JWTStrategy(jwtStrategyOptions, async (jwtPayload: IJwtPayload, done) => {
   try {
-    const [user]: IDBUser[] = await MSQLPool.promise()
-                                            .query(GET_USER_BY_NAME, [jwtPayload.username])
+    const rawUser: LoginAdminUserData[] = await MSQLPool.promise()
+                                            .query(GET_USER_BY_ID, [jwtPayload.id])
                                             .then(([rows]: any) => rows);
+
+    const permissions: number[] = Array.from(new Set(rawUser.map((user) => user.secondary_group!)));
+
+    const [user] = rawUser;
+    user.permissions = permissions;
+    
     if (!isWorkGroup(user.main_group)) {
       return done(null, false, { message: 'User is not in workgroup' });
     }

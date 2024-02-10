@@ -21,6 +21,7 @@ const ALLOWED_GROUPS = {
 export namespace Guards {
   export const rejectUnauthorized = function (req: Request, res: Response, next: NextFunction) {
       if (!req.user) return res.sendStatus(UNAUTHORIZED);
+      console.log(req.user);
       next();
   };
   
@@ -46,6 +47,7 @@ export namespace Guards {
   };
   
   export const configuratorGuard = function({ user }: any, res: Response, next: NextFunction) {
+    console.log(user);
     if (!user) return res.sendStatus(UNAUTHORIZED);
     if (!intersection(user.permissions, ALLOWED_GROUPS.CONFIGURATIONS).length) { res.status(UNAUTHORIZED).send('Access denied for your workgroup: ' + isWorkGroup(user.main_group)); return; }
     next();
