@@ -22,5 +22,5 @@ export interface IJwtPayload {
   id: number;
   username: string;
   main_group: Workgroup;
-  secondary_group: Workgroup;
+  permissions: Workgroup[];
 };
