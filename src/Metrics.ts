@@ -22,10 +22,11 @@ export class OnlineMetric extends Statsman.Metric {
                  .exec();
     }
 
-    private _getServerOnline(): Promise<ServerGameMode> {
+    private async _getServerOnline(): Promise<ServerGameMode> {
+      try {
         const SERVER_IP: string | undefined = process.env.SERVER_IP;
         let SERVER_PORT: string | number | undefined  = process.env.SERVER_PORT;
-        
+
         if (!SERVER_IP || !SERVER_PORT) throw new Error('SERVER_IP or SERVER_PORT is undefined');
             SERVER_PORT = Number(SERVER_PORT);
         
@@ -33,6 +34,10 @@ export class OnlineMetric extends Statsman.Metric {
         
         const samp: Samp = new Samp(10000);
         return samp.getGameMode(SERVER_IP, SERVER_PORT);
+      } catch (err) {
+        logger.err(err);
+        throw err;
+      }
     }
 
     public async tail(label: string): Promise<UpdateResult | undefined> {
