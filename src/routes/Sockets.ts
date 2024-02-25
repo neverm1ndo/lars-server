@@ -133,6 +133,11 @@ const sockets = (socket: ISocket) => {
     });
   });
 
+  socket.on('join:monitor', () => {
+    logger.log(LOGGER_PREFIX, 'JOIN_SERVER_MONITOR', `(${socket.handshake.address})`, socket.request.user?.username);
+    socket.join('server_log');
+  });
+
   socket.on('update', () => {
     socket.emit('update:soft');
   });
