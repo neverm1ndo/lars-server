@@ -42,7 +42,7 @@ app.set('secret', process.env.ACCESS_TOKEN_SECRET);
 
 // MongoDB connection
 set('strictQuery', false);
-const clientPromise = connect(process.env.MONGO!, { useNewUrlParser: true, useUnifiedTopology: true } as ConnectOptions).then(m => m.connection.getClient());
+const clientPromise = connect(process.env.MONGO!).then(m => m.connection.getClient());
 
 export const sessionMiddleware = session({
   secret: app.get('secret'),
