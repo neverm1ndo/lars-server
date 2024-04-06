@@ -23,7 +23,7 @@ export const CommonErrors = {
   [ErrorCode.CHILD_PROCESS_CANT_SERVE]: 'Child process cant serve.',
 } as const;
 
-export const logger: Logger = new Logger(path.resolve(process.cwd(), 'diary'), 'log'); 
+export const logger: Logger = new Logger(process.env.LARS_LOGS_PATH!, 'log'); 
 
 export const onlineMetric: OnlineMetric = new OnlineMetric();
 export const omp = new OMPServerControl();
