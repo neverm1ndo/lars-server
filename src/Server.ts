@@ -1,27 +1,31 @@
-import cookieParser from 'cookie-parser';
-import morgan from 'morgan';
-import helmet from 'helmet';
 import { join } from 'path';
 
 import express, { NextFunction, Request, Response, Express } from 'express';
+import { connect, ConnectOptions, set } from 'mongoose';
+
+import cookieParser from 'cookie-parser';
+
+import morgan from 'morgan';
+import helmet from 'helmet';
 import passport from 'passport';
-import { Strategy as JWTStrategy, ExtractJwt, StrategyOptions as JWTStrategyOptions } from 'passport-jwt';
-import { Strategy as LocalStrategy, IStrategyOptions as ILocalStrategyOptions } from 'passport-local';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
+import StatusCodes from 'http-status-codes';
+import 'express-async-errors';
 
-import { connect, ConnectOptions, set } from 'mongoose';
+
+import { Strategy as JWTStrategy, ExtractJwt, StrategyOptions as JWTStrategyOptions } from 'passport-jwt';
+import { Strategy as LocalStrategy, IStrategyOptions as ILocalStrategyOptions } from 'passport-local';
+
 import { rmOldBackups, SQLQueries, tailOnlineStats, MSQLPool, logger } from '@shared/constants';
 
 import BaseRouter from './routes';
 
-import StatusCodes from 'http-status-codes';
-import 'express-async-errors';
 
 // import { Logger } from '@shared/Logger';
 import { watch, isWorkGroup, checkPassword } from '@shared/functions';
-import { IDBUser, IJwtPayload } from '@interfaces/user';
-import { AdminUserData, LoginAdminUserData } from '@entities/admin.entity';
+import { IJwtPayload } from '@interfaces/user';
+import { LoginAdminUserData } from '@entities/admin.entity';
 
 const app: Express = express();
 
@@ -50,7 +54,7 @@ export const sessionMiddleware = session({
     sameSite: 'none' 
   },
   store: MongoStore.create({ clientPromise }),
-})
+});
 
 app.use(sessionMiddleware);
 
