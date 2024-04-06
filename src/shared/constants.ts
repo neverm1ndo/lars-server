@@ -1,6 +1,5 @@
 import { createPool } from 'mysql2';
 import Backuper from '@backuper';
-import path from 'path';
 import { Logger } from './Logger2';
 import multer, { Multer, diskStorage} from 'multer';
 import cors from 'cors';
