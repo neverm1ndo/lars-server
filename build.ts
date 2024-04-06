@@ -5,7 +5,6 @@ import path from 'path';
 import fs from 'fs/promises';
 import { ExecException, ExecOptions, exec } from 'child_process';
 import { get, isFunction } from 'lodash';
-import { EOL } from 'os';
 
 const config = {
     env: 'pre-start/env/',
@@ -123,7 +122,7 @@ process.stdout.write(`\x1b[36m
 
         console.info(CONSOLE_MESSAGE.get('POST_BUILD.JISON_GEN_SUCCESS', current, config.parser.grammars.length));
 
-   } catch(err) {
+   } catch(err: any) {
         console.error(CONSOLE_MESSAGE.error(err.message));
    }
 })(config);
@@ -161,12 +160,12 @@ function duration(d: number): string {
 function execCmd(cmd: string, options: ExecOptions) {
     return new Promise<void>((resolve, reject) => {
         return exec(cmd, options, (err: ExecException | null, stdout: string, stderr: string) => {
-            // if (!!stdout) {
-            //     console.info(stdout);
-            // }
-            // if (!!stderr) {
-            //     console.warn(stderr);
-            // }
+            if (!!stdout) {
+                console.info(stdout);
+            }
+            if (!!stderr) {
+                console.warn(stderr);
+            }
             return void(!!err ? reject(err) : resolve());
         });
     });

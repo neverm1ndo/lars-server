@@ -1,7 +1,8 @@
 import { join } from 'path';
 
 import express, { NextFunction, Request, Response, Express } from 'express';
-import { connect, ConnectOptions, set } from 'mongoose';
+import { connect, set } from 'mongoose';
+import { MongoClient } from 'mongodb';
 
 import cookieParser from 'cookie-parser';
 
@@ -42,7 +43,7 @@ app.set('secret', process.env.ACCESS_TOKEN_SECRET);
 
 // MongoDB connection
 set('strictQuery', false);
-const clientPromise = connect(process.env.MONGO!).then(m => m.connection.getClient());
+const clientPromise = connect(process.env.MONGO!).then(m => m.connection.getClient() as unknown as MongoClient);
 
 export const sessionMiddleware = session({
   secret: app.get('secret'),
@@ -53,7 +54,7 @@ export const sessionMiddleware = session({
     secure: true, 
     sameSite: 'none' 
   },
-  store: MongoStore.create({ clientPromise }),
+  store: MongoStore.create({ clientPromise: clientPromise as Promise<MongoClient> }),
 });
 
 app.use(sessionMiddleware);
