@@ -21,7 +21,7 @@
     "@interfaces": "dist/interfaces",
     "@schemas": "dist/schemas",
     "@server": "dist/Server",
-    "@parser": "dist/Parser",
+    "@parser": "dist/Parser2",
     "@enums": "dist/enums",
     "@watcher": "dist/Watcher",
     "@backuper": "dist/Backuper"
