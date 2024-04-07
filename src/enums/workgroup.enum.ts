@@ -1,9 +1,9 @@
 enum Workgroup {
-  CHALLENGER = 9,
-  DEV = 10,
-  ADMIN = 11,
-  MAPPER = 12,
-  CFR = 13,
-  BACKUPER = 14
+    CHALLENGER = 9,
+    DEV,
+    ADMIN,
+    MAPPER,
+    CFR,
+    BACKUPER
 }
 export default Workgroup;

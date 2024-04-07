@@ -107,6 +107,7 @@ export class Logger {
                 args[i] = arg.toString();
             }
         }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         this.log('[ERROR]', ...args);
     }
 

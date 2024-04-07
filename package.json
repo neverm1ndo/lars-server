@@ -3,7 +3,7 @@
   "version": "0.9.0",
   "scripts": {
     "build": "ts-node build.ts",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint .",
     "start": "node -r module-alias/register ./dist --env=production",
     "start:dev": "nodemon",
     "test": "nodemon --config ./spec/nodemon.json"
@@ -13,7 +13,7 @@
       "src"
     ],
     "ext": "ts, html",
-    "exec": "ts-node -r tsconfig-paths/register ./src"
+    "exec": "ts-node --project ./tsconfig.json -r tsconfig-paths/register ./src --env=development"
   },
   "_moduleAliases": {
     "@entities": "dist/entities",
@@ -117,15 +117,17 @@
     "@types/node": "^14.14.21",
     "@types/passport-jwt": "^3.0.7",
     "@types/passport-local": "^1.0.34",
-    "@typescript-eslint/eslint-plugin": "^4.14.0",
-    "@typescript-eslint/parser": "^4.14.0",
-    "eslint": "^7.18.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
     "find": "^0.3.0",
     "fs-extra": "^9.0.1",
     "jasmine": "^5.0.2",
     "nodemon": "^3.1.0",
+    "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^3.9.0",
-    "typescript": "^5.4.4"
+    "typescript": "^5.4.4",
+    "typescript-eslint": "^7.5.0"
   }
 }

@@ -1,3 +1,4 @@
+import { Processes } from '@shared/processes/processes.enum';
 import { IGeoData } from './geodata';
 import { IUserData } from './user';
 
@@ -14,29 +15,29 @@ export interface IContentEditor {
   visitors: number;
 }
 export interface IContentData {
-  time?: string;
-  oid?: number;
-  op?: string;
-  weapon?: string;
-  dm_id?: string;
-  auth?: IUserData;
-  message?: string;
-  numbers?: number[];
-  action?: string;
-  targetType?: string;
-  target?: IContentTarget;
-  props?: any;
-  cn?: string;
-  editor?: IContentEditor;
+    time?: string;
+    oid?: number;
+    op?: string;
+    weapon?: string;
+    dm_id?: string;
+    auth?: IUserData;
+    message?: string;
+    numbers?: number[];
+    action?: string;
+    targetType?: string;
+    target?: IContentTarget;
+    props?: any;
+    cn?: string;
+    editor?: IContentEditor;
 }
 
 export interface ILogLine {
-  unix: number;
-  date: Date;
-  process: string;
-  nickname?: string;
-  id?: number;
-  geo?: IGeoData;
-  content?: IContentData;
-  multiplier?: number;
+    unix: number;
+    date: Date;
+    process: Processes;
+    nickname?: string;
+    id?: number;
+    geo?: IGeoData;
+    content?: IContentData;
+    multiplier?: number;
 }

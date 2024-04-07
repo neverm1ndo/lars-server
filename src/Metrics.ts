@@ -1,11 +1,12 @@
-import Samp, { ServerGameMode } from '@shared/samp';
-import { Statsman } from '@shared/statsman';
-import { logger, omp } from '@shared/constants';
-
-import { STAT } from '@schemas/stat.schema';
-import { UpdateResult } from 'mongodb';
 import { EOL } from 'os';
+
 import { isObject } from 'lodash';
+import { UpdateResult } from 'mongodb';
+
+import { omp } from '@shared/constants';
+import { logger } from '@shared/logger';
+import { STAT } from '@schemas/stat.schema';
+import Samp, { ServerGameMode } from '@shared/samp';
 
 export interface OnlineMetricChart {
   data: number[];
@@ -14,30 +15,33 @@ export interface OnlineMetricChart {
   label?: string;
 }
 
-export class OnlineMetric extends Statsman.Metric {
+export class OnlineMetric {
 
     public getDailyOnlineChart(date: Date): Promise<OnlineMetricChart | null> {
-      const day: number = date.setHours(0, 0, 0, 0);
-      return STAT.findOne<OnlineMetricChart>({ date: day })
-                 .exec();
+        const day: number = date.setHours(0, 0, 0, 0);
+
+        return STAT.findOne<OnlineMetricChart>({ date: day })
+                    .exec();
     }
 
     private async _getServerOnline(): Promise<ServerGameMode> {
-      try {
-        const SERVER_IP: string | undefined = process.env.SERVER_IP;
-        let SERVER_PORT: string | number | undefined  = process.env.SERVER_PORT;
+        try {
+            const SERVER_IP: string | undefined = process.env.SERVER_IP;
+            let SERVER_PORT: string | number | undefined  = process.env.SERVER_PORT;
 
-        if (!SERVER_IP || !SERVER_PORT) throw new Error('SERVER_IP or SERVER_PORT is undefined');
-            SERVER_PORT = Number(SERVER_PORT);
-        
-        if (Number.isNaN(SERVER_PORT)) throw new Error('SERVER_PORT is NaN');
-        
-        const samp: Samp = new Samp(10000);
-        return samp.getGameMode(SERVER_IP, SERVER_PORT);
-      } catch (err) {
-        logger.err(err);
-        throw err;
-      }
+            if (!SERVER_IP || !SERVER_PORT) throw new Error('SERVER_IP or SERVER_PORT is undefined');
+                SERVER_PORT = Number(SERVER_PORT);
+            
+            if (Number.isNaN(SERVER_PORT)) throw new Error('SERVER_PORT is NaN');
+            
+            const samp: Samp = new Samp(10000);
+
+            return samp.getGameMode(SERVER_IP, SERVER_PORT);
+        } catch (err) {
+            logger.err(err);
+
+            throw err;
+        }
     }
 
     public async tail(label: string): Promise<UpdateResult | undefined> {
@@ -57,7 +61,7 @@ export class OnlineMetric extends Statsman.Metric {
                           .exec();
       } catch (err) {
         logger.err(err);
-      };
+      }
     }
 
     public onInit(): void { 
@@ -65,16 +69,21 @@ export class OnlineMetric extends Statsman.Metric {
           .then((gameMode: ServerGameMode) => {
             logger.log(
               '[METRICS]','[SRV_GAME_MODE]', 'Got game mode data:\n',
-                                             ...Object.entries(gameMode)
-                                                      .map(([key, val]) => {
-                                                        if (!isObject(val)) return [key, val];
-                                                        val = Object.values(val)
-                                                                    .join('/');
-                                                        return [key, val];
-                                                      })
-                                                      .map(([key, val]) => '\t'.repeat(6) + key + ': ' + val + EOL)
+                ...Object.entries(gameMode)
+                        .map(([key, val]: string[]) => {
+                            if (!isObject(val)) {
+                                return [key, val];
+                            }
+                            
+                            const nested = Object.values(val)
+                                                    .join('/');
+                            
+                            return [key, nested];
+                        })
+                        .map(([key, val]: string[]) => '\t'.repeat(6) + key + ': ' + val + EOL)
             );
-            this.snapshot.online = gameMode.players.online;
+
+            // this.snapshot.online = gameMode.players.online;
           })
           .catch((err: any) => {
             logger.err(err);

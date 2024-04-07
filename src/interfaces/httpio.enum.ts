@@ -3,16 +3,16 @@ import { Socket } from "socket.io";
 import { IDBUser } from "./user";
 
 export interface IIncomingMessage extends IncomingMessage {
-  user?: IDBUser;
+    user?: IDBUser;
 }
 
 export interface ISocket extends Socket {
-  request: IIncomingMessage;
+    request: IIncomingMessage;
 }
 
 export interface IHttpsOptions {
-  key: string,
-  cert: string,
-  ca?: string,
-  rejectUnauthorized: boolean
+    key: string,
+    cert: string,
+    ca?: string,
+    rejectUnauthorized: boolean
 }

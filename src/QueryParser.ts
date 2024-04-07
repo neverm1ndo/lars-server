@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 import { ISearchQuery } from "@interfaces/search";
 
 export class QueryParser {
@@ -113,15 +114,16 @@ export class QueryParser {
     };
     
     constructor() {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
         this._engine = new (require('jison')).Parser(this._grammar);
     }
 
     public parse(input: string): ISearchQuery {
         try {
-            return this._engine.parse(input);
+            return this._engine.parse(input) as ISearchQuery;
         } catch(err) { // parse fail state
             console.error(err);
             return { nickname: [input] };
-        };
+        }
     }
 }

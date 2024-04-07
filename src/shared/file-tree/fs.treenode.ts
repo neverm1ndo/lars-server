@@ -9,7 +9,7 @@ const __cache: Map<string, TreeNode> = new Map();
 enum TreeNodeType {
   DIR = 'dir',
   FILE = 'file',
-};
+}
 
 const { DIR, FILE } = TreeNodeType;
 
@@ -57,7 +57,7 @@ export class TreeNode {
 
         children = children.filter((child: string) => !this._isExcludedDirPath(currentNode.path) && !exclusions.includes(child));
         
-        for (let child of children) {
+        for (const child of children) {
 
           const childPath: string = join(currentNode.path, child);
           const childNode: TreeNode = new TreeNode(childPath, child);
