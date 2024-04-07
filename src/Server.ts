@@ -1,6 +1,6 @@
 import { join } from 'path';
 
-import express, { NextFunction, Request, Response, Express } from 'express';
+import express, { Request, Response, Express, Handler } from 'express';
 import { connect, set } from 'mongoose';
 import { MongoClient } from 'mongodb';
 
@@ -18,15 +18,18 @@ import 'express-async-errors';
 import { Strategy as JWTStrategy, ExtractJwt, StrategyOptions as JWTStrategyOptions } from 'passport-jwt';
 import { Strategy as LocalStrategy, IStrategyOptions as ILocalStrategyOptions } from 'passport-local';
 
-import { rmOldBackups, SQLQueries, tailOnlineStats, MSQLPool, logger } from '@shared/constants';
 
 import BaseRouter from './routes';
 
+import { watch,  } from '@shared/functions';
+import { checkPassword, isWorkGroup } from '@shared/security';
 
-// import { Logger } from '@shared/Logger';
-import { watch, isWorkGroup, checkPassword } from '@shared/functions';
 import { IJwtPayload } from '@interfaces/user';
 import { LoginAdminUserData } from '@entities/admin.entity';
+import { MSQLPool, SQLQueries } from '@shared/sql';
+import { rmOldBackups, tailOnlineStats } from '@shared/cron/tasks';
+
+import { logger } from '@shared/logger';
 
 const app: Express = express();
 
@@ -54,7 +57,7 @@ export const sessionMiddleware = session({
     secure: true, 
     sameSite: 'none' 
   },
-  store: MongoStore.create({ clientPromise: clientPromise as Promise<MongoClient> }),
+  store: MongoStore.create({ clientPromise: clientPromise }),
 });
 
 app.use(sessionMiddleware);
@@ -64,25 +67,28 @@ const jwtStrategyOptions: JWTStrategyOptions = {
   secretOrKey: app.get('secret'),
 };
 
-const jwtStrategy = new JWTStrategy(jwtStrategyOptions, async (jwtPayload: IJwtPayload, done) => {
-  try {
-    const rawUser: LoginAdminUserData[] = await MSQLPool.promise()
-                                            .query(GET_USER_BY_ID, [jwtPayload.id])
-                                            .then(([rows]: any) => rows);
-
-    const permissions: number[] = Array.from(new Set(rawUser.map((user) => user.secondary_group!)));
-
-    const [user] = rawUser;
-    user.permissions = permissions;
-    
-    if (!isWorkGroup(user.main_group)) {
-      return done(null, false, { message: 'User is not in workgroup' });
+const jwtStrategy = new JWTStrategy(jwtStrategyOptions, (jwtPayload: IJwtPayload, done) => {
+  void (async () => {
+    try {
+      const rawUser: LoginAdminUserData[] = await MSQLPool.promise()
+                                              .query(GET_USER_BY_ID as string, [jwtPayload.id])
+                                              .then(([rows]) => rows as LoginAdminUserData[]);
+  
+      const permissions: number[] = Array.from(new Set(rawUser.map((user) => user.secondary_group!)));
+  
+      const [user] = rawUser;
+      user.permissions = permissions;
+  
+      if (!isWorkGroup(user.main_group)) {
+        return void done(null, false, { message: 'User is not in workgroup' });
+      }
+  
+      return void done(null, user);
+    } catch (error) {
+  
+      return void done(error);
     }
-    
-    return done(null, user);
-  } catch (error) {
-    done(error);
-  }
+  })();
 });
 
 const localStrategyOptions: ILocalStrategyOptions = {
@@ -90,46 +96,49 @@ const localStrategyOptions: ILocalStrategyOptions = {
   passwordField: 'password',
 };
 
-const localStrategy: LocalStrategy = new LocalStrategy(localStrategyOptions, async (email: string, password: string, done: any) => {
-  try {
-    const rawUser: any[] = await MSQLPool.promise()
-                                            .query(GET_USER, [email])
-                                            .then(([rows]: any) => rows);
-    if (!rawUser.length) {
-      return done(null, false, { message: 'User not found' });
+const localStrategy: LocalStrategy = new LocalStrategy(localStrategyOptions, (email: string, password: string, done: any) => {
+  void (async() => {
+    try {
+      const rawUser: LoginAdminUserData[] = await MSQLPool.promise()
+                                           .query(GET_USER as string, [email])
+                                           .then(([rows]) => rows as LoginAdminUserData[]);
+      if (!rawUser.length) {
+        return void done(null, false, { message: 'User not found' });
+      }
+  
+      const permissions: number[] = Array.from(new Set(rawUser.map((user) => user.secondary_group!)));
+      
+      const [user] = rawUser;
+      const { user_password, main_group } = user;
+  
+      user.permissions = permissions;
+      
+      if (!checkPassword(password, user_password)) {
+        return void done(null, false, { message: 'Wrong password' });
+      }
+  
+      if (!isWorkGroup(main_group)) {
+        return void done(null, false, { message: 'User is not in workgroup' });
+      }
+      
+      return void done(null, user, { message: 'Success' });
+    } catch(error) {
+      
+      return void done(error);
     }
-
-    const permissions: number[] = Array.from(new Set(rawUser.map((user) => user.secondary_group!)));
-    
-    const [user] = rawUser;
-    const { user_password, main_group } = user;
-
-    user.permissions = permissions;
-    
-    if (!checkPassword(password, user_password)) {
-      return done(null, false, { message: 'Wrong password' });
-    }
-
-    if (!isWorkGroup(main_group)) {
-      return done(null, false, { message: 'User is not in workgroup' });
-    }
-    
-    return done(null, user, { message: 'Success' });
-  } catch(error) {
-    return done(error);
-  }
+  })();
 });
 
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
 
-passport.deserializeUser(function(jwtPayload: IJwtPayload, done) {
-  done(null, jwtPayload as any);
+passport.deserializeUser(function(jwtPayload, done) {
+  done(null, jwtPayload as Express.User);
 });
 
 app.use(passport.initialize());
-app.use(passport.session());
+app.use(passport.session() as Handler);
 
 passport.use('local', localStrategy);
 passport.use('jwt', jwtStrategy);
@@ -154,7 +163,7 @@ app.get('*', (_req: Request, res: Response) => {
 });
 
 // Print API errors
-app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response) => {
     logger.log('[INTERNAL_ERROR]', 
       'SERVER', err, '\n',
       'ORIGINAL_URL', req.originalUrl, '\n',
@@ -169,7 +178,7 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 if (process.env.NODE_ENV === 'production') {
   rmOldBackups.start();
   tailOnlineStats.start();
-};
+}
 
 // Watcher
 watch();

@@ -7,10 +7,11 @@ import Backuper, { BackupAction } from '@backuper';
 import fs, { WriteStream } from 'fs';
 import multer from "multer";
 
-import { UTF8toANSI, isBinary } from './functions';
+import { UTF8toANSI } from '../../functions';
+import { isBinary } from '@shared/mime/utils';
 
 import Workgroup from '@enums/workgroup.enum';
-import { logger } from './constants'; 
+import { logger } from '@shared/logger'; 
 
 const { CFR } = Workgroup;
 
@@ -37,7 +38,7 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
   _handleFile(req: Request,
             file: Express.Multer.File,
             callback: (error?: any, info?: Partial<Express.Multer.File>) => void): void {
-    this._getDestination(req, file, async (err: any, path: any) => {
+    this._getDestination(req, file, async (err: any, path: string) => {
       
       const filepath: string = join(path, file.originalname);
       
@@ -61,7 +62,7 @@ class ExperimentalConfigFileStorageEngine implements multer.StorageEngine {
         * Create backup note in DB
         * Save file as hashed backup
         */
-        await Backuper.backup(filepath, req.user, BackupAction.CHANGE);
+        await Backuper.backup(filepath, req.user!, BackupAction.CHANGE);
       } catch(err) {
         logger.err(err);
       }

@@ -4,35 +4,43 @@ import https from 'https';
 import { readFileSync } from 'fs';
 import sockets, { wrap } from './routes/Sockets';
 import { Server } from 'socket.io';
-import { socketCORS, logger } from '@shared/constants';
+import { socketCORS } from '@shared/constants';
 import passport from 'passport';
 import { IHttpsOptions, ISocket } from '@interfaces/httpio.enum';
+import { CorsOptions } from 'cors';
+import { logger } from '@shared/logger';
 
 // Start the server
 
 const httpsOptions: IHttpsOptions = {
-  key: readFileSync(process.env.SSL_KEY!, 'utf8'),
-  cert: readFileSync(process.env.SSL_CERT!, 'utf8'),
-  rejectUnauthorized: false
+    key: readFileSync(process.env.SSL_KEY!, 'utf8'),
+    cert: readFileSync(process.env.SSL_CERT!, 'utf8'),
+    rejectUnauthorized: false
 };
 
 const server: https.Server = https.createServer(httpsOptions , app);
 
-export const io: Server = new Server(server, { cors: socketCORS, path: '/notifier/' });
+export const io: Server = new Server(
+    server,
+    {
+        cors: socketCORS as CorsOptions,
+        path: '/notifier/'
+    }
+);
              
 [
-  sessionMiddleware,
-  passport.authenticate('jwt'),
-  passport.initialize(),
-  passport.session(),
+    sessionMiddleware,
+    passport.authenticate('jwt'),
+    passport.initialize(),
+    passport.session(),
 ].forEach((middlware) => io.use(wrap(middlware)));
              
 io.use((socket: any, next: any) => {
-  socket.request.user ? next() 
-                      : next(new Error('Unauthorized'));
+    socket.request.user ? next() 
+                        : next(new Error('Unauthorized'));
 });
 io.on('connection', (socket: ISocket) => {
-  sockets(socket);
+    sockets(socket);
 });
 
 logger.log(
