@@ -43,7 +43,7 @@ jobs:
         run: npm run ci:clean
       
       - name: Create env file
-        run: touch src/pre-start/env/production.env
+        run: touch ./src/pre-start/env/production.env
 
       - name: 🔨 Build Application
         run: npm run build
