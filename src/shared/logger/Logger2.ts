@@ -83,11 +83,9 @@ export class Logger {
         let str: string = [this._formatTimestamp([seconds, minutes, hours, date, month, year]), ...args].join(' ');
             str += EOL;
         
-        process.stdout.write(str);
-
-        str = str.replace(/[^\x20-\x7E]/g, ''); // removes escape codes
-
-        str += EOL;
+        if (process.env.NODE_ENV === 'development') {
+            process.stdout.write(str);
+        }
         
         this._writeStream.write(str, (err: Error | null | undefined) => {
             if (err) {
