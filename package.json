@@ -6,6 +6,7 @@
     "lint": "eslint .",
     "start": "node -r module-alias/register ./dist --env=production",
     "start:dev": "nodemon",
+    "ci:clean": "rimraf ./dist",
     "test": "nodemon --config ./spec/nodemon.json"
   },
   "nodemonConfig": {
@@ -85,6 +86,7 @@
     "@types/node": "^14.14.21",
     "@types/passport-jwt": "^3.0.7",
     "@types/passport-local": "^1.0.34",
+    "ci": "^2.3.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",

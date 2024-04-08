@@ -1,0 +1,46 @@
+name: LARS CI
+
+on:
+    push:
+        branches:
+        - master
+
+jobs:
+  build:
+    name: All Steps (Build, Lint)
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: ⚙️ Install Dependencies
+        run: npm ci
+
+      - name: 📑 ESLint TypeScript lint project
+        run: npm run lint
+
+      - name: 🧼 Clean Distribution Directory
+        run: npm run ci:clean
+
+      - name: 🔨 Build Application
+        run: npm run build
+
+      - name: 📦 List Files in Distribution Directory
+        run: ls -R ./dist
