@@ -93,7 +93,7 @@ export const watch = (): void => {
 
         void (async () => {
             await dbLine.save();
-        });
+        })();
     };
 
     const _updateStatistics = (logLine: ILogLine) => {
