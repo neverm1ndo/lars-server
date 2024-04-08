@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: All Steps (Build, Lint)
+    name: ESLint
     runs-on: ubuntu-latest
 
     strategy:
@@ -33,20 +33,5 @@ jobs:
         with:
           node-version: '18'
 
-      - name: ⚙️ Install Dependencies
-        run: npm ci
-
       - name: 📑 ESLint TypeScript lint project
         run: npm run lint
-
-      - name: 🧼 Clean Distribution Directory
-        run: npm run ci:clean
-      
-      - name: Create env file
-        run: touch ./src/pre-start/env/production.env
-
-      - name: 🔨 Build Application
-        run: npm run build
-
-      - name: 📦 List Files in Distribution Directory
-        run: ls -R ./dist
