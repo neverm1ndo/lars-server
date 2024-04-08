@@ -49,22 +49,22 @@ set('strictQuery', false);
 const clientPromise = connect(process.env.MONGO!).then(m => m.connection.getClient() as unknown as MongoClient);
 
 export const sessionMiddleware = session({
-  secret: app.get('secret'),
-  resave: false,
-  saveUninitialized: true,
-  cookie: { 
-    maxAge: 525600*60000, 
-    secure: true, 
-    sameSite: 'none' 
-  },
-  store: MongoStore.create({ clientPromise: clientPromise }),
+    secret: app.get('secret'),
+    resave: false,
+    saveUninitialized: true,
+    cookie: { 
+        maxAge: 525600*60000, 
+        secure: true, 
+        sameSite: 'none' 
+    },
+    store: MongoStore.create({ clientPromise: clientPromise }),
 });
 
 app.use(sessionMiddleware);
 
 const jwtStrategyOptions: JWTStrategyOptions = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: app.get('secret'),
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: app.get('secret'),
 };
 
 const jwtStrategy = new JWTStrategy(jwtStrategyOptions, (jwtPayload: IJwtPayload, done) => {
@@ -92,36 +92,36 @@ const jwtStrategy = new JWTStrategy(jwtStrategyOptions, (jwtPayload: IJwtPayload
 });
 
 const localStrategyOptions: ILocalStrategyOptions = {
-  usernameField: 'email',
-  passwordField: 'password',
+    usernameField: 'email',
+    passwordField: 'password',
 };
 
 const localStrategy: LocalStrategy = new LocalStrategy(localStrategyOptions, (email: string, password: string, done: any) => {
   void (async() => {
     try {
-      const rawUser: LoginAdminUserData[] = await MSQLPool.promise()
-                                           .query(GET_USER as string, [email])
-                                           .then(([rows]) => rows as LoginAdminUserData[]);
-      if (!rawUser.length) {
-        return void done(null, false, { message: 'User not found' });
-      }
-  
-      const permissions: number[] = Array.from(new Set(rawUser.map((user) => user.secondary_group!)));
-      
-      const [user] = rawUser;
-      const { user_password, main_group } = user;
-  
-      user.permissions = permissions;
-      
-      if (!checkPassword(password, user_password)) {
-        return void done(null, false, { message: 'Wrong password' });
-      }
-  
-      if (!isWorkGroup(main_group)) {
-        return void done(null, false, { message: 'User is not in workgroup' });
-      }
-      
-      return void done(null, user, { message: 'Success' });
+        const rawUser: LoginAdminUserData[] = await MSQLPool.promise()
+                                            .query(GET_USER as string, [email])
+                                            .then(([rows]) => rows as LoginAdminUserData[]);
+        if (!rawUser.length) {
+            return void done(null, false, { message: 'User not found' });
+        }
+    
+        const permissions: number[] = Array.from(new Set(rawUser.map((user) => user.secondary_group!)));
+        
+        const [user] = rawUser;
+        const { user_password, main_group } = user;
+    
+        user.permissions = permissions;
+        
+        if (!checkPassword(password, user_password)) {
+            return void done(null, false, { message: 'Wrong password' });
+        }
+    
+        if (!isWorkGroup(main_group)) {
+            return void done(null, false, { message: 'User is not in workgroup' });
+        }
+        
+        return void done(null, user, { message: 'Success' });
     } catch(error) {
       
       return void done(error);
@@ -170,14 +170,14 @@ app.use((err: Error, req: Request, res: Response) => {
       'PROTOCOL', req.protocol, '\n',
       'XHR', req.xhr,
     );
-    return res.status(BAD_REQUEST)
-              .send('ERR: ' + err.message);
+    res.status(BAD_REQUEST)
+       .send('ERR: ' + err.message);
 });
 
 // Crontasks
 if (process.env.NODE_ENV === 'production') {
-  rmOldBackups.start();
-  tailOnlineStats.start();
+    rmOldBackups.start();
+    tailOnlineStats.start();
 }
 
 // Watcher
