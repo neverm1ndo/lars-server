@@ -1,4 +1,3 @@
-import { Processes } from '@shared/processes/processes.enum';
 import { IGeoData } from './geodata';
 import { IUserData } from './user';
 
@@ -34,7 +33,7 @@ export interface IContentData {
 export interface ILogLine {
     unix: number;
     date: Date;
-    process: Processes;
+    process: string;
     nickname?: string;
     id?: number;
     geo?: IGeoData;
