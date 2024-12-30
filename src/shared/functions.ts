@@ -149,7 +149,7 @@ export const broadcastProcessNotification = (line: ILogLine): void => {
 }
 
 export const getAvatarURL = function(filename?: string): string {
-    return filename ? `https://www.gta-liberty.ru/images/avatars/upload/${filename}`
+    return filename ? `https://www.gta-liberty.ru/download/file.php?avatar=${filename}`
                     : noAvatarImageUrl;
 }
 

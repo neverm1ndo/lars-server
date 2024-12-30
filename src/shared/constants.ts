@@ -5,7 +5,7 @@ import { OnlineMetric } from '../Metrics';
 import { ErrorCode } from '@enums/error.codes.enum';
 
 export const paramMissingError = 'One or more of the required parameters was missing.';
-export const noAvatarImageUrl: string = 'https://www.gta-liberty.ru/styles/prosilver_ex/theme/images/no_avatar.gif';
+export const noAvatarImageUrl: string = 'https://www.gta-liberty.ru/styles/eles/theme/images/no_avatar.gif';
 
 export const CommonErrors = {
   [ErrorCode.UNSUPPORTED_PLATFORM]: 'Platform is not supported',
