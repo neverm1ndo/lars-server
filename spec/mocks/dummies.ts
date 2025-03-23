@@ -1,5 +1,3 @@
-import { disconnect } from "process";
-
 export const lines = {
     auth: {
         correct: {
