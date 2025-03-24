@@ -1,7 +1,7 @@
 import { unlink, readFile, stat } from 'fs/promises';
 import fs from 'fs';
 import { pipeline } from 'stream';
-import path, { join, basename, extname } from 'path';
+import { join, basename, extname } from 'path';
 import { BACKUP } from '@schemas/backup.schema';
 import { ANSItoUTF8, getAvatarURL } from '@shared/functions';
 import { logger } from '@shared/logger';
@@ -146,7 +146,7 @@ export default class Backuper {
                         return backup;
                     })
                     .then((backup) => {
-                        const backupFilePath: string = path.join(process.env.BACKUPS_PATH!, backup.hash);
+                        const backupFilePath: string = join(process.env.BACKUPS_PATH!, backup.hash);
 
                         return Backuper.prepareBackupFile(
                             backupFilePath,
@@ -157,9 +157,9 @@ export default class Backuper {
     }
   
     /**
-     * Removes expired(2 weeks old) backups from database and fs
+     * Removes expired(2 weeks old by default) backups from database and fs
      */
-    static async removeExpired(): Promise<any> {
+    static async removeExpired(): Promise<unknown> {
         const now: Date = new Date();
         
         const unlinkShchedule: Promise<unknown> = BACKUP.find<BackupNote>({ expires: { $lte: now }}, [])
@@ -169,13 +169,13 @@ export default class Backuper {
                     return notes;
             })
             .then((notes) => 
-                    Promise.all(notes.map((note) => unlink(path.join(process.env.BACKUPS_PATH!, note.hash))))
+                    Promise.all(notes.map((note) => unlink(join(process.env.BACKUPS_PATH!, note.hash))))
             );
         
-        const deleteBackupNotes = BACKUP.deleteMany({ expires: { $lte: new Date() }}, [])
+        const deleteBackupNotes = BACKUP.deleteMany({ expires: { $lte: now }}, [])
                                         .exec();
         
-        return Promise.all([unlinkShchedule, deleteBackupNotes]);
+        return unlinkShchedule.then(() => deleteBackupNotes);
     }
 
     /**
@@ -187,8 +187,9 @@ export default class Backuper {
         return BACKUP.deleteOne({ hash })
                     .exec()
                     .then(() => {
-                    const filepath: string = path.join(process.env.BACKUPS_PATH!, hash);
-                    return unlink(filepath);
+                        const filepath: string = join(process.env.BACKUPS_PATH!, hash);
+                    
+                        return unlink(filepath);
                     });
     }
 
@@ -197,7 +198,7 @@ export default class Backuper {
      * @returns {Promise<Buffer>} - file buffer
      */
     static async getBackupFile(hash: string): Promise<Buffer> {
-        const filepath: string = path.join(process.env.BACKUPS_PATH!, hash);
+        const filepath: string = join(process.env.BACKUPS_PATH!, hash);
 
         return readFile(filepath).then((buffer: Buffer) => ANSItoUTF8(buffer))
     }
