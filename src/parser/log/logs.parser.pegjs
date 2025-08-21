@@ -12,10 +12,10 @@ logline
         id:id?
         numbers:numbers?
        	admin:admin?
-        message:message?
-        geo:geo_object?
+        message:message
+        serials:(cn:object / geo:geo_object)?
         	{ 
-            	const line = { unix, date, process, nickname, id, admin, message, geo, numbers };
+            	const line = { unix, date, process, nickname, id, admin, message, serials, numbers };
             	
                 for (const prop in line) {
                 	if (line[prop] === null) delete line[prop];
@@ -33,7 +33,10 @@ date
 geo_object =
 	object:object {
     	object.as = parseInt(object.as);
-        object.country = object.props[0];
+        
+        if (object.props?.length) {
+        	object.country = object.props[0];
+        }
         
         delete object.props;
 
@@ -114,19 +117,23 @@ ipv4
     }
 
 string "string"
-  = chars:char* { return chars.join(""); }
+  = chars:char* { return text(); }
+  
+source_char
+	= .
+    
+single_string_char
+	= !("'" / "\\") source_char { return text(); }
+    / sequence:escape { return sequence; }
 
 message "message"
-    = quotation_mark @string quotation_mark
-
-quotation_mark
-    = "'"
+    = "'" chars:single_string_char* "'" { return chars.join(""); }
 
 char
   = unescaped
   / escape
     sequence:(
-        '"'
+      '"'
       / "\\"
       / "/"
       / "b" { return "\b"; }
